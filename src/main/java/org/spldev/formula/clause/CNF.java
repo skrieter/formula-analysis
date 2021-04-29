@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import org.spldev.formula.*;
+import org.spldev.util.*;
 
 // TODO rename, as it can represent both CNF and DNF
 /**
@@ -12,7 +13,7 @@ import org.spldev.formula.*;
  * @author Sebastian Krieter
  */
 public class CNF implements Serializable {
-
+	
 	private static final long serialVersionUID = -7716526687669886274L;
 
 	protected ClauseList clauses;
@@ -47,6 +48,10 @@ public class CNF implements Serializable {
 
 	public void setVariableMap(VariableMap variables) {
 		this.variables = variables;
+	}
+
+	public VariableMap getVariables() {
+		return variables;
 	}
 
 	public VariableMap getVariableMap() {
@@ -87,8 +92,8 @@ public class CNF implements Serializable {
 	 * @return an adapted cnf, {@code null} if there are old variables names the are
 	 *         not contained in the new variables.
 	 */
-	public Optional<CNF> adapt(VariableMap newVariableMap) {
-		return Optional.of(new CNF(newVariableMap, clauses.adapt(variables, newVariableMap)));
+	public Result<CNF> adapt(VariableMap newVariableMap) {
+		return clauses.adapt(variables, newVariableMap).map(c -> new CNF(newVariableMap, c));
 	}
 
 	public CNF randomize(Random random) {
@@ -96,7 +101,7 @@ public class CNF implements Serializable {
 		Collections.shuffle(shuffledVariableNames, random);
 		final VariableMap newVariableMap = new VariableMap(shuffledVariableNames);
 
-		final ClauseList adaptedClauseList = clauses.adapt(variables, newVariableMap);
+		final ClauseList adaptedClauseList = clauses.adapt(variables, newVariableMap).get();
 		Collections.shuffle(adaptedClauseList, random);
 
 		return new CNF(newVariableMap, adaptedClauseList);

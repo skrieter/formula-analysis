@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.*;
 
 import org.spldev.formula.*;
+import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.util.*;
 
 /**
  * Represents an instance of a satisfiability problem in CNF.
@@ -47,12 +49,16 @@ public class ClauseList extends ArrayList<LiteralList> implements Cloneable, Ser
 		return negatedClauseList;
 	}
 
-	public ClauseList adapt(VariableMap oldVariableMap, VariableMap newVariableMap) {
+	public Result<ClauseList> adapt(VariableMap oldVariableMap, VariableMap newVariableMap) {
 		final ClauseList adaptedClauseList = new ClauseList();
-		stream() //
-			.map(clause -> clause.adapt(oldVariableMap, newVariableMap)) //
-			.forEach(adaptedClauseList::add);
-		return adaptedClauseList;
+		for (LiteralList clause : this) {
+			final Result<LiteralList> adapted = clause.adapt(oldVariableMap, newVariableMap);
+			if (adapted.isEmpty()) {
+				return Result.empty(adapted.getProblems());
+			}
+			adaptedClauseList.add(adapted.get());
+		}
+		return Result.of(adaptedClauseList);
 	}
 
 	/**
@@ -66,16 +72,16 @@ public class ClauseList extends ArrayList<LiteralList> implements Cloneable, Ser
 		return convertedClauseList;
 	}
 
-	private void convert(ClauseList cnf, ClauseList dnf, int[] literals, int index) {
-		if (index == cnf.size()) {
-			final LiteralList literalSet = new LiteralList(Arrays.copyOf(literals, literals.length)).clean();
+	private void convert(ClauseList nf1, ClauseList nf2, int[] literals, int index) {
+		if (index == nf1.size()) {
+			final LiteralList literalSet = new LiteralList(literals, Order.UNORDERED, false).clean().get();
 			if (literalSet != null) {
-				dnf.add(literalSet);
+				nf2.add(literalSet);
 			}
 		} else {
-			for (final int literal : cnf.get(index).getLiterals()) {
+			for (final int literal : nf1.get(index).getLiterals()) {
 				literals[index] = literal;
-				convert(cnf, dnf, literals, index + 1);
+				convert(nf1, nf2, literals, index + 1);
 			}
 		}
 	}

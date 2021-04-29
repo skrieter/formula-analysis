@@ -29,20 +29,26 @@ class CoverAll implements ICoverStrategy {
 
 		util.initCandidatesList(nextCondition, candidatesList);
 
-		if (util.coverSol(candidatesList)) {
-			return CombinationStatus.COVERED;
-		}
-
-		if (util.removeInvalidClauses(nextCondition, candidatesList)) {
-			return CombinationStatus.INVALID;
-		}
-
-		if (candidatesList.size() < 32) {
-			if (util.coverSat(candidatesList)) {
+		if (util.hasSolver) {
+			if (util.coverSol(candidatesList)) {
 				return CombinationStatus.COVERED;
 			}
+
+			if (util.removeInvalidClauses(nextCondition, candidatesList)) {
+				return CombinationStatus.INVALID;
+			}
+
+	//		if (candidatesList.size() < 32) {
+				if (util.coverSat(candidatesList)) {
+					return CombinationStatus.COVERED;
+				}
+	//		} else {
+	//			if (util.coverSatPara(candidatesList)) {
+	//				return CombinationStatus.COVERED;
+	//			}
+	//		}
 		} else {
-			if (util.coverSatPara(candidatesList)) {
+			if (util.coverNoSat(candidatesList)) {
 				return CombinationStatus.COVERED;
 			}
 		}

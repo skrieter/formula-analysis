@@ -5,6 +5,8 @@ import java.util.*;
 import java.util.stream.*;
 
 import org.spldev.formula.*;
+import org.spldev.util.*;
+import org.spldev.util.Problem.*;
 
 // TODO add mathods for adding literals (e.g. addAll, union, ...)
 /**
@@ -25,29 +27,6 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 	private int hashCode;
 
 	private Order order = null;
-
-	/**
-	 * Constructs a new clause from the given literals. Negates the given literals.
-	 * <br>
-	 * <b>Does not modify the given literal array.</b>
-	 *
-	 * @param literals literals of the clause
-	 * @return A newly constructed clause from the given literals (negated).
-	 */
-	public static LiteralList getBlockingClause(int... literals) {
-		return new LiteralList(literals).negate();
-	}
-
-	/**
-	 * Constructs a new clause from the given literals. <br>
-	 * <b>Does not modify the given literal array.</b>
-	 *
-	 * @param literals literals of the clause
-	 * @return A newly constructed clause from the given literals.
-	 */
-	public static LiteralList getClause(int... literals) {
-		return new LiteralList(literals);
-	}
 
 	/**
 	 * Sets the value at position i of solution1 to 0 if the value of solution2 at
@@ -184,7 +163,7 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return literals;
 	}
 
-	public boolean containsLiteral(int... literals) {
+	public boolean containsAnyLiteral(int... literals) {
 		for (final int literal : literals) {
 			if (indexOfLiteral(literal) >= 0) {
 				return true;
@@ -193,13 +172,31 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return false;
 	}
 
-	public boolean containsVariable(int... variables) {
+	public boolean containsAllLiterals(int... literals) {
+		for (final int literal : literals) {
+			if (indexOfLiteral(literal) < 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean containsAnyVariable(int... variables) {
 		for (final int variable : variables) {
 			if (indexOfVariable(variable) >= 0) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public boolean containsAllVariables(int... variables) {
+		for (final int variable : variables) {
+			if (indexOfVariable(variable) >= 0) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public boolean containsAny(LiteralList otherLiteralSet) {
@@ -316,9 +313,9 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return new LiteralList(absoluteLiterals);
 	}
 
-	public LiteralList removeAll(LiteralList variables) {
+	public LiteralList removeAll(LiteralList otherLiterals) {
 		final boolean[] removeMarker = new boolean[literals.length];
-		final int count = countDuplicates(variables, removeMarker);
+		final int count = countDuplicates(otherLiterals.literals, removeMarker);
 
 		final int[] newLiterals = new int[literals.length - count];
 		int j = 0;
@@ -330,9 +327,27 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return new LiteralList(newLiterals, order, false);
 	}
 
-	public LiteralList retainAll(LiteralList variables) {
+	public LiteralList removeVariables(LiteralList variables) {
+		return removeVariables(variables.literals);
+	}
+
+	public LiteralList removeVariables(int... variables) {
 		final boolean[] removeMarker = new boolean[literals.length];
-		final int count = countDuplicates(variables, removeMarker);
+		final int count = countVariables(variables, removeMarker);
+
+		final int[] newLiterals = new int[literals.length - count];
+		int j = 0;
+		for (int i = 0; i < literals.length; i++) {
+			if (!removeMarker[i]) {
+				newLiterals[j++] = literals[i];
+			}
+		}
+		return new LiteralList(newLiterals, order, false);
+	}
+
+	public LiteralList retainAll(LiteralList otherLiterals) {
+		final boolean[] removeMarker = new boolean[literals.length];
+		final int count = countDuplicates(otherLiterals.literals, removeMarker);
 
 		final int[] newLiterals = new int[count];
 		int j = 0;
@@ -344,11 +359,42 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return new LiteralList(newLiterals, order, false);
 	}
 
-	protected int countDuplicates(LiteralList variables, final boolean[] removeMarker) {
-		final int[] otherLiterals = variables.getLiterals();
+	public LiteralList retainVariables(LiteralList variables) {
+		return retainVariables(variables.getLiterals());
+	}
+
+	public LiteralList retainVariables(int... variables) {
+		final boolean[] removeMarker = new boolean[literals.length];
+		final int count = countVariables(variables, removeMarker);
+
+		final int[] newLiterals = new int[count];
+		int j = 0;
+		for (int i = 0; i < literals.length; i++) {
+			if (removeMarker[i]) {
+				newLiterals[j++] = literals[i];
+			}
+		}
+		return new LiteralList(newLiterals, order, false);
+	}
+
+	private int countDuplicates(int[] otherLiterals, final boolean[] removeMarker) {
 		int count = 0;
 		for (int i = 0; i < otherLiterals.length; i++) {
 			final int index = indexOfLiteral(otherLiterals[i]);
+			if (index >= 0) {
+				count++;
+				if (removeMarker != null) {
+					removeMarker[index] = true;
+				}
+			}
+		}
+		return count;
+	}
+
+	private int countVariables(int[] otherLiterals, final boolean[] removeMarker) {
+		int count = 0;
+		for (int i = 0; i < otherLiterals.length; i++) {
+			final int index = indexOfVariable(otherLiterals[i]);
 			if (index >= 0) {
 				count++;
 				if (removeMarker != null) {
@@ -370,7 +416,7 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 	}
 
 	public int countDuplicates(LiteralList variables) {
-		return countDuplicates(variables, null);
+		return countDuplicates(variables.literals, null);
 	}
 
 	public boolean hasConflicts(LiteralList variables) {
@@ -467,38 +513,28 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return new LiteralList(negativeLiterals, order, false);
 	}
 
-	/**
-	 * Constructs a new {@link LiteralList} that contains no duplicates and unwanted
-	 * literals. Also checks whether the set contains a literal and its negation.
-	 *
-	 * @param unwantedVariables An array of variables that should be removed.
-	 * @return A new literal set or {@code null}, if the initial set contained a
-	 *         literal and its negation.
-	 */
-	// TODO Split functions into contradiction detection and variable removal
-	public LiteralList clean(int... unwantedVariables) {
+	public Optional<LiteralList> clean() {
 		final LinkedHashSet<Integer> newLiteralSet = new LinkedHashSet<>();
 
 		for (final int literal : literals) {
 			if (newLiteralSet.contains(-literal)) {
-				return null;
+				return Optional.empty();
 			} else {
 				newLiteralSet.add(literal);
 			}
 		}
 
-		for (int i = 0; i < unwantedVariables.length; i++) {
-			final int unwantedVariable = unwantedVariables[i];
-			newLiteralSet.remove(unwantedVariable);
-			newLiteralSet.remove(-unwantedVariable);
+		final int[] uniqueVarArray;
+		if (newLiteralSet.size() == literals.length) {
+			uniqueVarArray = Arrays.copyOf(literals, literals.length);
+		} else {
+			uniqueVarArray = new int[newLiteralSet.size()];
+			int i = 0;
+			for (final int lit : newLiteralSet) {
+				uniqueVarArray[i++] = lit;
+			}
 		}
-
-		final int[] uniqueVarArray = new int[newLiteralSet.size()];
-		int i = 0;
-		for (final int lit : newLiteralSet) {
-			uniqueVarArray[i++] = lit;
-		}
-		return new LiteralList(uniqueVarArray, order, false);
+		return Optional.of(new LiteralList(uniqueVarArray, order, false));
 	}
 
 	@Override
@@ -519,7 +555,7 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 
 	@Override
 	public String toString() {
-		return "Clause " + Arrays.toString(literals);
+		return "Clause " + toLiteralString();
 	}
 
 	@Override
@@ -546,16 +582,24 @@ public class LiteralList implements Cloneable, Comparable<LiteralList>, Serializ
 		return lengthDiff;
 	}
 
-	public LiteralList adapt(VariableMap oldVariables, VariableMap newVariables) {
+	public Result<LiteralList> adapt(VariableMap oldVariables, VariableMap newVariables) {
 		final int[] oldLiterals = literals;
 		final int[] newLiterals = new int[oldLiterals.length];
 		for (int i = 0; i < oldLiterals.length; i++) {
 			final int l = oldLiterals[i];
-			final String name = oldVariables.getName(Math.abs(l)).get();
-			final int index = newVariables.getIndex(name).orElse(0);
-			newLiterals[i] = l < 0 ? -index : index;
+			final Optional<String> name = oldVariables.getName(Math.abs(l));
+			if (name.isPresent()) {
+				final Optional<Integer> index = newVariables.getIndex(name.get());
+				if (index.isPresent()) {
+					newLiterals[i] = l < 0 ? -index.get() : index.get();
+				} else {
+					return Result.empty(new Problem("No variable named " + name.get(), Severity.ERROR));
+				}
+			} else {
+				return Result.empty(new Problem("No variable with index " + l, Severity.ERROR));
+			}
 		}
-		return new LiteralList(newLiterals, order, true);
+		return Result.of(new LiteralList(newLiterals, order, true));
 	}
 
 	public String toBinaryString() {

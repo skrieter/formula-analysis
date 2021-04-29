@@ -115,7 +115,7 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 				final int[] model2 = solver.findSolution();
 				monitor.step();
 
-				updateModel(unkownValues, model2);
+				LiteralList.resetConflicts(unkownValues, model2);
 				solver.setSelectionStrategy(unkownValues, true);
 
 				for (int k = 0; k < knownValues.length; k++) {
@@ -163,7 +163,7 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 					break;
 				case TRUE:
 					solver.assignmentPop();
-					updateModel(unkownValues, solver.getSolution());
+					LiteralList.resetConflicts(unkownValues, solver.getSolution());
 					solver.shuffleOrder(getRandom());
 					break;
 				}

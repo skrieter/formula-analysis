@@ -21,16 +21,14 @@ public class EnumeratingRandomConfigurationGenerator extends ARandomConfiguratio
 		return identifier;
 	}
 
-	public EnumeratingRandomConfigurationGenerator(int maxNumber) {
-		super(maxNumber);
-	}
-
 	@Override
 	protected void generate(SatSolver solver, InternalMonitor monitor) throws Exception {
 		monitor.setTotalWork(2 * maxSampleSize);
 
+		final AllConfigurationGenerator allConfigurationGenerator = new AllConfigurationGenerator();
+		allConfigurationGenerator.setLimit(maxSampleSize);
 		final List<LiteralList> allConfigurations = new ArrayList<>(
-			new AllConfigurationGenerator(maxSampleSize).execute(solver, monitor.subTask(maxSampleSize)));
+			allConfigurationGenerator.execute(solver, monitor.subTask(maxSampleSize)));
 		if (!allowDuplicates) {
 			Collections.shuffle(allConfigurations, getRandom());
 		}
@@ -48,5 +46,5 @@ public class EnumeratingRandomConfigurationGenerator extends ARandomConfiguratio
 			monitor.step();
 		}
 	}
-
+	
 }

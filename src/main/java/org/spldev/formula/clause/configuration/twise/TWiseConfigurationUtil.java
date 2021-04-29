@@ -2,7 +2,6 @@ package org.spldev.formula.clause.configuration.twise;
 
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.stream.*;
 
 import org.sat4j.core.*;
@@ -16,7 +15,7 @@ import org.spldev.formula.clause.solver.*;
 import org.spldev.formula.clause.solver.SatSolver.*;
 import org.spldev.util.data.*;
 import org.spldev.util.io.*;
-import org.spldev.util.job.Executor;
+import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
 /**
@@ -27,49 +26,49 @@ import org.spldev.util.logging.*;
  */
 public class TWiseConfigurationUtil {
 
-	private class SolverPool {
-
-		private final LinkedList<SatSolver> available = new LinkedList<>();
-		private final HashMap<SatSolver, SatSolver> used = new HashMap<>();
-		private final Semaphore s;
-
-		private final int assignmentSize;
-
-		public SolverPool(int size, SatSolver template) {
-			s = new Semaphore(size);
-			assignmentSize = template.getAssignmentSize();
-			for (int i = 0; i < size; i++) {
-				final SatSolver solver = new Sat4JSolver(template.getCnf());
-				solver.assignmentPushAll(template.getAssignmentArray());
-				solver.rememberSolutionHistory(0);
-				solver.setSelectionStrategy(SelectionStrategy.ORG);
-				available.add(solver);
-			}
-		}
-
-		public SatSolver acquire() {
-			try {
-				s.acquire();
-				synchronized (this) {
-					final SatSolver solver = available.removeFirst();
-					used.put(solver, solver);
-					return solver;
-				}
-			} catch (final InterruptedException e) {
-				return null;
-			}
-		}
-
-		public void release(SatSolver solver) {
-			synchronized (this) {
-				final SatSolver freedSolver = used.remove(solver);
-				freedSolver.assignmentClear(assignmentSize);
-				available.addLast(freedSolver);
-			}
-			s.release();
-		}
-
-	}
+//	private class SolverPool {
+//
+//		private final LinkedList<SatSolver> available = new LinkedList<>();
+//		private final HashMap<SatSolver, SatSolver> used = new HashMap<>();
+//		private final Semaphore s;
+//
+//		private final int assignmentSize;
+//
+//		public SolverPool(int size, SatSolver template) {
+//			s = new Semaphore(size);
+//			assignmentSize = template.getAssignmentSize();
+//			for (int i = 0; i < size; i++) {
+//				final SatSolver solver = new Sat4JSolver(template.getCnf());
+//				solver.assignmentPushAll(template.getAssignmentArray());
+//				solver.rememberSolutionHistory(0);
+//				solver.setSelectionStrategy(SelectionStrategy.ORG);
+//				available.add(solver);
+//			}
+//		}
+//
+//		public SatSolver acquire() {
+//			try {
+//				s.acquire();
+//				synchronized (this) {
+//					final SatSolver solver = available.removeFirst();
+//					used.put(solver, solver);
+//					return solver;
+//				}
+//			} catch (final InterruptedException e) {
+//				return null;
+//			}
+//		}
+//
+//		public void release(SatSolver solver) {
+//			synchronized (this) {
+//				final SatSolver freedSolver = used.remove(solver);
+//				freedSolver.assignmentClear(assignmentSize);
+//				available.addLast(freedSolver);
+//			}
+//			s.release();
+//		}
+//
+//	}
 
 	public static final int GLOBAL_SOLUTION_LIMIT = 100_000;
 
@@ -87,7 +86,7 @@ public class TWiseConfigurationUtil {
 	protected final CNF cnf;
 	protected final SatSolver localSolver;
 	protected final boolean hasSolver;
-	protected SolverPool localSolverPool;
+//	protected SolverPool localSolverPool;
 
 	protected MIG mig;
 	protected LiteralList[] strongHull;
@@ -107,7 +106,8 @@ public class TWiseConfigurationUtil {
 	}
 
 	public void computeRandomSample(int randomSampleSize) {
-		final RandomConfigurationGenerator randomGenerator = new RandomConfigurationGenerator(randomSampleSize);
+		final RandomConfigurationGenerator randomGenerator = new RandomConfigurationGenerator();
+		randomGenerator.setLimit(randomSampleSize);
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
 		randomSample = Executor.run(randomGenerator, cnf).orElse(Logger::logProblems);
@@ -155,7 +155,7 @@ public class TWiseConfigurationUtil {
 			} else {
 				computeDeadCoreFeatures();
 			}
-			localSolverPool = new SolverPool(16, localSolver);
+//			localSolverPool = new SolverPool(16, localSolver);
 		}
 		return coreDead;
 	}
@@ -436,46 +436,48 @@ public class TWiseConfigurationUtil {
 	}
 
 	private boolean isSelectionPossibleSat(final LiteralList literals, final TWiseConfiguration configuration) {
-		final SatSolver localSolver = getSolver();
-		final int orgAssignmentSize = configuration.setUpSolver(localSolver);
-		try {
-			final int[] configurationLiterals = configuration.getLiterals();
-			for (final int literal : literals.getLiterals()) {
-				if (configurationLiterals[Math.abs(literal) - 1] == 0) {
-					localSolver.assignmentPush(literal);
+		if (hasSolver) {
+			final SatSolver localSolver = getSolver();
+			final int orgAssignmentSize = configuration.setUpSolver(localSolver);
+			try {
+				final int[] configurationLiterals = configuration.getLiterals();
+				for (final int literal : literals.getLiterals()) {
+					if (configurationLiterals[Math.abs(literal) - 1] == 0) {
+						localSolver.assignmentPush(literal);
+					}
 				}
-			}
-			if (orgAssignmentSize < localSolver.getAssignmentSize()) {
-				if (localSolver.hasSolution() != SatResult.TRUE) {
-					return false;
+				if (orgAssignmentSize < localSolver.getAssignmentSize()) {
+					if (localSolver.hasSolution() != SatResult.TRUE) {
+						return false;
+					}
 				}
+			} finally {
+				localSolver.assignmentClear(orgAssignmentSize);
 			}
-		} finally {
-			localSolver.assignmentClear(orgAssignmentSize);
 		}
 		return true;
 	}
 
-	private boolean isSelectionPossibleSatPara(final LiteralList literals, final TWiseConfiguration configuration) {
-		final SatSolver localSolver = localSolverPool.acquire();
-		try {
-			final int orgAssignmentSize = configuration.setUpSolver(localSolver);
-			final int[] configurationLiterals = configuration.getLiterals();
-			for (final int literal : literals.getLiterals()) {
-				if (configurationLiterals[Math.abs(literal) - 1] == 0) {
-					localSolver.assignmentPush(literal);
-				}
-			}
-			if (orgAssignmentSize < localSolver.getAssignmentSize()) {
-				if (localSolver.hasSolution() != SatResult.TRUE) {
-					return false;
-				}
-			}
-		} finally {
-			localSolverPool.release(localSolver);
-		}
-		return true;
-	}
+//	private boolean isSelectionPossibleSatPara(final LiteralList literals, final TWiseConfiguration configuration) {
+//		final SatSolver localSolver = localSolverPool.acquire();
+//		try {
+//			final int orgAssignmentSize = configuration.setUpSolver(localSolver);
+//			final int[] configurationLiterals = configuration.getLiterals();
+//			for (final int literal : literals.getLiterals()) {
+//				if (configurationLiterals[Math.abs(literal) - 1] == 0) {
+//					localSolver.assignmentPush(literal);
+//				}
+//			}
+//			if (orgAssignmentSize < localSolver.getAssignmentSize()) {
+//				if (localSolver.hasSolution() != SatResult.TRUE) {
+//					return false;
+//				}
+//			}
+//		} finally {
+//			localSolverPool.release(localSolver);
+//		}
+//		return true;
+//	}
 
 	public static boolean isCovered(ClauseList condition, Iterable<? extends LiteralList> solutionList) {
 		for (final LiteralList configuration : solutionList) {
@@ -600,6 +602,14 @@ public class TWiseConfigurationUtil {
 		return false;
 	}
 
+	protected boolean coverNoSat(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+		for (final Pair<LiteralList, TWiseConfiguration> pair : candidatesList) {
+			select(pair.getValue(), extendConfigurationDeduce, pair.getKey());
+			return true;
+		}
+		return false;
+	}
+
 	protected boolean coverSolPara(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		final Optional<Pair<LiteralList, TWiseConfiguration>> candidate = candidatesList.parallelStream() //
 			.filter(this::isSelectionPossibleSol) //
@@ -615,19 +625,19 @@ public class TWiseConfigurationUtil {
 		}
 	}
 
-	public boolean coverSatPara(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
-		final Optional<Pair<LiteralList, TWiseConfiguration>> findFirst = candidatesList.parallelStream().filter(
-			pair -> isSelectionPossibleSatPara(pair.getKey(), pair.getValue())).findFirst();
-
-		if (findFirst.isPresent()) {
-			final Pair<LiteralList, TWiseConfiguration> pair = findFirst.get();
-			select(pair.getValue(), extendConfigurationDeduce, pair.getKey());
-			assert pair.getValue().isValid();
-			return true;
-		} else {
-			return false;
-		}
-	}
+//	public boolean coverSatPara(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+//		final Optional<Pair<LiteralList, TWiseConfiguration>> findFirst = candidatesList.parallelStream().filter(
+//			pair -> isSelectionPossibleSatPara(pair.getKey(), pair.getValue())).findFirst();
+//
+//		if (findFirst.isPresent()) {
+//			final Pair<LiteralList, TWiseConfiguration> pair = findFirst.get();
+//			select(pair.getValue(), extendConfigurationDeduce, pair.getKey());
+//			assert pair.getValue().isValid();
+//			return true;
+//		} else {
+//			return false;
+//		}
+//	}
 
 	public void newConfiguration(final LiteralList literals) {
 		if (completeSolutionList.size() < maxSampleSize) {
@@ -679,6 +689,10 @@ public class TWiseConfigurationUtil {
 
 	public void setExtendConfigurationDeduce(Deduce extendConfigurationDeduce) {
 		this.extendConfigurationDeduce = extendConfigurationDeduce;
+	}
+
+	public void setMIG(MIG mig) {
+		this.mig = mig;
 	}
 
 }

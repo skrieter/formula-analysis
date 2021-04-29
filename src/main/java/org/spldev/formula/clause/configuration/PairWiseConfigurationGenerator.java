@@ -149,11 +149,6 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 
 	private int[] allYesSolution, allNoSolution;
 
-	public PairWiseConfigurationGenerator(int maxNumber) {
-		super();
-		this.maxNumber = maxNumber;
-	}
-
 	protected void addCombinationsFromModel(int[] curModel) {
 		for (int i = 0; i < combinations2.length; i++) {
 			final int a = (i / numVariables);

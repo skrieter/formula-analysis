@@ -39,8 +39,8 @@ public interface MIGProvider extends Provider<MIG> {
 		return (c, m) -> Provider.convert(c, CNFProvider.identifier, new MIGBuilder(), m);
 	}
 
-	static <T> MIGProvider fromOldMig(MIG oldMig) {
-		return (c, m) -> Provider.convert(c, CNFProvider.identifier, new IncrementalMIGBuilder(oldMig), m);
-	}
+//	static <T> MIGProvider fromOldMig(MIG oldMig) {
+//		return (c, m) -> Provider.convert(c, CNFProvider.identifier, new IncrementalMIGBuilder(oldMig), m);
+//	}
 
 }

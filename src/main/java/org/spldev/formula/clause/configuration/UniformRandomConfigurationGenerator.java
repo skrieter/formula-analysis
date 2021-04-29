@@ -24,15 +24,12 @@ public class UniformRandomConfigurationGenerator extends ARandomConfigurationGen
 
 	private int sampleSize = 1000;
 
-	public UniformRandomConfigurationGenerator(int maxNumber) {
-		super(maxNumber);
-	}
-
 	@Override
 	protected void generate(SatSolver solver, InternalMonitor monitor) throws Exception {
 		monitor.setTotalWork(maxSampleSize + sampleSize);
 
-		final ARandomConfigurationGenerator gen = new RandomConfigurationGenerator(sampleSize);
+		final ARandomConfigurationGenerator gen = new RandomConfigurationGenerator();
+		gen.setLimit(sampleSize);
 		gen.setAllowDuplicates(false);
 		gen.setRandom(getRandom());
 		final List<LiteralList> sample = gen.execute(solver, monitor.subTask(sampleSize));
@@ -72,5 +69,5 @@ public class UniformRandomConfigurationGenerator extends ARandomConfigurationGen
 	public void setSampleSize(int sampleSize) {
 		this.sampleSize = sampleSize;
 	}
-
+	
 }

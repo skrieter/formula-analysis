@@ -19,7 +19,7 @@ public abstract class AbstractAnalysis<T> implements Analysis<T>, Provider<T> {
 
 	protected LiteralList assumptions = null;
 
-	private Random random = new Random(112358);
+	protected Random random = new Random(112358);
 
 	private boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
@@ -49,6 +49,7 @@ public abstract class AbstractAnalysis<T> implements Analysis<T>, Provider<T> {
 		try {
 			return analyze(solver, monitor);
 		} catch (final Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException(e);
 		} finally {
 			solver.assignmentClear(0);

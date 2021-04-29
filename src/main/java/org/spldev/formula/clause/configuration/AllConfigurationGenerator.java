@@ -22,14 +22,6 @@ public class AllConfigurationGenerator extends AConfigurationGenerator {
 		return identifier;
 	}
 
-	public AllConfigurationGenerator() {
-		super();
-	}
-
-	public AllConfigurationGenerator(int maxNumber) {
-		super(maxNumber);
-	}
-
 	@Override
 	protected void generate(SatSolver solver, InternalMonitor monitor) throws Exception {
 		for (int i = 0; i < maxSampleSize; i++) {

@@ -13,6 +13,10 @@ import org.spldev.formula.clause.solver.*;
  * @author Sebastian Krieter
  */
 public class MIG {
+	
+	public static enum BuildStatus {
+		None, Incremental, Complete
+	}
 
 	public static int getVertexIndex(int literal) {
 		return literal < 0
@@ -24,8 +28,13 @@ public class MIG {
 		return getVertexIndex(vertex.getVar());
 	}
 
+	private final ArrayList<LiteralList> detectedStrong = new ArrayList<>();
+
 	private final List<Vertex> adjList;
 	private final CNF cnf;
+	
+	private BuildStatus redundancyStatus = BuildStatus.None;
+	private BuildStatus strongStatus = BuildStatus.None;
 
 	public MIG(CNF cnf) {
 		this.cnf = cnf;
@@ -58,6 +67,10 @@ public class MIG {
 		return Collections.unmodifiableList(adjList);
 	}
 
+	public ArrayList<LiteralList> getDetectedStrong() {
+		return detectedStrong;
+	}
+
 	public int size() {
 		return adjList.size() >> 1;
 	}
@@ -73,59 +86,69 @@ public class MIG {
 			throw new RuntimeContradictionException();
 		case 1: {
 			final int literal = literals[0];
-			final Vertex vertex = getVertex(literal);
-			final Vertex complementVertex = getVertex(-literal);
 			if (literal > 0) {
-				vertex.setStatus(Status.Core);
-				complementVertex.setStatus(Status.Dead);
+				getVertex(literal).setStatus(Status.Core);
+				getVertex(-literal).setStatus(Status.Dead);
 			} else if (literal < 0) {
-				vertex.setStatus(Status.Dead);
-				complementVertex.setStatus(Status.Core);
+				getVertex(literal).setStatus(Status.Dead);
+				getVertex(-literal).setStatus(Status.Core);
 			} else {
 				throw new RuntimeContradictionException();
 			}
 			break;
 		}
 		case 2: {
-			final Vertex vertex1 = getVertex(literals[0]);
-			final Vertex vertex2 = getVertex(literals[1]);
-			final Vertex complementVertex1 = getVertex(-literals[0]);
-			final Vertex complementVertex2 = getVertex(-literals[1]);
-			complementVertex1.addStronglyConnected(vertex2);
-			complementVertex2.addStronglyConnected(vertex1);
+			getVertex(-literals[0]).addStronglyConnected(getVertex(literals[1]));
+			getVertex(-literals[1]).addStronglyConnected(getVertex(literals[0]));
 			break;
 		}
 		default: {
-			for (final int literal1 : literals) {
-				getVertex(-literal1).addWeaklyConnected(clause);
+			for (final int literal : literals) {
+				getVertex(-literal).addWeaklyConnected(clause);
 			}
 			break;
 		}
 		}
 	}
 
-	public void removeClause(LiteralList clause) {
-		final int[] literals = clause.getLiterals();
-		switch (clause.size()) {
-		case 0:
-			throw new RuntimeContradictionException();
-		case 1: {
-			break;
-		}
-		case 2: {
-			getVertex(-literals[0]).getStrongEdges().remove(getVertex(literals[1]));
-			getVertex(-literals[1]).getStrongEdges().remove(getVertex(literals[0]));
-			break;
-		}
-		default: {
-			for (final int literal : literals) {
-				final Vertex vertex = getVertex(-literal);
-				// TODO increase performance
-				vertex.getComplexClauses().remove(clause);
-			}
-			break;
-		}
-		}
+	public BuildStatus getStrongStatus() {
+		return strongStatus;
 	}
+
+	public void setStrongStatus(BuildStatus strongStatus) {
+		this.strongStatus = strongStatus;
+	}
+
+	public BuildStatus getRedundancyStatus() {
+		return redundancyStatus;
+	}
+
+	public void setRedundancyStatus(BuildStatus redundancyStatus) {
+		this.redundancyStatus = redundancyStatus;
+	}
+
+//	public void removeClause(LiteralList clause) {
+//		final int[] literals = clause.getLiterals();
+//		switch (clause.size()) {
+//		case 0:
+//			throw new RuntimeContradictionException();
+//		case 1: {
+//			break;
+//		}
+//		case 2: {
+//			getVertex(-literals[0]).getStrongEdges().remove(getVertex(literals[1]));
+//			getVertex(-literals[1]).getStrongEdges().remove(getVertex(literals[0]));
+//			break;
+//		}
+//		default: {
+//			for (final int literal : literals) {
+//				final Vertex vertex = getVertex(-literal);
+//				// TODO increase performance
+//				vertex.getComplexClauses().remove(clause);
+//			}
+//			break;
+//		}
+//		}
+//	}
 
 }

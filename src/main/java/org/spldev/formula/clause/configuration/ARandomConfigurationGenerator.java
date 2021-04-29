@@ -11,8 +11,8 @@ public abstract class ARandomConfigurationGenerator extends AConfigurationGenera
 
 	protected boolean allowDuplicates = false;
 
-	public ARandomConfigurationGenerator(int maxNumber) {
-		super(maxNumber);
+	public ARandomConfigurationGenerator() {
+		super();
 		setRandom(new Random());
 	}
 

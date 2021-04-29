@@ -36,18 +36,7 @@ public final class Clauses {
 		return clauses.stream().map(LiteralList::negate);
 	}
 
-	public static CNF adapt(CNF cnf, VariableMap newVariableMap) {
-		return new CNF(newVariableMap,
-			adapt(cnf.getClauses(), cnf.getVariableMap(), newVariableMap)
-				.collect(Collectors.toList()));
-	}
-
-	public static Stream<LiteralList> adapt(Collection<LiteralList> clauses, VariableMap oldVariables,
-		VariableMap newVariables) {
-		return clauses.stream().map(clause -> clause.adapt(oldVariables, newVariables));
-	}
-
-	public static LiteralList adapt(LiteralList clause, VariableMap oldVariables,
+	public static Result<LiteralList> adapt(LiteralList clause, VariableMap oldVariables,
 		VariableMap newVariables) {
 		return clause.adapt(oldVariables, newVariables);
 	}
@@ -99,13 +88,37 @@ public final class Clauses {
 
 	private static void convertNF(List<LiteralList> cnf, List<LiteralList> dnf, int[] literals, int index) {
 		if (index == cnf.size()) {
-			final LiteralList literalSet = new LiteralList(Arrays.copyOf(literals, literals.length)).clean();
-			if (literalSet != null) {
-				dnf.add(literalSet);
+			int[] newClauseLiterals = new int[literals.length];
+			int count = 0;
+			for (int literal : literals) {
+				if (literal != 0) {
+					newClauseLiterals[count++] = literal;
+				}
+			}
+			if (count < newClauseLiterals.length) {
+				dnf.add(new LiteralList(Arrays.copyOf(newClauseLiterals, count)));
+			} else {
+				dnf.add(new LiteralList(newClauseLiterals));
 			}
 		} else {
-			for (final int literal : cnf.get(index).getLiterals()) {
-				literals[index] = literal;
+			HashSet<Integer> literalSet = new HashSet<>();
+			for (int i = 0; i <= index; i++) {
+				literalSet.add(literals[i]);
+			}
+			int redundantCount = 0;
+			final int[] literals2 = cnf.get(index).getLiterals();
+			for (final int literal : literals2) {
+				if (!literalSet.contains(-literal)) {
+					if (!literalSet.contains(literal)) {
+						literals[index] = literal;
+						convertNF(cnf, dnf, literals, index + 1);
+					} else {
+						redundantCount++;
+					}
+				}
+			}
+			literals[index] = 0;
+			if (redundantCount == literals2.length) {
 				convertNF(cnf, dnf, literals, index + 1);
 			}
 		}

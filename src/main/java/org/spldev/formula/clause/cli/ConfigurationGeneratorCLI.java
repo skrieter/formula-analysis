@@ -25,12 +25,11 @@ import java.nio.file.*;
 import java.util.*;
 
 import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.analysis.*;
 import org.spldev.formula.clause.configuration.*;
-import org.spldev.formula.clause.configuration.twise.*;
 import org.spldev.formula.clause.io.*;
 import org.spldev.util.*;
 import org.spldev.util.cli.*;
+import org.spldev.util.extension.*;
 import org.spldev.util.io.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
@@ -40,16 +39,7 @@ import org.spldev.util.logging.*;
  *
  * @author Sebastian Krieter
  */
-public class ConfigurationGenerator implements CLIFunction {
-
-	private String algorithm;
-	private Path outputFile;
-	private Path fmFile;
-	private Path expressionFile;
-	private Integer t;
-	private Integer m;
-	private Integer limit;
-	private Long seed;
+public class ConfigurationGeneratorCLI extends ExtensionPoint<ConfigurationGeneratorAlgorithm> implements CLIFunction {
 
 	@Override
 	public String getId() {
@@ -58,7 +48,35 @@ public class ConfigurationGenerator implements CLIFunction {
 
 	@Override
 	public void run(List<String> args) {
-		parseArguments(args);
+		Path outputFile = null;
+		Path fmFile = null;
+		ConfigurationGeneratorAlgorithm algorithm = null;
+
+		final List<String> remainingArguments = new ArrayList<>();
+		for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {
+			final String arg = iterator.next();
+			switch (arg) {
+			case "-a": {
+				String name = CLI.getArgValue(iterator, arg).toLowerCase();
+				for (ConfigurationGeneratorAlgorithm algExtension : getExtensions()) {
+					if (Objects.equals(name, algExtension.getName())) {
+						algorithm = algExtension;
+					}
+				}
+			}
+			case "-o": {
+				outputFile = Paths.get(CLI.getArgValue(iterator, arg));
+				break;
+			}
+			case "-fm": {
+				fmFile = Paths.get(CLI.getArgValue(iterator, arg));
+				break;
+			}
+			default: {
+				remainingArguments.add(arg);
+			}
+			}
+		}
 
 		if (fmFile == null) {
 			throw new IllegalArgumentException("No feature model specified!");
@@ -69,33 +87,14 @@ public class ConfigurationGenerator implements CLIFunction {
 		if (algorithm == null) {
 			throw new IllegalArgumentException("No algorithm specified!");
 		}
+		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments).orElse(
+			Logger::logProblems);
 
-		final Result<CNF> cnfResult = FileHandler.parse(fmFile, new DIMACSFormat());
-		if (cnfResult.isEmpty()) {
-			throw new IllegalArgumentException(cnfResult.getProblems().get(0).getMessage().get());
-		}
-		final CNF cnf = cnfResult.get();
-
-		final List<List<ClauseList>> expressionGroups;
-		if (expressionFile != null) {
-			final Result<List<List<ClauseList>>> result = FileHandler.parse(expressionFile,
-				new ExpressionGroupFormat());
-			if (cnfResult.isEmpty()) {
-				throw new IllegalArgumentException(cnfResult.getProblems().get(0).getMessage().get());
-			}
-			expressionGroups = result.get();
-		} else {
-			expressionGroups = null;
-		}
-
-		IConfigurationGenerator generator = null;
-		switch (algorithm.toLowerCase()) {
+//		IConfigurationGenerator generator = null;
+//		switch (algorithm.toLowerCase()) {
 //		case "icpl": {
 //			if (t == null) {
 //				throw new IllegalArgumentException("Value of t must be specified for icpl (use -t <value>)");
-//			}
-//			if (limit == null) {
-//				limit = Integer.MAX_VALUE;
 //			}
 //			generator = new SPLCAToolConfigurationGenerator("ICPL", t, limit);
 //			break;
@@ -104,142 +103,22 @@ public class ConfigurationGenerator implements CLIFunction {
 //			if (t == null) {
 //				throw new IllegalArgumentException("Value of t must be specified for chvatal (use -t <value>)");
 //			}
-//			if (limit == null) {
-//				limit = Integer.MAX_VALUE;
-//			}
 //			generator = new SPLCAToolConfigurationGenerator("Chvatal", t, limit);
 //			break;
 //		}
-		case "incling": {
-			if (limit == null) {
-				limit = Integer.MAX_VALUE;
-			}
-			generator = new PairWiseConfigurationGenerator(limit);
-			if (seed == null) {
-				((AbstractAnalysis<?>) generator).setRandom(new Random(seed));
-			}
-			break;
-		}
-		case "yasa": {
-			if (t == null) {
-				throw new IllegalArgumentException("Value of t must be specified for yasa (use -t <value>)");
-			}
-			if (limit == null) {
-				limit = Integer.MAX_VALUE;
-			}
-			if (expressionGroups == null) {
-				generator = new TWiseConfigurationGenerator(t, limit);
-			} else {
-				generator = new TWiseConfigurationGenerator(expressionGroups, t, limit);
-			}
-			if (m != null) {
-				((TWiseConfigurationGenerator) generator).setIterations(m);
-			}
-			if (seed == null) {
-				((AbstractAnalysis<?>) generator).setRandom(new Random(seed));
-			}
-			break;
-		}
-		case "random": {
-			if (limit == null) {
-				limit = Integer.MAX_VALUE;
-			}
-			generator = new RandomConfigurationGenerator(limit);
-			((RandomConfigurationGenerator) generator).setAllowDuplicates(true);
-			if (seed == null) {
-				((AbstractAnalysis<?>) generator).setRandom(new Random(seed));
-			}
-			break;
-		}
-		case "all": {
-			if (limit == null) {
-				limit = Integer.MAX_VALUE;
-			}
-			generator = new AllConfigurationGenerator(limit);
-			if (seed == null) {
-				((AbstractAnalysis<?>) generator).setRandom(new Random(seed));
-			}
-			break;
-		}
-		default:
-			throw new IllegalArgumentException("No algorithm specified!");
-		}
+
+		final CNF cnf = FileHandler.parse(fmFile, new DIMACSFormat())
+			.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
+		final Path out = outputFile;
 		final Result<List<LiteralList>> result = Executor.run(generator, cnf);
 		result.ifPresentOrElse(list -> {
 			try {
-				FileHandler.write(new SolutionList(cnf.getVariableMap(), list), outputFile,
+				FileHandler.write(new SolutionList(cnf.getVariableMap(), list), out,
 					new ConfigurationListFormat());
 			} catch (final IOException e) {
 				Logger.logError(e);
 			}
 		}, Logger::logProblems);
-	}
-
-	private void resetArguments() {
-		algorithm = null;
-		outputFile = null;
-		fmFile = null;
-		expressionFile = null;
-		t = null;
-		m = null;
-		limit = null;
-		seed = null;
-	}
-
-	private void parseArguments(List<String> args) {
-		resetArguments();
-		for (final Iterator<String> iterator = args.iterator(); iterator.hasNext();) {
-			final String arg = iterator.next();
-			if (arg.startsWith("-")) {
-				switch (arg.substring(1)) {
-				case "a": {
-					algorithm = getArgValue(iterator, arg);
-					break;
-				}
-				case "o": {
-					outputFile = Paths.get(getArgValue(iterator, arg));
-					break;
-				}
-				case "fm": {
-					fmFile = Paths.get(getArgValue(iterator, arg));
-					break;
-				}
-				case "t": {
-					t = Integer.parseInt(getArgValue(iterator, arg));
-					break;
-				}
-				case "m": {
-					m = Integer.parseInt(getArgValue(iterator, arg));
-					break;
-				}
-				case "l": {
-					limit = Integer.parseInt(getArgValue(iterator, arg));
-					break;
-				}
-				case "e": {
-					expressionFile = Paths.get(getArgValue(iterator, arg));
-					break;
-				}
-				case "s": {
-					seed = Long.parseLong(getArgValue(iterator, arg));
-					break;
-				}
-				default: {
-					throw new IllegalArgumentException(arg);
-				}
-				}
-			} else {
-				throw new IllegalArgumentException(arg);
-			}
-		}
-	}
-
-	private String getArgValue(final Iterator<String> iterator, final String arg) {
-		if (iterator.hasNext()) {
-			return iterator.next();
-		} else {
-			throw new IllegalArgumentException("No value specified for " + arg);
-		}
 	}
 
 	@Override

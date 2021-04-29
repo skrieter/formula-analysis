@@ -18,13 +18,13 @@ public class MIGBuilder extends MIGBuilder2 implements MonitorableFunction<CNF, 
 		init(cnf);
 		monitor.step();
 
-		if (!getCoreFeatures(cnf, monitor.subTask(10))) {
-			return null;
-		}
+//		if (!getCoreFeatures(cnf, monitor.subTask(10))) {
+//			return null;
+//		}
 
-		addClauses(cnf, monitor.subTask(100));
+//		addClauses(cnf, monitor.subTask(100));
 
-		bfsStrong();
+//		bfsStrong();
 		monitor.step();
 
 		finish();

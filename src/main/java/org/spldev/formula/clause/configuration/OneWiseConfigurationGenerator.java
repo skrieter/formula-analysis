@@ -157,5 +157,5 @@ public class OneWiseConfigurationGenerator extends AConfigurationGenerator imple
 
 		}
 	}
-
+	
 }

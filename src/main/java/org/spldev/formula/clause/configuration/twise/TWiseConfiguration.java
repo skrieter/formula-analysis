@@ -131,9 +131,7 @@ public class TWiseConfiguration extends LiteralList {
 			if (util.hasMig()) {
 				traverser = new Traverser(util.getMig());
 				traverser.setModel(literals);
-
 				visitor = new DefaultVisitor() {
-
 					@Override
 					public VisitResult visitStrong(int curLiteral) {
 						addLiteral(curLiteral);
@@ -147,7 +145,9 @@ public class TWiseConfiguration extends LiteralList {
 		} else {
 			traverser = null;
 			visitor = null;
-			numberOfVariableLiterals = 0;
+//			numberOfVariableLiterals = 0;
+			numberOfVariableLiterals = literals.length - countLiterals;
+			solutionLiterals = new VecInt(numberOfVariableLiterals);
 		}
 	}
 

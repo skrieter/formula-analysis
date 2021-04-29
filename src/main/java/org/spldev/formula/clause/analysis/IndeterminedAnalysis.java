@@ -44,8 +44,8 @@ public class IndeterminedAnalysis extends AVariableAnalysis<LiteralList> {
 		for (final int literal : variables.getLiterals()) {
 			final List<LiteralList> clauses = solver.getCnf().getClauses();
 			for (final LiteralList clause : clauses) {
-				if (clause.containsVariable(literal)) {
-					final LiteralList newClause = clause.clean(literal);
+				if (clause.containsAnyVariable(literal)) {
+					final LiteralList newClause = clause.removeVariables(literal);
 					if (newClause != null) {
 						relevantClauses.add(newClause);
 					}
@@ -86,8 +86,8 @@ public class IndeterminedAnalysis extends AVariableAnalysis<LiteralList> {
 				.getCnf()).orElse(Logger::logProblems);
 			final List<LiteralList> clauses = slicedCNF.getClauses();
 			for (final LiteralList clause : clauses) {
-				if (clause.containsVariable(literal)) {
-					final LiteralList newClause = clause.clean(literal);
+				if (clause.containsAnyVariable(literal)) {
+					final LiteralList newClause = clause.removeVariables(literal);
 					if (newClause != null) {
 						relevantClauses.add(newClause);
 					}

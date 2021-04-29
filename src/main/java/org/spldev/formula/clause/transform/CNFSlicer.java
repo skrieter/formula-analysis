@@ -115,7 +115,7 @@ public class CNFSlicer implements MonitorableFunction<CNF, CNF> {
 		release();
 		final VariableMap slicedVariableMap = orgCNF.getVariableMap().removeIndices(dirtyVariables.getLiterals());
 		final List<LiteralList> slicedClauseList = cleanClauseList.stream()
-			.map(clause -> clause.adapt(orgCNF.getVariableMap(), slicedVariableMap))
+			.map(clause -> clause.adapt(orgCNF.getVariableMap(), slicedVariableMap).get())
 			.collect(Collectors.toList());
 
 		return new CNF(slicedVariableMap, slicedClauseList);

@@ -33,16 +33,6 @@ public abstract class AConditionallyCoreDeadAnalysis extends AbstractAnalysis<Li
 		newCount = 0;
 	}
 
-	public void updateModel(final int[] model1, int[] model2) {
-		for (int i = 0; i < model1.length; i++) {
-			final int x = model1[i];
-			final int y = model2[i];
-			if ((x != 0) && (x != y)) {
-				model1[i] = 0;
-			}
-		}
-	}
-
 	protected static int countNegative(int[] model) {
 		int count = 0;
 		for (int i = 0; i < model.length; i++) {

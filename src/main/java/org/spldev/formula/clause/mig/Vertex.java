@@ -82,4 +82,19 @@ public class Vertex implements Comparable<Vertex> {
 		return literal - other.literal;
 	}
 
+	@Override
+	public String toString() {
+		return String.valueOf(literal);
+	}
+
+	public void finish() {
+		complexClauses = new ArrayList<>(new HashSet<>(complexClauses));
+		stronglyConnetedVertices = new ArrayList<>(new HashSet<>(stronglyConnetedVertices));
+		stronglyConnetedVertices.remove(this);
+		Collections.sort(complexClauses);
+		Collections.sort(stronglyConnetedVertices);
+//		complexClauses.trimToSize();
+//		stronglyConnetedVertices.trimToSize();
+	}
+
 }

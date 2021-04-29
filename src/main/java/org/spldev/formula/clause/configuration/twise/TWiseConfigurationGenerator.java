@@ -1,11 +1,11 @@
 package org.spldev.formula.clause.configuration.twise;
 
-import java.nio.file.*;
 import java.util.*;
 
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.configuration.*;
 import org.spldev.formula.clause.configuration.twise.ICoverStrategy.*;
+import org.spldev.formula.clause.mig.*;
 import org.spldev.formula.clause.solver.*;
 import org.spldev.formula.clause.solver.SatSolver.*;
 import org.spldev.util.data.*;
@@ -72,16 +72,17 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 	private int randomSampleSize = DEFAULT_RANDOM_SAMPLE_SIZE;
 	private int logFrequency = DEFAULT_LOG_FREQUENCY;
 	private boolean useMig = true;
-	private boolean migCheckRedundancy = true;
-	private boolean migDetectStrong = false;
-	private Path migPath = null;
+	private MIG mig;
+//	private boolean migCheckRedundancy = true;
+//	private boolean migDetectStrong = false;
+//	private Path migPath = null;
 	private Deduce createConfigurationDeduce = Deduce.DP;
 	private Deduce extendConfigurationDeduce = Deduce.NONE;
 
 	protected TWiseConfigurationUtil util;
 	protected TWiseCombiner combiner;
 
-	protected final int t;
+	protected int t;
 	protected List<List<ClauseList>> nodes;
 	protected PresenceConditionManager presenceConditionManager;
 
@@ -94,22 +95,19 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 	protected UpdateThread samplingMonitor;
 	protected UpdateThread memoryMonitor;
 
-	public TWiseConfigurationGenerator(int t) {
-		this(t, Integer.MAX_VALUE);
+	public int getT() {
+		return t;
 	}
 
-	public TWiseConfigurationGenerator(int t, int maxSampleSize) {
-		super(maxSampleSize);
+	public void setT(int t) {
 		this.t = t;
 	}
 
-	public TWiseConfigurationGenerator(List<List<ClauseList>> nodes, int t) {
-		this(nodes, t, Integer.MAX_VALUE);
+	public List<List<ClauseList>> getNodes() {
+		return nodes;
 	}
 
-	public TWiseConfigurationGenerator(List<List<ClauseList>> nodes, int t, int maxSampleSize) {
-		super(maxSampleSize);
-		this.t = t;
+	public void setNodes(List<List<ClauseList>> nodes) {
 		this.nodes = nodes;
 	}
 
@@ -134,12 +132,15 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 		if (TWiseConfigurationGenerator.VERBOSE) {
 			System.out.println("Compute random sample... ");
 		}
-		util.computeRandomSample(randomSampleSize);
-		if (useMig && !util.getCnf().getClauses().isEmpty()) {
-			if (migPath != null) {
-				util.computeMIG(migPath);
-			} else {
-				util.computeMIG(migCheckRedundancy, migDetectStrong);
+
+		if (!cnf.getClauses().isEmpty()) {
+			util.computeRandomSample(randomSampleSize);
+			if (useMig) {
+				if (mig != null) {
+					util.setMIG(mig);
+				} else {
+					util.computeMIG(false, false);
+				}
 			}
 		}
 
@@ -376,28 +377,40 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 		this.useMig = useMig;
 	}
 
-	public Path getMigPath() {
-		return migPath;
+	public void setMIG(MIG mig) {
+		this.mig = mig;
 	}
 
-	public void setMigPath(Path migPath) {
-		this.migPath = migPath;
+//	public Path getMigPath() {
+//		return migPath;
+//	}
+//
+//	public void setMigPath(Path migPath) {
+//		this.migPath = migPath;
+//	}
+//
+//	public boolean isMigCheckRedundancy() {
+//		return migCheckRedundancy;
+//	}
+//
+//	public void setMigCheckRedundancy(boolean migCheckRedundancy) {
+//		this.migCheckRedundancy = migCheckRedundancy;
+//	}
+//
+//	public boolean isMigDetectStrong() {
+//		return migDetectStrong;
+//	}
+//
+//	public void setMigDetectStrong(boolean migDetectStrong) {
+//		this.migDetectStrong = migDetectStrong;
+//	}
+
+	public MIG getMig() {
+		return mig;
 	}
 
-	public boolean isMigCheckRedundancy() {
-		return migCheckRedundancy;
-	}
-
-	public void setMigCheckRedundancy(boolean migCheckRedundancy) {
-		this.migCheckRedundancy = migCheckRedundancy;
-	}
-
-	public boolean isMigDetectStrong() {
-		return migDetectStrong;
-	}
-
-	public void setMigDetectStrong(boolean migDetectStrong) {
-		this.migDetectStrong = migDetectStrong;
+	public void setMig(MIG mig) {
+		this.mig = mig;
 	}
 
 	public int getLogFrequency() {

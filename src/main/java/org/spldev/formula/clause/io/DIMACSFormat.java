@@ -1,7 +1,7 @@
 package org.spldev.formula.clause.io;
 
 import java.io.*;
-import java.text.*;
+import java.text.ParseException;
 
 import org.spldev.formula.clause.*;
 import org.spldev.util.*;

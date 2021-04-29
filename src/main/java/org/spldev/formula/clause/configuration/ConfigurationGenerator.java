@@ -11,8 +11,8 @@ import org.spldev.formula.clause.analysis.*;
  *
  * @author Sebastian Krieter
  */
-public interface IConfigurationGenerator extends Analysis<List<LiteralList>> {
+public interface ConfigurationGenerator extends Analysis<List<LiteralList>> {
 
 	LinkedBlockingQueue<LiteralList> getResultQueue();
-
+	
 }

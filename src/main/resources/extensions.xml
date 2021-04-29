@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<extensions>
+	<point id="org.spldev.util.cli.CLIFunctionManager">
+	    <extension id="org.spldev.formula.clause.cli.ConfigurationGenerator" />
+	</point>
+	<point id="org.spldev.formula.clause.cli.ConfigurationGenerator">
+	    <extension id="org.spldev.formula.clause.cli.AllAlgorithm" />
+	    <extension id="org.spldev.formula.clause.cli.EnumeratingAlgorithm" />
+	    <extension id="org.spldev.formula.clause.cli.OneWiseAlgorithm" />
+	    <extension id="org.spldev.formula.clause.cli.PairWiseAlgorithm" />
+	    <extension id="org.spldev.formula.clause.cli.TWiseAlgorithm" />
+	    <extension id="org.spldev.formula.clause.cli.RandomAlgorithm" />
+	    <extension id="org.spldev.formula.clause.cli.UniformaRandomAlgorithm" />
+	</point>
+</extensions>

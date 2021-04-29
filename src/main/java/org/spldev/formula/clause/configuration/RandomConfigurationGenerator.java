@@ -23,10 +23,6 @@ public class RandomConfigurationGenerator extends ARandomConfigurationGenerator 
 		return identifier;
 	}
 
-	public RandomConfigurationGenerator(int maxNumber) {
-		super(maxNumber);
-	}
-
 	@Override
 	protected void generate(SatSolver solver, InternalMonitor monitor) throws Exception {
 		monitor.setTotalWork(maxSampleSize);
@@ -50,5 +46,5 @@ public class RandomConfigurationGenerator extends ARandomConfigurationGenerator 
 			}
 		}
 	}
-
+	
 }

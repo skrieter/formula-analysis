@@ -15,20 +15,19 @@ import org.spldev.util.logging.*;
  * @author Sebastian Krieter
  */
 public abstract class AConfigurationGenerator extends AbstractAnalysis<List<LiteralList>> implements
-	IConfigurationGenerator {
+	ConfigurationGenerator {
 
-	protected final int maxSampleSize;
+	protected int maxSampleSize = Integer.MAX_VALUE;
 
 	private final List<LiteralList> resultList = new ArrayList<>();
 	private final LinkedBlockingQueue<LiteralList> resultQueue = new LinkedBlockingQueue<>();
 
-	public AConfigurationGenerator() {
-		this(Integer.MAX_VALUE);
+	public int getLmit() {
+		return maxSampleSize;
 	}
 
-	public AConfigurationGenerator(int maxSampleSize) {
-		super();
-		this.maxSampleSize = maxSampleSize;
+	public void setLimit(int limit) {
+		this.maxSampleSize = limit;
 	}
 
 	@Override

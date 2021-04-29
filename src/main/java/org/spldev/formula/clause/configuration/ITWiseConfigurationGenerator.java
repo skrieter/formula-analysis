@@ -5,7 +5,7 @@ package org.spldev.formula.clause.configuration;
  *
  * @author Sebastian Krieter
  */
-public interface ITWiseConfigurationGenerator extends IConfigurationGenerator {
+public interface ITWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	enum Deduce {
 		DP, AC, NONE
