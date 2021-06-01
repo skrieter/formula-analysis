@@ -1,3 +1,25 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.configuration.twise;
 
 import java.util.*;
@@ -52,7 +74,7 @@ public class TWiseConfiguration extends LiteralList {
 			if (unkownValues == null) {
 				final SatSolver solver = util.getSolver();
 				setUpSolver(solver);
-				solver.setSelectionStrategy(SelectionStrategy.POSITIVE);
+				solver.setSelectionStrategy(SStrategy.positive());
 				switch (solver.hasSolution()) {
 				case FALSE:
 					return VisitResult.Cancel;
@@ -66,12 +88,12 @@ public class TWiseConfiguration extends LiteralList {
 					throw new RuntimeException();
 				}
 				if (unkownValues != null) {
-					solver.setSelectionStrategy(SelectionStrategy.NEGATIVE);
+					solver.setSelectionStrategy(SStrategy.negative());
 					final int[] model2 = solver.findSolution();
 					util.addSolverSolution(model2);
 
 					LiteralList.resetConflicts(unkownValues, model2);
-					solver.setSelectionStrategy(unkownValues, true);
+					solver.setSelectionStrategy(SStrategy.reversed(unkownValues));
 
 					final int[] literals = TWiseConfiguration.this.literals;
 					for (int k = 0; k < literals.length; k++) {
@@ -250,10 +272,10 @@ public class TWiseConfiguration extends LiteralList {
 			final SatSolver solver = util.getSolver();
 			final int orgAssignmentSize = setUpSolver(solver);
 
-			solver.setSelectionStrategy(SelectionStrategy.NEGATIVE);
+			solver.setSelectionStrategy(SStrategy.negative());
 			final int[] firstSolution = solver.findSolution();
 			if (firstSolution != null) {
-				solver.setSelectionStrategy(SelectionStrategy.POSITIVE);
+				solver.setSelectionStrategy(SStrategy.positive());
 				final int[] secondSolution = util.getSolver().findSolution();
 				LiteralList.resetConflicts(firstSolution, secondSolution);
 
@@ -382,7 +404,7 @@ public class TWiseConfiguration extends LiteralList {
 
 	public void generateRandomSolutions(int count) {
 		final SatSolver solver = util.getSolver();
-		solver.setSelectionStrategy(SelectionStrategy.RANDOM);
+		solver.setSelectionStrategy(SStrategy.random());
 		final int orgAssignmentSize = setUpSolver(solver);
 		try {
 			for (int i = 0; i < count; i++) {
@@ -396,7 +418,7 @@ public class TWiseConfiguration extends LiteralList {
 
 	public boolean isValid() {
 		final SatSolver solver = util.getSolver();
-		solver.setSelectionStrategy(SelectionStrategy.RANDOM);
+		solver.setSelectionStrategy(SStrategy.random());
 		final int orgAssignmentSize = setUpSolver(solver);
 		try {
 			final SatResult satResult = solver.hasSolution();

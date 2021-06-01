@@ -1,9 +1,34 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.solver;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
 
-import org.sat4j.specs.*;
-import org.spldev.formula.clause.*;
+import org.sat4j.specs.IConstr;
+import org.spldev.formula.clause.CNF;
+import org.spldev.formula.clause.LiteralList;
 
 /**
  * Finds certain solutions of propositional formulas.
@@ -13,10 +38,6 @@ import org.spldev.formula.clause.*;
 public interface SatSolver {
 
 	int MAX_SOLUTION_BUFFER = 1000;
-
-	public enum SelectionStrategy {
-		NEGATIVE, ORG, POSITIVE, RANDOM, UNIFORM_RANDOM, FIXED
-	}
 
 	/**
 	 * Possible outcomes of a satisfiability solver call.<br>
@@ -163,15 +184,9 @@ public interface SatSolver {
 
 	void shuffleOrder(Random rnd);
 
-	SelectionStrategy getSelectionStrategy();
+	SStrategy<?> getSelectionStrategy();
 
-	void setSelectionStrategy(SelectionStrategy strategy);
-
-	void setSelectionStrategy(int[] model, boolean min);
-
-	void setSelectionStrategy(int[] model, boolean min, boolean inverse);
-
-	void setSelectionStrategy(List<LiteralList> sample);
+	void setSelectionStrategy(SStrategy<?> strategy);
 
 	void assignmentPop();
 

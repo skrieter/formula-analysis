@@ -1,466 +1,395 @@
-//package org.spldev.formula.clause.mig;
-//
-//import java.util.*;
-//import java.util.stream.*;
-//
-//import org.sat4j.core.*;
-//import org.spldev.formula.*;
-//import org.spldev.formula.clause.*;
-//import org.spldev.formula.clause.LiteralList.*;
-//import org.spldev.formula.clause.mig.Vertex.*;
-//import org.spldev.formula.clause.solver.*;
-//import org.spldev.util.job.*;
-//import org.spldev.util.logging.*;
-//
-//public class IncrementalMIGBuilder extends MIGBuilder2 implements MonitorableFunction<CNF, MIG> {
-//
-//	private final Random random = new Random(112358);
-//	private final CNF oldCNF;
-//	private final MIG oldMig;
-//
-//	private SatSolver solver;
-//	private int[] fixedFeatures;
-//
-//	public IncrementalMIGBuilder(MIG oldMig) {
-//		this.oldMig = oldMig;
-//		oldCNF = oldMig.getCnf();
-//	}
-//
-//	@Override
-//	public MIG execute(CNF cnf, InternalMonitor monitor) throws Exception {
-//		Objects.requireNonNull(oldCNF);
-//		Objects.requireNonNull(oldMig);
-////		monitor.setTotalWork(113);
-//
-//		init(cnf);
-//		monitor.step();
-//
-//		long start, end;
-//		start = System.nanoTime();
-//
-//		final Set<String> allVariables = new HashSet<>(oldCNF.getVariableMap().getNames());
-//		allVariables.addAll(cnf.getVariableMap().getNames());
-//		final VariableMap variables = new VariableMap(allVariables);
-//
-//		final HashSet<LiteralList> adaptedNewClauses = cnf.getClauses().stream()
-//			.map(c -> c.adapt(cnf.getVariableMap(), variables))
-//			.peek(c -> c.setOrder(Order.NATURAL))
-//			.collect(Collectors.toCollection(HashSet::new));
-//
-//		final HashSet<LiteralList> adaptedOldClauses = oldCNF.getClauses().stream()
-//			.map(c -> c.adapt(oldCNF.getVariableMap(), variables))
-//			.peek(c -> c.setOrder(Order.NATURAL))
-//			.collect(Collectors.toCollection(HashSet::new));
-//
-//		final HashSet<LiteralList> addedClauses = adaptedNewClauses.stream()
-//			.filter(c -> !adaptedOldClauses.contains(c))
-//			.collect(Collectors.toCollection(HashSet::new));
-//		final HashSet<LiteralList> removedClauses = adaptedOldClauses.stream()
-//			.filter(c -> !adaptedNewClauses.contains(c))
-//			.collect(Collectors.toCollection(HashSet::new));
-//
-//		end = System.nanoTime();
-//		Logger.logInfo("Collect: " + (((end - start) / 1_000_000) / 1_000.0));
-//
-//		if (addedClauses.isEmpty()) {
-//			if (removedClauses.isEmpty()) {
-//				// Unchanged
-//				if (checkRedundancy) {
-//					final HashSet<LiteralList> redundantClauses = getOldRedundantClauses(variables);
-//
-//					cnf.getClauses().stream()
-//						.map(c -> cleanClause(c, mig))
-//						.filter(Objects::nonNull)
-//						.distinct()
-//						.map(c -> c.adapt(cnf.getVariableMap(), variables))
-//						.peek(c -> c.setOrder(Order.NATURAL))
-//						.filter(c -> (c.size() <= 2) || !redundantClauses.contains(c))
-//						.map(c -> c.adapt(variables, cnf.getVariableMap()))
-//						.forEach(mig::addClause);
-//				} else {
-//					addAllClauses(cnf);
-//				}
-//				getOldCoreLiterals(cnf);
-//			} else {
-//				// Removed
-//				if (!satCheck(cnf)) {
-//					return null;
-//				}
-//
-//				final int[] coreDead = getOldCoreLiterals(cnf);
-//				checkOldCoreLiterals(coreDead);
-//
-//				if (checkRedundancy) {
-//					final HashSet<LiteralList> redundantClauses = getOldRedundantClauses(variables);
-//
-//					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
-//					cnf.getClauses().stream()
-//						.map(c -> cleanClause(c, mig))
-//						.filter(Objects::nonNull)
-//						.map(c -> c.adapt(cnf.getVariableMap(), variables))
-//						.distinct()
-//						.sorted(lengthComparator)
-//						.peek(c -> c.setOrder(Order.NATURAL))
-//						.filter(c -> (c.size() <= 2)
-//							|| !redundantClauses.contains(c)
-//							|| !isRedundant(redundancySolver, c))
-//						.peek(redundancySolver::addClause)
-//						.map(c -> c.adapt(variables, cnf.getVariableMap()))
-//						.forEach(mig::addClause);
-//				} else {
-//					addAllClauses(cnf);
-//				}
-//			}
-//		} else {
-//			if (removedClauses.isEmpty()) {
-//				// Added
-//				if (!satCheck(cnf)) {
-//					return null;
-//				}
-//
-//				final int[] coreDead = getOldCoreLiterals(cnf);
-//				for (final int literal : coreDead) {
-//					solver.assignmentPush(literal);
-//					fixedFeatures[Math.abs(literal) - 1] = 0;
-//				}
-//				findNewCoreLiterals();
-//
-//				if (checkRedundancy) {
-//					final HashSet<LiteralList> redundantClauses = getOldRedundantClauses(variables);
-//
-//					final int[] affectedLiterals = addedClauses.stream()
-//						.flatMapToInt(c -> IntStream.of(c.getLiterals()))
-//						.distinct()
-//						.toArray();
-//					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
-//					cnf.getClauses().stream()
-//						.peek(c -> c.setOrder(Order.NATURAL))
-//						.map(c -> cleanClause(c, mig))
-//						.filter(Objects::nonNull)
-//						.map(c -> c.adapt(cnf.getVariableMap(), variables))
-//						.distinct()
-//						.sorted(lengthComparator)
-//						.peek(c -> c.setOrder(Order.NATURAL))
-//						.filter(c -> (c.size() <= 2)
-//							|| (!redundantClauses.contains(c)
-//								&& (!c.containsAnyLiteral(affectedLiterals)
-//									|| !isRedundant(redundancySolver, c))))
-//						.peek(redundancySolver::addClause)
-//						.map(c -> c.adapt(variables, cnf.getVariableMap()))
-//						.forEach(mig::addClause);
-//				} else {
-//					addAllClauses(cnf);
-//				}
-//			} else {
-//				// Replaced
-//				if (!satCheck(cnf)) {
-//					return null;
-//				}
-//				final int[] coreDead = getOldCoreLiterals(cnf);
-//				checkOldCoreLiterals(coreDead);
-//				for (final int literal : coreDead) {
-//					fixedFeatures[Math.abs(literal) - 1] = 0;
-//				}
-//				findNewCoreLiterals();
-//
-//				start = System.nanoTime();
-//				if (checkRedundancy) {
-//					final HashSet<LiteralList> redundantClauses = getOldRedundantClauses(variables);
-//
-//					final int[] affectedLiterals = addedClauses.stream()
-//						.flatMapToInt(c -> IntStream.of(c.getLiterals()))
-//						.distinct()
-//						.toArray();
-//					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
-//					cnf.getClauses().stream()
-//						.map(c -> cleanClause(c, mig))
-//						.filter(Objects::nonNull)
-//						.map(c -> c.adapt(cnf.getVariableMap(), variables))
-//						.distinct()
-//						.sorted(lengthComparator)
-//						.peek(c -> c.setOrder(Order.NATURAL))
-//						.filter(c -> {
-//							if (c.size() <= 2) {
-//								return true;
-//							}
-//							if (redundantClauses.contains(c)) {
-//								return !isRedundant(redundancySolver, c);
-//							} else {
-//								return !c.containsAnyLiteral(affectedLiterals) || !isRedundant(redundancySolver, c);
-//							}
-//						})
-//						.peek(redundancySolver::addClause)
-//						.map(c -> c.adapt(variables, cnf.getVariableMap()))
-//						.forEach(mig::addClause);
-//				} else {
-//					addAllClauses(cnf);
-//				}
-//
-//				end = System.nanoTime();
-//				Logger.logInfo("Add Clauses: " + (((end - start) / 1_000_000) / 1_000.0));
-//			}
-//		}
-//		start = System.nanoTime();
-//		bfsStrong();
-//		monitor.step();
-//		end = System.nanoTime();
-//		Logger.logInfo("bfs: " + (((end - start) / 1_000_000) / 1_000.0));
-//
-//		start = System.nanoTime();
-//		finish();
-//		monitor.step();
-//		end = System.nanoTime();
-//		Logger.logInfo("finish: " + (((end - start) / 1_000_000) / 1_000.0));
-//
-//		return mig;
-//	}
-//
-//	private void addAllClauses(CNF cnf) {
-//		cnf.getClauses().stream()
-//			.map(c -> cleanClause(c, mig))
-//			.filter(Objects::nonNull)
-//			.forEach(mig::addClause);
-//	}
-//
-//	private int[] getOldCoreLiterals(CNF cnf) {
-//		final long start = System.nanoTime();
-//		final int[] array = oldMig.getVertices().stream()
-//			.filter(v -> v.getStatus() == Status.Core)
-//			.mapToInt(v -> v.getVar())
-//			.map(l -> Clauses.adapt(l, oldCNF.getVariableMap(), cnf.getVariableMap()))
-//			.filter(l -> l != 0)
-//			.peek(l -> {
-//				mig.getVertex(l).setStatus(Status.Core);
-//				mig.getVertex(-l).setStatus(Status.Dead);
-//			})
-//			.toArray();
-//		final long end = System.nanoTime();
-//		Logger.logInfo("getOldCore: " + (((end - start) / 1_000_000) / 1_000.0));
-//		return array;
-//	}
-//
-//	private HashSet<LiteralList> getOldRedundantClauses(VariableMap variables) {
-//		final Set<LiteralList> oldMigClauses = oldMig.getVertices().stream()
-//			.flatMap(v -> v.getComplexClauses().stream())
-//			.collect(Collectors.toCollection(HashSet::new));
-//		return oldCNF.getClauses().stream()
-//			.map(c -> cleanClause(c, oldMig))
-//			.filter(Objects::nonNull)
-//			.filter(c -> c.size() > 2)
-//			.filter(c -> !oldMigClauses.contains(c))
-//			.map(c -> c.adapt(oldCNF.getVariableMap(), variables))
-//			.peek(c -> c.setOrder(Order.NATURAL))
-//			.collect(Collectors.toCollection(HashSet::new));
-//	}
-//
-//	protected boolean satCheck(CNF cnf) {
-//		final long start = System.nanoTime();
-//
-//		solver = new Sat4JSolver(cnf);
-//		solver.rememberSolutionHistory(0);
-//		fixedFeatures = solver.findSolution();
-//
-//		final long end = System.nanoTime();
-//		Logger.logInfo("Sat: " + (((end - start) / 1_000_000) / 1_000.0));
-//
-//		return fixedFeatures != null;
-//	}
-//
-//	// For removed clauses
-//	protected void checkOldCoreLiterals(int[] coreDead) {
-//		final long start = System.nanoTime();
-//		checkOldCoreLiterals2(coreDead);
-//		final long end = System.nanoTime();
-//		Logger.logInfo("checkOldCoreLiterals: " + (((end - start) / 1_000_000) / 1_000.0));
-//
-//	}
-//
-//	// For added clauses
-//	protected void findNewCoreLiterals() {
-//		final long start = System.nanoTime();
-//		findNewCoreLiterals1();
-//		final long end = System.nanoTime();
-//		Logger.logInfo("findNewCoreLiterals: " + (((end - start) / 1_000_000) / 1_000.0));
-//	}
-//
-//	protected void findNewCoreLiterals1() {
-//		solver.setSelectionStrategy(fixedFeatures, true, true);
-//		for (final int varX : fixedFeatures) {
-//			if (varX != 0) {
-//				solver.assignmentPush(-varX);
-//				switch (solver.hasSolution()) {
-//				case FALSE:
-//					solver.assignmentReplaceLast(varX);
-//					mig.getVertex(-varX).setStatus(Status.Dead);
-//					mig.getVertex(varX).setStatus(Status.Core);
-//					break;
-//				case TIMEOUT:
-//					solver.assignmentPop();
-//					break;
-//				case TRUE:
-//					solver.assignmentPop();
-//					LiteralList.resetConflicts(fixedFeatures, solver.getSolution());
-//					solver.shuffleOrder(random);
-//					break;
-//				}
-//			}
-//		}
-//	}
-//
-//	private void findNewCoreLiterals2() {
-//		solver.setSelectionStrategy(fixedFeatures, true, true);
-//		split(fixedFeatures, 0, fixedFeatures.length, 0);
-//	}
-//
-//	private void split(int[] model, int start, int end, int depth) {
-//		final VecInt vars = new VecInt(end - start);
-//		for (int j = start; j < end; j++) {
-//			final int var = model[j];
-//			if (var != 0) {
-//				vars.push(-var);
-//			}
-//		}
-//		if ((vars.size() <= 4) || (depth > 100)) {
-//			for (int j = start; j < end; j++) {
-//				final int varX = model[j];
-//				if (varX != 0) {
-//					solver.assignmentPush(-varX);
-//					switch (solver.hasSolution()) {
-//					case FALSE:
-//						solver.assignmentReplaceLast(varX);
-//						mig.getVertex(-varX).setStatus(Status.Dead);
-//						mig.getVertex(varX).setStatus(Status.Core);
-//						break;
-//					case TIMEOUT:
-//						solver.assignmentPop();
-//						break;
-//					case TRUE:
-//						solver.assignmentPop();
-//						LiteralList.resetConflicts(model, solver.getSolution());
-//						solver.shuffleOrder(random);
-//						break;
-//					}
-//				}
-//			}
-//		} else {
-//			final LiteralList mainClause = new LiteralList(Arrays.copyOf(vars.toArray(), vars.size()), Order.UNORDERED);
-//			switch (solver.hasSolution(mainClause)) {
-//			case FALSE:
-//				final int halfLength = (end - start) >> 1;
-//				split(model, start + halfLength, end, depth + 1);
-//				split(model, start, start + halfLength, depth + 1);
-//				break;
-//			case TIMEOUT:
-//				break;
-//			case TRUE:
-//				LiteralList.resetConflicts(model, solver.getSolution());
-//				solver.shuffleOrder(random);
-//				break;
-//			}
-//		}
-//	}
-//
-//	private void checkOldCoreLiterals1(int[] coreDead) {
-//		solver.setSelectionStrategy(fixedFeatures, true, true);
-//		for (final int literal : coreDead) {
-//			final int varX = fixedFeatures[Math.abs(literal) - 1];
-//			if (varX == -literal) {
-//				fixedFeatures[Math.abs(literal) - 1] = 0;
-//				mig.getVertex(-varX).setStatus(Status.Normal);
-//				mig.getVertex(varX).setStatus(Status.Normal);
-//			} else if (varX == 0) {
-//				mig.getVertex(-literal).setStatus(Status.Normal);
-//				mig.getVertex(literal).setStatus(Status.Normal);
-//			} else {
-//				solver.assignmentPush(-varX);
-//				switch (solver.hasSolution()) {
-//				case FALSE:
-//					solver.assignmentReplaceLast(varX);
-//					break;
-//				case TIMEOUT:
-//					solver.assignmentPop();
-//					mig.getVertex(-varX).setStatus(Status.Normal);
-//					mig.getVertex(varX).setStatus(Status.Normal);
-//					break;
-//				case TRUE:
-//					solver.assignmentPop();
-//					mig.getVertex(-varX).setStatus(Status.Normal);
-//					mig.getVertex(varX).setStatus(Status.Normal);
-//					LiteralList.resetConflicts(fixedFeatures, solver.getSolution());
-//					solver.shuffleOrder(random);
-//					break;
-//				}
-//			}
-//		}
-//	}
-//
-//	protected void checkOldCoreLiterals2(int[] coreDead) {
-//		solver.setSelectionStrategy(fixedFeatures, true, false);
-//		final int[] negCoreDead = new int[coreDead.length];
-//		for (int i = 0; i < coreDead.length; i++) {
-//			negCoreDead[i] = -coreDead[i];
-//		}
-//		checkOldCoreLiteralsRec(negCoreDead, 0);
-//	}
-//
-//	protected void checkOldCoreLiteralsRec(int[] coreDead, int depth) {
-//		if ((coreDead.length <= 4) || (depth > 4)) {
-//			for (final int literal : coreDead) {
-//				final int varX = fixedFeatures[Math.abs(literal) - 1];
-//				if (varX == literal) {
-//					fixedFeatures[Math.abs(literal) - 1] = 0;
-//					mig.getVertex(-literal).setStatus(Status.Normal);
-//					mig.getVertex(literal).setStatus(Status.Normal);
-//				} else if (varX == 0) {
-//					mig.getVertex(-literal).setStatus(Status.Normal);
-//					mig.getVertex(literal).setStatus(Status.Normal);
-//				} else {
-//					solver.assignmentPush(-varX);
-//					switch (solver.hasSolution()) {
-//					case FALSE:
-//						solver.assignmentReplaceLast(varX);
-//						break;
-//					case TIMEOUT:
-//						solver.assignmentPop();
-//						mig.getVertex(-varX).setStatus(Status.Normal);
-//						mig.getVertex(varX).setStatus(Status.Normal);
-//						break;
-//					case TRUE:
-//						solver.assignmentPop();
-//						mig.getVertex(-varX).setStatus(Status.Normal);
-//						mig.getVertex(varX).setStatus(Status.Normal);
-//						LiteralList.resetConflicts(fixedFeatures, solver.getSolution());
-//						solver.shuffleOrder(random);
-//						break;
-//					}
-//				}
-//			}
-//		} else {
-//			try {
-//				solver.addClause(new LiteralList(coreDead, Order.UNORDERED));
-//				switch (solver.hasSolution()) {
-//				case FALSE:
-//					solver.removeLastClause();
-//					for (final int literal : coreDead) {
-//						solver.assignmentPush(-literal);
-//					}
-//					break;
-//				case TIMEOUT:
-//					solver.removeLastClause();
-//					break;
-//				case TRUE:
-//					solver.removeLastClause();
-//					final int half = coreDead.length >> 1;
-//					checkOldCoreLiteralsRec(Arrays.copyOfRange(coreDead, 0, half), depth + 1);
-//					checkOldCoreLiteralsRec(Arrays.copyOfRange(coreDead, half, coreDead.length), depth + 1);
-//					break;
-//				}
-//			} catch (final RuntimeContradictionException e) {
-//				for (final int literal : coreDead) {
-//					solver.assignmentPush(-literal);
-//				}
-//			}
-//		}
-//	}
-//
-//}
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
+package org.spldev.formula.clause.mig;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import org.spldev.formula.VariableMap;
+import org.spldev.formula.clause.CNF;
+import org.spldev.formula.clause.Clauses;
+import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.LiteralList.Order;
+import org.spldev.formula.clause.mig.MIG.BuildStatus;
+import org.spldev.formula.clause.mig.Vertex.Status;
+import org.spldev.formula.clause.solver.RuntimeContradictionException;
+import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.formula.clause.solver.Sat4JSolver;
+import org.spldev.util.job.InternalMonitor;
+
+public class IncrementalMIGBuilder extends MIGBuilder {
+
+	private static enum Changes {
+		UNCHANGED, ADDED, REMOVED, REPLACED
+	}
+
+	private final MIG oldMig;
+
+	private boolean add = false;
+
+	private Changes changes;
+	private HashSet<LiteralList> addedClauses;
+	private VariableMap variables;
+
+	public IncrementalMIGBuilder(MIG oldMig) {
+		this.oldMig = oldMig;
+	}
+
+	@Override
+	public MIG execute(CNF cnf, InternalMonitor monitor) throws Exception {
+		Objects.requireNonNull(cnf);
+		Objects.requireNonNull(oldMig);
+
+		collect(cnf);
+		monitor.step();
+
+		if (!satCheck(cnf)) {
+			throw new RuntimeContradictionException("CNF is not satisfiable!");
+		}
+		monitor.step();
+		core(cnf, monitor);
+		monitor.step();
+
+		cleanClauses();
+		monitor.step();
+
+		if (detectStrong) {
+			checkOldStrong();
+
+			if (add) {
+				addClauses(cnf, false, monitor.subTask(10));
+
+				bfsStrong(monitor.subTask(10));
+
+				final LiteralList affectedVariables = new LiteralList(addedClauses.stream() //
+						.map(c -> c.adapt(variables, cnf.getVariableMap()).get()) //
+						.flatMapToInt(c -> IntStream.of(c.getLiterals())) //
+						.map(Math::abs) //
+						.distinct() //
+						.toArray(), //
+						Order.NATURAL);
+				bfsWeak(affectedVariables, monitor.subTask(1000));
+			}
+			mig.setStrongStatus(BuildStatus.Incremental);
+		} else {
+			mig.setStrongStatus(BuildStatus.None);
+		}
+
+		add(cnf, checkRedundancy, addedClauses);
+
+		bfsStrong(monitor);
+		monitor.step();
+
+		finish();
+		monitor.step();
+		return mig;
+	}
+
+	public static double getChangeRatio(CNF cnf1, CNF cnf2) {
+		final Set<String> allVariables = new HashSet<>(cnf2.getVariableMap().getNames());
+		allVariables.addAll(cnf1.getVariableMap().getNames());
+		VariableMap variables = new VariableMap(allVariables);
+
+		final HashSet<LiteralList> adaptedNewClauses = cnf1.getClauses().stream()
+				.map(c -> c.adapt(cnf1.getVariableMap(), variables).get()) //
+				.peek(c -> c.setOrder(Order.NATURAL)).collect(Collectors.toCollection(HashSet::new));
+
+		final HashSet<LiteralList> adaptedOldClauses = cnf2.getClauses().stream() //
+				.map(c -> c.adapt(cnf2.getVariableMap(), variables).get()) //
+				.peek(c -> c.setOrder(Order.NATURAL)) //
+				.collect(Collectors.toCollection(HashSet::new));
+
+		final HashSet<LiteralList> addedClauses = adaptedNewClauses.stream() //
+				.filter(c -> !adaptedOldClauses.contains(c)) //
+				.collect(Collectors.toCollection(HashSet::new));
+		final HashSet<LiteralList> removedClauses = adaptedOldClauses.stream() //
+				.filter(c -> !adaptedNewClauses.contains(c)) //
+				.collect(Collectors.toCollection(HashSet::new));
+
+		HashSet<LiteralList> allClauses = new HashSet<>(adaptedNewClauses);
+		allClauses.addAll(adaptedOldClauses);
+		return (addedClauses.size() + removedClauses.size()) / (double) allClauses.size();
+	}
+
+	private void collect(CNF cnf) {
+		init(cnf);
+
+		final CNF oldCnf = oldMig.getCnf();
+		final Set<String> allVariables = new HashSet<>(oldCnf.getVariableMap().getNames());
+		allVariables.addAll(cnf.getVariableMap().getNames());
+		variables = new VariableMap(allVariables);
+
+		final HashSet<LiteralList> adaptedNewClauses = cnf.getClauses().stream()
+				.map(c -> c.adapt(cnf.getVariableMap(), variables).get()) //
+				.peek(c -> c.setOrder(Order.NATURAL)).collect(Collectors.toCollection(HashSet::new));
+
+		final HashSet<LiteralList> adaptedOldClauses = oldCnf.getClauses().stream() //
+				.map(c -> c.adapt(oldCnf.getVariableMap(), variables).get()) //
+				.peek(c -> c.setOrder(Order.NATURAL)) //
+				.collect(Collectors.toCollection(HashSet::new));
+
+		addedClauses = adaptedNewClauses.stream() //
+				.filter(c -> !adaptedOldClauses.contains(c)) //
+				.collect(Collectors.toCollection(HashSet::new));
+		final HashSet<LiteralList> removedClauses = adaptedOldClauses.stream() //
+				.filter(c -> !adaptedNewClauses.contains(c)) //
+				.collect(Collectors.toCollection(HashSet::new));
+
+		changes = addedClauses.isEmpty() ? removedClauses.isEmpty() ? Changes.UNCHANGED : Changes.REMOVED
+				: removedClauses.isEmpty() ? Changes.ADDED : Changes.REPLACED;
+
+		HashSet<LiteralList> allClauses = new HashSet<>(adaptedNewClauses);
+		allClauses.addAll(adaptedOldClauses);
+//		changeRatio = (addedClauses.size() + removedClauses.size()) / (double) allClauses.size();
+	}
+
+	private void core(CNF cnf, InternalMonitor monitor) {
+		int[] coreDead = oldMig.getVertices().stream() //
+				.filter(Vertex::isCore) //
+				.mapToInt(Vertex::getVar) //
+				.map(l -> Clauses.adapt(l, oldMig.getCnf().getVariableMap(), cnf.getVariableMap())) //
+				.filter(l -> l != 0) //
+				.peek(l -> {
+					mig.getVertex(l).setStatus(Status.Core);
+					mig.getVertex(-l).setStatus(Status.Dead);
+				}).toArray();
+		switch (changes) {
+		case ADDED:
+			for (int literal : coreDead) {
+				solver.assignmentPush(literal);
+				fixedFeatures[Math.abs(literal) - 1] = 0;
+			}
+			findCoreFeatures(monitor);
+			break;
+		case REMOVED:
+			checkOldCoreLiterals(coreDead);
+			break;
+		case REPLACED:
+			checkOldCoreLiterals(coreDead);
+			for (int literal : coreDead) {
+				fixedFeatures[Math.abs(literal) - 1] = 0;
+			}
+			findCoreFeatures(monitor);
+			break;
+		case UNCHANGED:
+			break;
+		default:
+			throw new IllegalStateException(String.valueOf(changes));
+		}
+	}
+
+	private long add(CNF cnf, boolean checkRedundancy, Collection<LiteralList> addedClauses) {
+		Stream<LiteralList> cnfStream = cleanedClausesList.stream();
+		if (checkRedundancy) {
+			final Set<LiteralList> oldMigClauses = oldMig.getVertices().stream()
+					.flatMap(v -> v.getComplexClauses().stream()).collect(Collectors.toCollection(HashSet::new));
+			final HashSet<LiteralList> redundantClauses = oldMig.getCnf().getClauses().stream()
+					.map(c -> cleanClause(c, oldMig)) //
+					.filter(Objects::nonNull) //
+					.filter(c -> c.size() > 2) //
+					.filter(c -> !oldMigClauses.contains(c)) //
+					.map(c -> c.adapt(oldMig.getCnf().getVariableMap(), variables).get()) //
+					.peek(c -> c.setOrder(Order.NATURAL)) //
+					.collect(Collectors.toCollection(HashSet::new));
+
+			cnfStream = cnfStream //
+					.map(c -> c.adapt(cnf.getVariableMap(), variables).get()) //
+					.peek(c -> c.setOrder(Order.NATURAL));
+
+			switch (changes) {
+			case ADDED: {
+				if (add) {
+					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
+					final int[] affectedVariables = addedClauses.stream()
+							.flatMapToInt(c -> IntStream.of(c.getLiterals())).map(Math::abs).distinct().toArray();
+					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> {
+						if (c.size() < 3) {
+							return true;
+						}
+						if (redundantClauses.contains(c)) {
+							return false;
+						}
+						if (add && c.containsAnyVariable(affectedVariables)) {
+							return !isRedundant(redundancySolver, c);
+						}
+						return true;
+					}).peek(redundancySolver::addClause);
+				} else {
+					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c ->
+						c.size() < 3 || !redundantClauses.contains(c));
+				}
+				mig.setRedundancyStatus(BuildStatus.Incremental);
+				break;
+			}
+			case REMOVED: {
+				final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
+				cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> {
+					if (c.size() < 3) {
+						return true;
+					}
+					if (redundantClauses.contains(c)) {
+						return !isRedundant(redundancySolver, c);
+					}
+					return true;
+				}).peek(redundancySolver::addClause);
+				mig.setRedundancyStatus(mig.getRedundancyStatus());
+				break;
+			}
+			case REPLACED: {
+				if (add) {
+					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
+					final int[] affectedVariables = addedClauses.stream()
+							.flatMapToInt(c -> IntStream.of(c.getLiterals())).map(Math::abs).distinct().toArray();
+					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> {
+						if (c.size() < 3) {
+							return true;
+						}
+						if (redundantClauses.contains(c)) {
+							return !isRedundant(redundancySolver, c);
+						} else {
+							if (c.containsAnyVariable(affectedVariables)) {
+								return !isRedundant(redundancySolver, c);
+							}
+							return true;
+						}
+					}).peek(redundancySolver::addClause);
+				} else {
+					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
+					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> 
+						c.size() < 3 || !redundantClauses.contains(c) || !isRedundant(redundancySolver, c)
+					).peek(redundancySolver::addClause);
+				}
+				mig.setRedundancyStatus(BuildStatus.Incremental);
+				break;
+			}
+			case UNCHANGED: {
+				cnfStream = cnfStream.distinct().filter(c -> c.size() < 3 || !redundantClauses.contains(c));
+				mig.setRedundancyStatus(mig.getRedundancyStatus());
+				break;
+			}
+			default:
+				throw new IllegalStateException(String.valueOf(changes));
+			}
+			cnfStream = cnfStream.map(c -> c.adapt(variables, cnf.getVariableMap()).get())
+					.peek(c -> c.setOrder(Order.NATURAL));
+		} else {
+			cnfStream = cnfStream.distinct();
+			mig.setRedundancyStatus(BuildStatus.None);
+		}
+		return cnfStream.peek(mig::addClause).count();
+	}
+
+	protected void checkOldStrong() {
+		switch (changes) {
+		case REMOVED:
+		case REPLACED:
+			loop: for (LiteralList strongEdge : oldMig.getDetectedStrong()) {
+				final LiteralList adaptClause = strongEdge
+						.adapt(oldMig.getCnf().getVariableMap(), mig.getCnf().getVariableMap()).get();
+				if (adaptClause != null) {
+					final int[] literals = adaptClause.getLiterals();
+					final int l1 = -literals[0];
+					final int l2 = -literals[1];
+					for (LiteralList solution : solver.getSolutionHistory()) {
+						if (solution.containsAllLiterals(l1, l2)) {
+							continue loop;
+						}
+					}
+					solver.assignmentPush(l1);
+					solver.assignmentPush(l2);
+					switch (solver.hasSolution()) {
+					case FALSE:
+						cleanedClausesList.add(adaptClause);
+						mig.getDetectedStrong().add(adaptClause);
+					case TIMEOUT:
+					case TRUE:
+						break;
+					}
+					solver.assignmentPop();
+					solver.assignmentPop();
+				}
+			}
+			break;
+		case ADDED:
+		case UNCHANGED:
+			for (LiteralList strongEdge : oldMig.getDetectedStrong()) {
+				final LiteralList adaptClause = strongEdge
+						.adapt(oldMig.getCnf().getVariableMap(), mig.getCnf().getVariableMap()).get();
+				if (adaptClause != null) {
+					cleanedClausesList.add(adaptClause);
+					mig.getDetectedStrong().add(adaptClause);
+				}
+			}
+			break;
+		default:
+			throw new IllegalStateException(String.valueOf(changes));
+		}
+	}
+
+	protected void checkOldCoreLiterals(int[] coreDead) {
+		solver.setSelectionStrategy(SStrategy.reversed(fixedFeatures));
+		for (int literal : coreDead) {
+			final int varX = fixedFeatures[Math.abs(literal) - 1];
+			if (varX == 0) {
+				mig.getVertex(-literal).setStatus(Status.Normal);
+				mig.getVertex(literal).setStatus(Status.Normal);
+			} else {
+				solver.assignmentPush(-varX);
+				switch (solver.hasSolution()) {
+				case FALSE:
+					solver.assignmentReplaceLast(varX);
+					mig.getVertex(varX).setStatus(Status.Core);
+					mig.getVertex(-varX).setStatus(Status.Dead);
+					break;
+				case TIMEOUT:
+					solver.assignmentPop();
+					fixedFeatures[Math.abs(literal) - 1] = 0;
+					mig.getVertex(-varX).setStatus(Status.Normal);
+					mig.getVertex(varX).setStatus(Status.Normal);
+					break;
+				case TRUE:
+					solver.assignmentPop();
+					mig.getVertex(-varX).setStatus(Status.Normal);
+					mig.getVertex(varX).setStatus(Status.Normal);
+					LiteralList.resetConflicts(fixedFeatures, solver.getSolution());
+					solver.shuffleOrder(random);
+					break;
+				}
+			}
+		}
+	}
+
+	public boolean isAdd() {
+		return add;
+	}
+
+	public void setAdd(boolean add) {
+		this.add = add;
+	}
+
+}

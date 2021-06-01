@@ -1,38 +1,50 @@
-/* FeatureIDE - A Framework for Feature-Oriented Software Development
- * Copyright (C) 2005-2019  FeatureIDE team, University of Magdeburg, Germany
- *
- * This file is part of FeatureIDE.
- *
- * FeatureIDE is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * FeatureIDE is distributed in the hope that it will be useful,
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
  * You should have received a copy of the GNU Lesser General Public License
- * along with FeatureIDE.  If not, see <http://www.gnu.org/licenses/>.
- *
- * See http://featureide.cs.ovgu.de/ for further information.
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
  */
 package org.spldev.formula.clause.cli;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Objects;
 
-import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.configuration.*;
-import org.spldev.formula.clause.io.*;
-import org.spldev.util.*;
-import org.spldev.util.cli.*;
-import org.spldev.util.extension.*;
-import org.spldev.util.io.*;
-import org.spldev.util.job.*;
-import org.spldev.util.logging.*;
+import org.spldev.formula.clause.CNF;
+import org.spldev.formula.clause.Clauses;
+import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.SolutionList;
+import org.spldev.formula.clause.configuration.ConfigurationGenerator;
+import org.spldev.formula.clause.configuration.ConfigurationSampler;
+import org.spldev.formula.clause.io.ConfigurationListFormat;
+import org.spldev.formula.expression.io.DIMACSFormat;
+import org.spldev.util.Result;
+import org.spldev.util.cli.CLI;
+import org.spldev.util.cli.CLIFunction;
+import org.spldev.util.extension.ExtensionPoint;
+import org.spldev.util.io.FileHandler;
+import org.spldev.util.job.Executor;
+import org.spldev.util.logging.Logger;
 
 /**
  * Command line interface for sampling algorithms.
@@ -51,12 +63,14 @@ public class ConfigurationGeneratorCLI extends ExtensionPoint<ConfigurationGener
 		Path outputFile = null;
 		Path fmFile = null;
 		ConfigurationGeneratorAlgorithm algorithm = null;
+		int limit = Integer.MAX_VALUE;
 
 		final List<String> remainingArguments = new ArrayList<>();
 		for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {
 			final String arg = iterator.next();
 			switch (arg) {
 			case "-a": {
+				// TODO add plugin for icpl and chvatal
 				String name = CLI.getArgValue(iterator, arg).toLowerCase();
 				for (ConfigurationGeneratorAlgorithm algExtension : getExtensions()) {
 					if (Objects.equals(name, algExtension.getName())) {
@@ -72,6 +86,9 @@ public class ConfigurationGeneratorCLI extends ExtensionPoint<ConfigurationGener
 				fmFile = Paths.get(CLI.getArgValue(iterator, arg));
 				break;
 			}
+			case "-l":
+				limit = Integer.parseInt(CLI.getArgValue(iterator, arg));
+				break;
 			default: {
 				remainingArguments.add(arg);
 			}
@@ -87,38 +104,23 @@ public class ConfigurationGeneratorCLI extends ExtensionPoint<ConfigurationGener
 		if (algorithm == null) {
 			throw new IllegalArgumentException("No algorithm specified!");
 		}
-		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments).orElse(
-			Logger::logProblems);
+		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments)
+				.orElse(Logger::logProblems);
+		if (generator != null) {
+			ConfigurationSampler sampler = new ConfigurationSampler(generator, limit);
 
-//		IConfigurationGenerator generator = null;
-//		switch (algorithm.toLowerCase()) {
-//		case "icpl": {
-//			if (t == null) {
-//				throw new IllegalArgumentException("Value of t must be specified for icpl (use -t <value>)");
-//			}
-//			generator = new SPLCAToolConfigurationGenerator("ICPL", t, limit);
-//			break;
-//		}
-//		case "chvatal": {
-//			if (t == null) {
-//				throw new IllegalArgumentException("Value of t must be specified for chvatal (use -t <value>)");
-//			}
-//			generator = new SPLCAToolConfigurationGenerator("Chvatal", t, limit);
-//			break;
-//		}
-
-		final CNF cnf = FileHandler.parse(fmFile, new DIMACSFormat())
-			.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
-		final Path out = outputFile;
-		final Result<List<LiteralList>> result = Executor.run(generator, cnf);
-		result.ifPresentOrElse(list -> {
-			try {
-				FileHandler.write(new SolutionList(cnf.getVariableMap(), list), out,
-					new ConfigurationListFormat());
-			} catch (final IOException e) {
-				Logger.logError(e);
-			}
-		}, Logger::logProblems);
+			final CNF cnf = FileHandler.parse(fmFile, new DIMACSFormat()).map(Clauses::convertToCNF)
+					.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
+			final Path out = outputFile;
+			final Result<List<LiteralList>> result = Executor.run(sampler, cnf);
+			result.ifPresentOrElse(list -> {
+				try {
+					FileHandler.serialize(new SolutionList(cnf.getVariableMap(), list), out, new ConfigurationListFormat());
+				} catch (final IOException e) {
+					Logger.logError(e);
+				}
+			}, Logger::logProblems);
+		}
 	}
 
 	@Override

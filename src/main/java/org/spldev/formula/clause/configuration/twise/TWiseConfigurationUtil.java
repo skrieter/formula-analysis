@@ -1,22 +1,61 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.configuration.twise;
 
-import java.nio.file.*;
-import java.util.*;
-import java.util.stream.*;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Stream;
 
-import org.sat4j.core.*;
-import org.spldev.formula.clause.*;
+import org.sat4j.core.VecInt;
+import org.spldev.formula.clause.CNF;
+import org.spldev.formula.clause.ClauseList;
+import org.spldev.formula.clause.LiteralList;
 import org.spldev.formula.clause.LiteralList.Order;
-import org.spldev.formula.clause.configuration.*;
-import org.spldev.formula.clause.configuration.ITWiseConfigurationGenerator.*;
-import org.spldev.formula.clause.mig.*;
-import org.spldev.formula.clause.mig.io.*;
-import org.spldev.formula.clause.solver.*;
-import org.spldev.formula.clause.solver.SatSolver.*;
-import org.spldev.util.data.*;
-import org.spldev.util.io.*;
-import org.spldev.util.job.*;
-import org.spldev.util.logging.*;
+import org.spldev.formula.clause.configuration.ConfigurationSampler;
+import org.spldev.formula.clause.configuration.FastRandomConfigurationGenerator;
+import org.spldev.formula.clause.configuration.twise.TWiseConfigurationGenerator.Deduce;
+import org.spldev.formula.clause.mig.MIG;
+import org.spldev.formula.clause.mig.MIGBuilder;
+import org.spldev.formula.clause.mig.RegularMIGBuilder;
+import org.spldev.formula.clause.mig.Vertex;
+import org.spldev.formula.clause.mig.io.MIGFormat;
+import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.formula.clause.solver.Sat4JSolver;
+import org.spldev.formula.clause.solver.SatSolver;
+import org.spldev.formula.clause.solver.SatSolver.SatResult;
+import org.spldev.util.data.Pair;
+import org.spldev.util.io.FileHandler;
+import org.spldev.util.job.Executor;
+import org.spldev.util.logging.Logger;
 
 /**
  * Contains several intermediate results and functions for generating a t-wise
@@ -106,11 +145,10 @@ public class TWiseConfigurationUtil {
 	}
 
 	public void computeRandomSample(int randomSampleSize) {
-		final RandomConfigurationGenerator randomGenerator = new RandomConfigurationGenerator();
-		randomGenerator.setLimit(randomSampleSize);
+		final FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
-		randomSample = Executor.run(randomGenerator, cnf).orElse(Logger::logProblems);
+		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).orElse(Logger::logProblems);
 
 		for (final LiteralList solution : randomSample) {
 			addSolverSolution(solution.getLiterals());
@@ -122,7 +160,7 @@ public class TWiseConfigurationUtil {
 			System.out.println("Init graph... ");
 			System.out.println("\tCompute graph... ");
 		}
-		final MIGBuilder migBuilder = new MIGBuilder();
+		final MIGBuilder migBuilder = new RegularMIGBuilder();
 		migBuilder.setCheckRedundancy(migCheckRedundancy);
 		migBuilder.setDetectStrong(migDetectStrong);
 		mig = Executor.run(migBuilder, cnf).get();
@@ -185,9 +223,9 @@ public class TWiseConfigurationUtil {
 		if (firstSolution != null) {
 			final int[] coreDeadArray = new int[firstSolution.length];
 			int coreDeadIndex = 0;
-			solver.setSelectionStrategy(SelectionStrategy.NEGATIVE);
+			solver.setSelectionStrategy(SStrategy.negative());
 			LiteralList.resetConflicts(firstSolution, solver.findSolution());
-			solver.setSelectionStrategy(SelectionStrategy.POSITIVE);
+			solver.setSelectionStrategy(SStrategy.positive());
 
 			// find core/dead features
 			for (int i = 0; i < firstSolution.length; i++) {

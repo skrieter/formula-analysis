@@ -1,16 +1,43 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.configuration.twise;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
-import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.configuration.*;
-import org.spldev.formula.clause.configuration.twise.ICoverStrategy.*;
-import org.spldev.formula.clause.mig.*;
-import org.spldev.formula.clause.solver.*;
-import org.spldev.formula.clause.solver.SatSolver.*;
-import org.spldev.util.data.*;
-import org.spldev.util.job.*;
-import org.spldev.util.logging.*;
+import org.spldev.formula.clause.CNF;
+import org.spldev.formula.clause.ClauseList;
+import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.configuration.ConfigurationGenerator;
+import org.spldev.formula.clause.configuration.twise.ICoverStrategy.CombinationStatus;
+import org.spldev.formula.clause.mig.MIG;
+import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.util.job.UpdateThread;
+import org.spldev.util.logging.Logger;
 
 /**
  * Generates configurations for a given propositional formula such that t-wise
@@ -18,13 +45,18 @@ import org.spldev.util.logging.*;
  *
  * @author Sebastian Krieter
  */
-public class TWiseConfigurationGenerator extends AConfigurationGenerator implements ITWiseConfigurationGenerator {
+public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 
-	public static final Identifier<List<LiteralList>> identifier = new Identifier<>();
+	enum Deduce {
+		DP, AC, NONE
+	}
 
-	@Override
-	public Identifier<List<LiteralList>> getIdentifier() {
-		return identifier;
+	enum Order {
+		RANDOM, SORTED
+	}
+
+	enum Phase {
+		MULTI, SINGLE
 	}
 
 	/**
@@ -81,6 +113,7 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 
 	protected TWiseConfigurationUtil util;
 	protected TWiseCombiner combiner;
+	protected Random random = new Random(0);
 
 	protected int t;
 	protected List<List<ClauseList>> nodes;
@@ -94,6 +127,16 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 
 	protected UpdateThread samplingMonitor;
 	protected UpdateThread memoryMonitor;
+
+	private int maxSampleSize;
+
+	public int getMaxSampleSize() {
+		return maxSampleSize;
+	}
+
+	public void setMaxSampleSize(int maxSampleSize) {
+		this.maxSampleSize = maxSampleSize;
+	}
 
 	public int getT() {
 		return t;
@@ -111,7 +154,16 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 		this.nodes = nodes;
 	}
 
-	private void init(SatSolver solver) {
+	public Random getRandom() {
+		return random;
+	}
+
+	public void setRandom(Random random) {
+		this.random = random;
+	}
+
+	@Override
+	protected void init() {
 		if (TWiseConfigurationGenerator.VERBOSE) {
 			System.out.println("Create util instance... ");
 		}
@@ -153,12 +205,7 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 		combiner = new TWiseCombiner(cnf.getVariableMap().size());
 
 		solver.rememberSolutionHistory(0);
-		solver.setSelectionStrategy(SelectionStrategy.ORG);
-	}
-
-	@Override
-	protected void generate(SatSolver solver, InternalMonitor monitor) throws Exception {
-		init(solver);
+		solver.setSelectionStrategy(SStrategy.orgiginal());
 
 		phaseCount = 0;
 
@@ -173,8 +220,7 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 				trimConfigurations();
 				buildCombinations();
 			}
-
-			bestResult.forEach(configuration -> addResult(configuration.getCompleteSolution()));
+			Collections.reverse(bestResult);
 		} finally {
 			memoryMonitor.finish();
 			if (TWiseConfigurationGenerator.VERBOSE) {
@@ -183,10 +229,15 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 		}
 	}
 
+	@Override
+	public LiteralList get() {
+		return bestResult.remove(bestResult.size()).getCompleteSolution();
+	}
+
 	private void trimConfigurations() {
 		if (curResult != null) {
 			final CoverageStatistic statistic = new TWiseStatisticFastGenerator(util).getCoverage(curResult,
-				presenceConditionManager.getGroupedPresenceConditions(), t);
+					presenceConditionManager.getGroupedPresenceConditions(), t);
 
 			final double[] normConfigValues = statistic.getConfigScores();
 			double mean = 0;
@@ -204,7 +255,7 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 	}
 
 	private int removeSolutions(double[] values, final double reference, int index,
-		List<TWiseConfiguration> solutionList) {
+			List<TWiseConfiguration> solutionList) {
 		for (final Iterator<TWiseConfiguration> iterator = solutionList.iterator(); iterator.hasNext();) {
 			iterator.next();
 			if (values[index++] < reference) {
@@ -217,14 +268,14 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 	private void buildCombinations() {
 		// TODO Variation Point: Cover Strategies
 		final List<? extends ICoverStrategy> phaseList = Arrays.asList(//
-			new CoverAll(util) //
+				new CoverAll(util) //
 		);
 
 		// TODO Variation Point: Combination order
 		final ICombinationSupplier<ClauseList> it;
 		presenceConditionManager.shuffleSort(getRandom());
 		final List<List<PresenceCondition>> groupedPresenceConditions = presenceConditionManager
-			.getGroupedPresenceConditions();
+				.getGroupedPresenceConditions();
 		if (groupedPresenceConditions.size() == 1) {
 			it = new SingleIterator(t, util.getCnf().getVariableMap().size(), groupedPresenceConditions.get(0));
 		} else {
@@ -305,13 +356,13 @@ public class TWiseConfigurationGenerator extends AConfigurationGenerator impleme
 		if (VERBOSE) {
 			final long uncoveredCount = (numberOfCombinations - coveredCount) - invalidCount;
 			final double phaseProgress = ((int) Math.floor((1 - (((double) count) / numberOfCombinations)) * 1000))
-				/ 10.0;
+					/ 10.0;
 			final double coverProgress = ((int) Math.floor(((((double) coveredCount) / numberOfCombinations)) * 1000))
-				/ 10.0;
-			final double uncoverProgress = ((int) Math.floor(((((double) uncoveredCount) / numberOfCombinations))
-				* 1000)) / 10.0;
+					/ 10.0;
+			final double uncoverProgress = ((int) Math
+					.floor(((((double) uncoveredCount) / numberOfCombinations)) * 1000)) / 10.0;
 			final double invalidProgress = ((int) Math.floor(((((double) invalidCount) / numberOfCombinations)) * 1000))
-				/ 10.0;
+					/ 10.0;
 			final StringBuilder sb = new StringBuilder();
 
 			sb.append(phaseCount);

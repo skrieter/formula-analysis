@@ -1,12 +1,37 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.analysis;
 
-import java.util.*;
+import java.util.Random;
 
-import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.solver.*;
-import org.spldev.util.*;
-import org.spldev.util.data.*;
-import org.spldev.util.job.*;
+import org.spldev.formula.clause.CNF;
+import org.spldev.formula.clause.CNFProvider;
+import org.spldev.formula.clause.solver.SatSolver;
+import org.spldev.util.Provider;
+import org.spldev.util.Result;
+import org.spldev.util.data.Cache;
+import org.spldev.util.job.Executor;
+import org.spldev.util.job.InternalMonitor;
 
 /**
  * Base class for an analysis using a {@link SatSolver sat solver}.
@@ -15,15 +40,9 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class AbstractAnalysis<T> implements Analysis<T>, Provider<T> {
-
-	protected LiteralList assumptions = null;
+public abstract class AbstractAnalysis<T> extends SatAnalysis implements Analysis<T>, Provider<T> {
 
 	protected Random random = new Random(112358);
-
-	private boolean timeoutOccured = false;
-	private boolean throwTimeoutException = true;
-	private int timeout = 1000;
 
 	@Override
 	public Result<T> apply(Cache formula, InternalMonitor monitor) {
@@ -32,18 +51,12 @@ public abstract class AbstractAnalysis<T> implements Analysis<T>, Provider<T> {
 
 	@Override
 	public final T execute(CNF cnf, InternalMonitor monitor) {
-		return execute(initSolver(cnf), monitor);
+		return execute(createSolver(cnf), monitor);
 	}
 
 	@Override
 	public final T execute(SatSolver solver, InternalMonitor monitor) {
-		Objects.nonNull(solver);
-		solver.setTimeout(timeout);
-		if (assumptions != null) {
-			solver.assignmentPushAll(assumptions.getLiterals());
-		}
-		assumptions = new LiteralList(solver.getAssignmentArray());
-		timeoutOccured = false;
+		prepareSolver(solver);
 
 		monitor.checkCancel();
 		try {
@@ -56,40 +69,7 @@ public abstract class AbstractAnalysis<T> implements Analysis<T>, Provider<T> {
 		}
 	}
 
-	protected SatSolver initSolver(CNF cnf) throws RuntimeContradictionException {
-		return new Sat4JSolver(cnf);
-	}
-
 	protected abstract T analyze(SatSolver solver, InternalMonitor monitor) throws Exception;
-
-	protected final void reportTimeout() throws RuntimeTimeoutException {
-		timeoutOccured = true;
-		if (throwTimeoutException) {
-			throw new RuntimeTimeoutException();
-		}
-	}
-
-	@Override
-	public final LiteralList getAssumptions() {
-		return assumptions;
-	}
-
-	@Override
-	public final void setAssumptions(LiteralList assumptions) {
-		this.assumptions = assumptions;
-	}
-
-	public final boolean isThrowTimeoutException() {
-		return throwTimeoutException;
-	}
-
-	public final void setThrowTimeoutException(boolean throwTimeoutException) {
-		this.throwTimeoutException = throwTimeoutException;
-	}
-
-	public final boolean isTimeoutOccured() {
-		return timeoutOccured;
-	}
 
 	public Random getRandom() {
 		return random;
@@ -97,14 +77,6 @@ public abstract class AbstractAnalysis<T> implements Analysis<T>, Provider<T> {
 
 	public void setRandom(Random random) {
 		this.random = random;
-	}
-
-	public int getTimeout() {
-		return timeout;
-	}
-
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
 	}
 
 }

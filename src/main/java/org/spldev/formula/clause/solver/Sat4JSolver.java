@@ -1,3 +1,25 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.solver;
 
 import java.util.*;
@@ -9,6 +31,19 @@ import org.sat4j.minisat.orders.*;
 import org.sat4j.specs.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.clause.solver.SStrategy.DefaultStrategy;
+import org.spldev.formula.clause.solver.SStrategy.FastRandomStrategy;
+import org.spldev.formula.clause.solver.SStrategy.FixedStrategy;
+import org.spldev.formula.clause.solver.SStrategy.MIGRandomStrategy;
+import org.spldev.formula.clause.solver.SStrategy.NegativeStrategy;
+import org.spldev.formula.clause.solver.SStrategy.PositiveStrategy;
+import org.spldev.formula.clause.solver.SStrategy.ReverseFixedStrategy;
+import org.spldev.formula.clause.solver.SStrategy.UniformRandomStrategy;
+import org.spldev.formula.clause.solver.strategy.FixedLiteralSelectionStrategy;
+import org.spldev.formula.clause.solver.strategy.FixedOrderHeap;
+import org.spldev.formula.clause.solver.strategy.FixedOrderHeap2;
+import org.spldev.formula.clause.solver.strategy.ReverseFixedLiteralSelectionStrategy;
+import org.spldev.formula.clause.solver.strategy.UniformRandomSelectionStrategy;
 
 /**
  * Sat solver with advanced support.
@@ -26,7 +61,7 @@ public class Sat4JSolver implements SatSolver {
 
 	protected LinkedList<LiteralList> solutionHistory = null;
 	protected int solutionHistoryLimit = -1;
-	protected SelectionStrategy strategy = SelectionStrategy.ORG;
+	protected SStrategy<?> strategy;
 
 	protected boolean globalTimeout = false;
 
@@ -38,7 +73,7 @@ public class Sat4JSolver implements SatSolver {
 		configureSolver();
 		initSolver();
 
-		strategy = SelectionStrategy.ORG;
+		strategy = SStrategy.orgiginal();
 
 		assignment = new VecInt(satInstance.getVariableMap().size());
 		order = new int[satInstance.getVariableMap().size()];
@@ -250,7 +285,7 @@ public class Sat4JSolver implements SatSolver {
 	}
 
 	@Override
-	public SelectionStrategy getSelectionStrategy() {
+	public SStrategy<?> getSelectionStrategy() {
 		return strategy;
 	}
 
@@ -348,52 +383,37 @@ public class Sat4JSolver implements SatSolver {
 		}
 	}
 
+	private void setSelectionStrategy(IOrder strategy) {
+		solver.setOrder(strategy);
+		solver.getOrder().init();
+	}
+
 	@Override
-	public void setSelectionStrategy(SelectionStrategy strategy) {
-		if (this.strategy != strategy) {
-			this.strategy = strategy;
-			switch (strategy) {
-			case NEGATIVE:
-				solver.setOrder(new VarOrderHeap2(new NegativeLiteralSelectionStrategy(), order));
-				break;
-			case ORG:
-				solver.setOrder(new VarOrderHeap(new RSATPhaseSelectionStrategy()));
-				break;
-			case POSITIVE:
-				solver.setOrder(new VarOrderHeap2(new PositiveLiteralSelectionStrategy(), order));
-				break;
-			case RANDOM:
-				solver.setOrder(new VarOrderHeap2(new RandomLiteralSelectionStrategy(), order));
-				break;
-			case FIXED:
-			case UNIFORM_RANDOM:
-				break;
-			default:
-				throw new AssertionError(strategy);
-			}
+	public void setSelectionStrategy(SStrategy<?> strategy) {
+		this.strategy = strategy;
+		if (strategy instanceof DefaultStrategy) {
+			setSelectionStrategy(new VarOrderHeap(new RSATPhaseSelectionStrategy()));
+		} else if (strategy instanceof DefaultStrategy) {
+			setSelectionStrategy(new VarOrderHeap(new RSATPhaseSelectionStrategy()));
+		} else if (strategy instanceof NegativeStrategy) {
+			setSelectionStrategy(new FixedOrderHeap(new NegativeLiteralSelectionStrategy(), order));
+		} else if (strategy instanceof PositiveStrategy) {
+			setSelectionStrategy(new FixedOrderHeap(new PositiveLiteralSelectionStrategy(), order));
+		} else if (strategy instanceof FastRandomStrategy) {
+			setSelectionStrategy(new FixedOrderHeap(new RandomLiteralSelectionStrategy(), order));
+		} else if (strategy instanceof FixedStrategy) {
+			setSelectionStrategy(
+					new FixedOrderHeap(new FixedLiteralSelectionStrategy((int[]) strategy.parameter), order));
+		} else if (strategy instanceof ReverseFixedStrategy) {
+			setSelectionStrategy(
+					new FixedOrderHeap(new ReverseFixedLiteralSelectionStrategy((int[]) strategy.parameter), order));
+		} else if (strategy instanceof UniformRandomStrategy) {
+			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy((SampleDistribution) strategy.parameter), order));
+		} else if (strategy instanceof MIGRandomStrategy) {
+			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy((MIGDistribution) strategy.parameter), order));
+		} else {
+			throw new AssertionError(strategy);
 		}
-		solver.getOrder().init();
-	}
-
-	@Override
-	public void setSelectionStrategy(int[] model, boolean min) {
-		strategy = SelectionStrategy.FIXED;
-		solver.setOrder(new VarOrderHeap2(new FixedLiteralSelectionStrategy(model, min, true), order));
-		solver.getOrder().init();
-	}
-
-	@Override
-	public void setSelectionStrategy(int[] model, boolean min, boolean inverse) {
-		strategy = SelectionStrategy.FIXED;
-		solver.setOrder(new VarOrderHeap2(new FixedLiteralSelectionStrategy(model, min, inverse), order));
-		solver.getOrder().init();
-	}
-
-	@Override
-	public void setSelectionStrategy(List<LiteralList> sample) {
-		strategy = SelectionStrategy.UNIFORM_RANDOM;
-		solver.setOrder(new VarOrderHeap3(sample));
-		solver.getOrder().init();
 	}
 
 	@Override
@@ -446,7 +466,7 @@ public class Sat4JSolver implements SatSolver {
 	protected void configureSolver() {
 		solver.setTimeoutMs(1_000_000);
 		solver.setDBSimplificationAllowed(false);
-		solver.setKeepSolverHot(false);
+		solver.setKeepSolverHot(true);
 		solver.setVerbose(false);
 	}
 

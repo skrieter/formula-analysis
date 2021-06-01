@@ -1,13 +1,40 @@
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
+ */
 package org.spldev.formula.clause.configuration;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
-import org.sat4j.specs.*;
-import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.solver.*;
-import org.spldev.formula.clause.solver.SatSolver.*;
-import org.spldev.util.data.*;
-import org.spldev.util.job.*;
+import org.sat4j.specs.IConstr;
+import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.solver.RuntimeContradictionException;
+import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.formula.clause.solver.SatSolver;
 
 /**
  * Generates configurations for a given propositional formula such that two-wise
@@ -15,14 +42,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class PairWiseConfigurationGenerator extends AConfigurationGenerator implements ITWiseConfigurationGenerator {
-
-	public static final Identifier<List<LiteralList>> identifier = new Identifier<>();
-
-	@Override
-	public Identifier<List<LiteralList>> getIdentifier() {
-		return identifier;
-	}
+public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	public static class Configuration {
 
@@ -33,8 +53,6 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 		private int deltaCoverage;
 		private final LiteralList model;
 		private int totalCoverage;
-
-		public long time = 0;
 
 		public Configuration(LiteralList model, int deltaCoverage, int totalCoverage) {
 			this.model = model;
@@ -131,8 +149,6 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 
 	protected static final int maxBackJumping = 0;
 
-	protected SatSolver solver;
-
 	protected byte[] combinations = new byte[0];
 	protected byte[] combinations2 = new byte[0];
 	protected short[] comboIndex = new short[0];
@@ -141,13 +157,16 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 
 	protected FeatureIndex[] featureIndexArray = new FeatureIndex[0];
 	protected final List<Configuration> finalConfigurationList = new ArrayList<>();
-	protected int numVariables, maxNumber;
+	protected int numVariables;
 	protected final Deque<Integer> parentStack = new LinkedList<>();
 	protected byte[] recArray = new byte[0];
 
-	protected long time = 0;
-
 	private int[] allYesSolution, allNoSolution;
+
+	private boolean[] featuresUsedOrg;
+	private Random random = new Random(0);
+
+	private int numberOfFixedFeatures;
 
 	protected void addCombinationsFromModel(int[] curModel) {
 		for (int i = 0; i < combinations2.length; i++) {
@@ -365,16 +384,16 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 	protected void findInvalid() {
 		parentStack.clear();
 
-		solver.setSelectionStrategy(SelectionStrategy.POSITIVE);
+		solver.setSelectionStrategy(SStrategy.positive());
 		allYesSolution = solver.findSolution();
 		allNoSolution = allYesSolution;
 
 		// satisfiable?
 		if (allYesSolution != null) {
-			solver.setSelectionStrategy(SelectionStrategy.NEGATIVE);
+			solver.setSelectionStrategy(SStrategy.negative());
 			solver.hasSolution();
 			allNoSolution = solver.findSolution();
-			solver.setSelectionStrategy(SelectionStrategy.POSITIVE);
+			solver.setSelectionStrategy(SStrategy.positive());
 
 			// find core/dead features
 			core = new byte[numVariables];
@@ -529,7 +548,7 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 
 	protected int getLastCoverage() {
 		return (finalConfigurationList.isEmpty()) ? 0
-			: finalConfigurationList.get(finalConfigurationList.size() - 1).getTotalCoverage();
+				: finalConfigurationList.get(finalConfigurationList.size() - 1).getTotalCoverage();
 	}
 
 	protected int[] getModel(final Collection<int[]> solutions) {
@@ -540,12 +559,7 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 		return model;
 	}
 
-	protected boolean handleNewConfig(int[] curModel, final boolean[] featuresUsedOrg) {
-		if (curModel == null) {
-			return true;
-		}
-		final LiteralList solution = new LiteralList(Arrays.copyOf(curModel, curModel.length), LiteralList.Order.INDEX,
-			false);
+	protected boolean handleNewConfig(LiteralList solution, final boolean[] featuresUsedOrg) {
 		final int partCount = count(solution.getLiterals()) - fixedPartCount;
 		final Configuration config = new Configuration(solution, partCount - getLastCoverage(), partCount);
 
@@ -579,10 +593,6 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 			featureIndex.setSelected(selected);
 		}
 
-		config.time = System.nanoTime() - time;
-		addResult(solution);
-		time = System.nanoTime();
-
 		try {
 			solver.addClause(solution.negate());
 		} catch (final RuntimeContradictionException e) {
@@ -614,8 +624,8 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 		relTotal = Math.floor(relTotal * 1000.0) / 10.0;
 		if (VERBOSE) {
 			System.out.println(count++ + ": " + config.getTotalCoverage() + "/" + combinationCount + " | " + relTotal
-				+ "% | left = " + absUncovered
-				+ " | new = " + config.getDeltaCoverage() + " | delta = " + relDelta);
+					+ "% | left = " + absUncovered + " | new = " + config.getDeltaCoverage() + " | delta = "
+					+ relDelta);
 		}
 		return absUncovered;
 	}
@@ -712,9 +722,8 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 
 			inner1: for (int j = i + 1; j < xModel1.length; j++) {
 				final byte b = combinations[rowIndex + j];
-				if ((core[j] == 0) && ((b & BIT_CHECK) != 0)
-					&& ((positive && ((b & BITS_POSITIVE_IMPLY) == 0)) || (!positive && ((b
-						& BITS_NEGATIVE_IMPLY) == 0)))) {
+				if ((core[j] == 0) && ((b & BIT_CHECK) != 0) && ((positive && ((b & BITS_POSITIVE_IMPLY) == 0))
+						|| (!positive && ((b & BITS_NEGATIVE_IMPLY) == 0)))) {
 
 					final int my1 = xModel1[j];
 					for (final LiteralList solution : solver.getSolutionHistory()) {
@@ -726,8 +735,8 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 					}
 
 					solver.assignmentPush(my1);
-					solver.setSelectionStrategy(((c++ % 2) != 0) ? SelectionStrategy.POSITIVE
-						: SelectionStrategy.NEGATIVE);
+					solver.setSelectionStrategy(
+							((c++ % 2) != 0) ? SStrategy.positive() : SStrategy.negative());
 
 					switch (solver.hasSolution()) {
 					case FALSE:
@@ -807,21 +816,16 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 	}
 
 	@Override
-	protected void generate(SatSolver solver, InternalMonitor monitor) throws Exception {
-		if (maxNumber <= 0) {
-			return;
-		}
-		this.solver = solver;
+	protected void init() {
 		numVariables = solver.getCnf().getVariableMap().size();
-		time = System.nanoTime();
 
 		final int featureCount = solver.getCnf().getVariableMap().size();
 		solver.rememberSolutionHistory(Math.min(featureCount, SatSolver.MAX_SOLUTION_BUFFER));
 
 		findInvalid();
 
-		final int numberOfFixedFeatures = solver.getAssignmentSize();
-		final boolean[] featuresUsedOrg = new boolean[featureCount];
+		numberOfFixedFeatures = solver.getAssignmentSize();
+		featuresUsedOrg = new boolean[featureCount];
 		for (int i = 0; i < numberOfFixedFeatures; i++) {
 			featuresUsedOrg[Math.abs(solver.assignmentGet(i)) - 1] = true;
 		}
@@ -843,81 +847,100 @@ public class PairWiseConfigurationGenerator extends AConfigurationGenerator impl
 		comboIndex = new short[combinations2.length << 2];
 
 		solver = solver.clone();
-		solver.setSelectionStrategy(SelectionStrategy.RANDOM);
+		solver.setSelectionStrategy(SStrategy.random());
+	}
 
-		// allyes
-		handleNewConfig(allYesSolution, featuresUsedOrg);
-		if (maxNumber == 1) {
-			return;
+	@Override
+	public LiteralList get() {
+		if (allYesSolution != null) {
+			LiteralList solution = new LiteralList(allYesSolution, LiteralList.Order.INDEX, false);
+			handleNewConfig(solution, featuresUsedOrg);
+			allYesSolution = null;
+			return solution;
 		}
-		// allno
-		handleNewConfig(allNoSolution, featuresUsedOrg);
-
+		if (allNoSolution != null) {
+			LiteralList solution = new LiteralList(allNoSolution, LiteralList.Order.INDEX, false);
+			handleNewConfig(solution, featuresUsedOrg);
+			allNoSolution = null;
+			return solution;
+		}
 		final int[] varStatus = new int[2];
+		final boolean[] featuresUsed = Arrays.copyOf(featuresUsedOrg, featuresUsedOrg.length);
 
-		while (count <= maxNumber) {
-			monitor.checkCancel();
-			final boolean[] featuresUsed = Arrays.copyOf(featuresUsedOrg, featuresUsedOrg.length);
+		countLoops = featureIndexArray.length;
+		int prio = 0;
+		for (final FeatureIndex featureIndex : featureIndexArray) {
+			featureIndex.setPriority(prio++);
+		}
+		Arrays.sort(featureIndexArray);
 
-			countLoops = featureIndexArray.length;
-			int prio = 0;
-			for (final FeatureIndex featureIndex : featureIndexArray) {
-				featureIndex.setPriority(prio++);
+		for (int x = 1, end = featureIndexArray.length; x < end; x++) {
+			final FeatureIndex featureIndexA = featureIndexArray[x];
+			final int a = featureIndexA.getIndex();
+			if (featuresUsed[a]) {
+				continue;
 			}
-			Arrays.sort(featureIndexArray);
-
-			for (int x = 1, end = featureIndexArray.length; x < end; x++) {
-				final FeatureIndex featureIndexA = featureIndexArray[x];
-				final int a = featureIndexA.getIndex();
-				if (featuresUsed[a]) {
+			bLoop: for (int y = 0; y < x; y++) {
+				final FeatureIndex featureIndexB = featureIndexArray[y];
+				final int b = featureIndexB.getIndex();
+				final int index = (a * numVariables) + b;
+				final byte curCombo = (combinations2[index]);
+				if ((curCombo == 15) || featuresUsed[b]) {
 					continue;
 				}
-				bLoop: for (int y = 0; y < x; y++) {
-					final FeatureIndex featureIndexB = featureIndexArray[y];
-					final int b = featureIndexB.getIndex();
-					final int index = (a * numVariables) + b;
-					final byte curCombo = (combinations2[index]);
-					if ((curCombo == 15) || featuresUsed[b]) {
-						continue;
+
+				varStatus[0] = 0;
+				varStatus[1] = 0;
+
+				final int[] combinationOrder = getCombinationOrder(featureIndexA.getSelected(),
+						featureIndexB.getSelected(), curCombo);
+				comboLoop: for (int i = 0; i < combinationOrder.length; i++) {
+					final boolean result;
+					switch (combinationOrder[i]) {
+					case BIT_00:
+						result = testCombination(varStatus, featuresUsed, -(a + 1), -(b + 1));
+						break;
+					case BIT_01:
+						result = testCombination(varStatus, featuresUsed, -(a + 1), (b + 1));
+						break;
+					case BIT_10:
+						result = testCombination(varStatus, featuresUsed, (a + 1), -(b + 1));
+						break;
+					case BIT_11:
+						result = testCombination(varStatus, featuresUsed, (a + 1), (b + 1));
+						break;
+					default:
+						continue comboLoop;
 					}
-
-					varStatus[0] = 0;
-					varStatus[1] = 0;
-
-					final int[] combinationOrder = getCombinationOrder(featureIndexA.getSelected(), featureIndexB
-						.getSelected(), curCombo);
-					comboLoop: for (int i = 0; i < combinationOrder.length; i++) {
-						final boolean result;
-						switch (combinationOrder[i]) {
-						case BIT_00:
-							result = testCombination(varStatus, featuresUsed, -(a + 1), -(b + 1));
-							break;
-						case BIT_01:
-							result = testCombination(varStatus, featuresUsed, -(a + 1), (b + 1));
-							break;
-						case BIT_10:
-							result = testCombination(varStatus, featuresUsed, (a + 1), -(b + 1));
-							break;
-						case BIT_11:
-							result = testCombination(varStatus, featuresUsed, (a + 1), (b + 1));
-							break;
-						default:
-							continue comboLoop;
-						}
-						if (result) {
-							break bLoop;
-						}
+					if (result) {
+						break bLoop;
 					}
 				}
 			}
-
-			if (handleNewConfig(solver.findSolution(), featuresUsedOrg)) {
-				break;
-			} else {
-				solver.shuffleOrder(getRandom());
-			}
-			solver.assignmentClear(numberOfFixedFeatures);
 		}
+
+		int[] curModel = solver.findSolution();
+		if (curModel == null) {
+			return null;
+		}
+		final LiteralList solution = new LiteralList(Arrays.copyOf(curModel, curModel.length), LiteralList.Order.INDEX,
+				false);
+
+		if (handleNewConfig(solution, featuresUsedOrg)) {
+			return null;
+		} else {
+			solver.shuffleOrder(getRandom());
+		}
+		solver.assignmentClear(numberOfFixedFeatures);
+		return solution;
+	}
+
+	public Random getRandom() {
+		return random;
+	}
+
+	public void setRandom(Random random) {
+		this.random = random;
 	}
 
 }
