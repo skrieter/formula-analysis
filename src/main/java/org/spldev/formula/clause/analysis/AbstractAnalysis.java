@@ -29,7 +29,7 @@ import org.spldev.formula.clause.CNFProvider;
 import org.spldev.formula.clause.solver.SatSolver;
 import org.spldev.util.Provider;
 import org.spldev.util.Result;
-import org.spldev.util.data.Cache;
+import org.spldev.util.data.CacheHolder;
 import org.spldev.util.job.Executor;
 import org.spldev.util.job.InternalMonitor;
 
@@ -45,7 +45,7 @@ public abstract class AbstractAnalysis<T> extends SatAnalysis implements Analysi
 	protected Random random = new Random(112358);
 
 	@Override
-	public Result<T> apply(Cache formula, InternalMonitor monitor) {
+	public Result<T> apply(CacheHolder formula, InternalMonitor monitor) {
 		return formula.get(CNFProvider.identifier).flatMap(cnf -> Executor.run(this, cnf, monitor));
 	}
 

@@ -154,18 +154,18 @@ public final class Clauses {
 		return Provider.load(path, CNFFormatManager.getInstance());
 	}
 
-	public static Result<CNF> load(Path path, Cache cache) {
+	public static Result<CNF> load(Path path, CacheHolder cache) {
 		return cache.get(CNFProvider.loader(path));
 	}
 
-	public static Cache createCache(Path path) {
-		final Cache cache = new Cache();
+	public static CacheHolder createCache(Path path) {
+		final CacheHolder cache = new CacheHolder();
 		cache.set(CNFProvider.loader(path));
 		return cache;
 	}
 
-	public static Cache createCache(CNF cnf) {
-		final Cache cache = new Cache();
+	public static CacheHolder createCache(CNF cnf) {
+		final CacheHolder cache = new CacheHolder();
 		cache.set(CNFProvider.of(cnf));
 		return cache;
 	}

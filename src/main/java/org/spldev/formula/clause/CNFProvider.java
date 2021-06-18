@@ -29,7 +29,7 @@ import org.spldev.util.*;
 import org.spldev.util.data.*;
 
 /**
- * Abstract creator to derive an element from a {@link Cache}.
+ * Abstract creator to derive an element from a {@link CacheHolder}.
  *
  * @author Sebastian Krieter
  */
@@ -51,7 +51,7 @@ public interface CNFProvider extends Provider<CNF> {
 		return (c, m) -> Result.of(cnf);
 	}
 
-	static CNFProvider in(Cache cache) {
+	static CNFProvider in(CacheHolder cache) {
 		return (c, m) -> cache.get(identifier);
 	}
 

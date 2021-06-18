@@ -32,7 +32,7 @@ import org.spldev.formula.clause.mig.visitor.Traverser;
 import org.spldev.formula.clause.solver.SStrategy;
 import org.spldev.formula.clause.solver.SatSolver;
 import org.spldev.util.Result;
-import org.spldev.util.data.Cache;
+import org.spldev.util.data.CacheHolder;
 import org.spldev.util.data.Identifier;
 import org.spldev.util.job.InternalMonitor;
 
@@ -54,7 +54,7 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 	private MIG mig;
 
 	@Override
-	public Result<LiteralList> apply(Cache formula, InternalMonitor monitor) {
+	public Result<LiteralList> apply(CacheHolder formula, InternalMonitor monitor) {
 		monitor.setTotalWork(2);
 		mig = formula.get(MIGProvider.fromCNF(), monitor.subTask(1)).get();
 		return super.apply(formula, monitor.subTask(1));
