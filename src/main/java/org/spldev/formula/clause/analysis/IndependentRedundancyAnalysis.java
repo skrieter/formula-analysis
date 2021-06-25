@@ -81,7 +81,7 @@ public class IndependentRedundancyAnalysis extends AClauseAnalysis<List<LiteralL
 
 		final int[] firstSolution = solver.findSolution();
 		if (firstSolution != null) {
-			solver.setSelectionStrategy(SStrategy.random());
+			solver.setSelectionStrategy(SStrategy.random(getRandom()));
 
 			int endIndex = 0;
 			groupLoop: for (int i = 0; i < clauseGroupSize.length; i++) {

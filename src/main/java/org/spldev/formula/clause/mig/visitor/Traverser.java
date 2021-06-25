@@ -173,7 +173,7 @@ public class Traverser extends ATraverser {
 
 			for (final Vertex strongVertex : curVertex.getStrongEdges()) {
 				final int literal = strongVertex.getVar();
-				final int strongVertexIndex = MIG.getVertexIndex(literal);
+				final int strongVertexIndex = getIndex(literal);
 				if (currentConfiguration[strongVertexIndex] == 0) {
 					currentConfiguration[strongVertexIndex] = literal;
 					visitStrongResult = visitor.visitStrong(literal);

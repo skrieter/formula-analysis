@@ -31,19 +31,8 @@ import org.sat4j.minisat.orders.*;
 import org.sat4j.specs.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.*;
-import org.spldev.formula.clause.solver.SStrategy.DefaultStrategy;
-import org.spldev.formula.clause.solver.SStrategy.FastRandomStrategy;
-import org.spldev.formula.clause.solver.SStrategy.FixedStrategy;
-import org.spldev.formula.clause.solver.SStrategy.MIGRandomStrategy;
-import org.spldev.formula.clause.solver.SStrategy.NegativeStrategy;
-import org.spldev.formula.clause.solver.SStrategy.PositiveStrategy;
-import org.spldev.formula.clause.solver.SStrategy.ReverseFixedStrategy;
-import org.spldev.formula.clause.solver.SStrategy.UniformRandomStrategy;
-import org.spldev.formula.clause.solver.strategy.FixedLiteralSelectionStrategy;
-import org.spldev.formula.clause.solver.strategy.FixedOrderHeap;
-import org.spldev.formula.clause.solver.strategy.FixedOrderHeap2;
-import org.spldev.formula.clause.solver.strategy.ReverseFixedLiteralSelectionStrategy;
-import org.spldev.formula.clause.solver.strategy.UniformRandomSelectionStrategy;
+import org.spldev.formula.clause.solver.SStrategy.*;
+import org.spldev.formula.clause.solver.strategy.*;
 
 /**
  * Sat solver with advanced support.
@@ -61,7 +50,8 @@ public class Sat4JSolver implements SatSolver {
 
 	protected LinkedList<LiteralList> solutionHistory = null;
 	protected int solutionHistoryLimit = -1;
-	protected SStrategy<?> strategy;
+	protected int[] lastModel = null;
+	protected SStrategy strategy;
 
 	protected boolean globalTimeout = false;
 
@@ -73,7 +63,7 @@ public class Sat4JSolver implements SatSolver {
 		configureSolver();
 		initSolver();
 
-		strategy = SStrategy.orgiginal();
+		strategy = SStrategy.original();
 
 		assignment = new VecInt(satInstance.getVariableMap().size());
 		order = new int[satInstance.getVariableMap().size()];
@@ -88,9 +78,9 @@ public class Sat4JSolver implements SatSolver {
 
 		strategy = oldSolver.strategy;
 
-		order = Arrays.copyOf(oldSolver.order, oldSolver.order.length);
 		assignment = new VecInt(0);
 		oldSolver.assignment.copyTo(assignment);
+		order = Arrays.copyOf(oldSolver.order, oldSolver.order.length);
 	}
 
 	@Override
@@ -98,6 +88,7 @@ public class Sat4JSolver implements SatSolver {
 		final IConstr constr = addClause(clause.getLiterals());
 		if (solutionHistory != null) {
 			solutionHistory.clear();
+			lastModel = null;
 		}
 		return constr;
 	}
@@ -116,6 +107,7 @@ public class Sat4JSolver implements SatSolver {
 		}
 		if (solutionHistory != null) {
 			solutionHistory.clear();
+			lastModel = null;
 		}
 		return constrList;
 	}
@@ -140,7 +132,7 @@ public class Sat4JSolver implements SatSolver {
 
 	@Override
 	public int[] getSolution() {
-		return solver.model();
+		return lastModel;
 	}
 
 	@Override
@@ -158,6 +150,7 @@ public class Sat4JSolver implements SatSolver {
 		solver.reset();
 		if (solutionHistory != null) {
 			solutionHistory.clear();
+			lastModel = null;
 		}
 	}
 
@@ -256,7 +249,7 @@ public class Sat4JSolver implements SatSolver {
 
 	@Override
 	public int[] findSolution() {
-		return hasSolution() == SatResult.TRUE ? solver.model() : null;
+		return hasSolution() == SatResult.TRUE ? getSolution() : null;
 	}
 
 	@Override
@@ -285,7 +278,7 @@ public class Sat4JSolver implements SatSolver {
 	}
 
 	@Override
-	public SStrategy<?> getSelectionStrategy() {
+	public SStrategy getSelectionStrategy() {
 		return strategy;
 	}
 
@@ -297,16 +290,31 @@ public class Sat4JSolver implements SatSolver {
 	@Override
 	public SatResult hasSolution() {
 		if (contradiction) {
+			lastModel = null;
 			return SatResult.FALSE;
 		}
+
+		if (solutionHistory != null) {
+			final int[] array = Arrays.copyOf(assignment.toArray(), assignment.size());
+			for (LiteralList solution : solutionHistory) {
+				if (solution.containsAllLiterals(array)) {
+					lastModel = solution.getLiterals();
+					return SatResult.TRUE;
+				}
+			}
+		}
+
 		try {
 			if (solver.isSatisfiable(assignment, globalTimeout)) {
+				lastModel = solver.model();
 				addSolution();
 				return SatResult.TRUE;
 			} else {
+				lastModel = null;
 				return SatResult.FALSE;
 			}
 		} catch (final TimeoutException e) {
+			lastModel = null;
 			return SatResult.TIMEOUT;
 		}
 	}
@@ -322,27 +330,38 @@ public class Sat4JSolver implements SatSolver {
 		if (contradiction) {
 			return SatResult.FALSE;
 		}
+
+		if (solutionHistory != null) {
+			for (LiteralList solution : solutionHistory) {
+				if (solution.containsAllLiterals(assignment)) {
+					lastModel = solution.getLiterals();
+					return SatResult.TRUE;
+				}
+			}
+		}
+
 		final int[] unitClauses = new int[assignment.length];
 		System.arraycopy(assignment, 0, unitClauses, 0, unitClauses.length);
 
 		try {
 			// TODO why is this necessary?
-			solver.setKeepSolverHot(true);
 			if (solver.isSatisfiable(new VecInt(unitClauses), globalTimeout)) {
+				lastModel = solver.model();
 				addSolution();
 				return SatResult.TRUE;
 			} else {
+				lastModel = null;
 				return SatResult.FALSE;
 			}
 		} catch (final TimeoutException e) {
-			e.printStackTrace();
+			lastModel = null;
 			return SatResult.TIMEOUT;
 		}
 	}
 
 	private void addSolution() {
 		if (solutionHistory != null) {
-			solutionHistory.addFirst(new LiteralList(solver.model(), Order.INDEX, false));
+			solutionHistory.addFirst(new LiteralList(getSolution(), Order.INDEX, false));
 			if (solutionHistory.size() > solutionHistoryLimit) {
 				solutionHistory.removeLast();
 			}
@@ -389,30 +408,41 @@ public class Sat4JSolver implements SatSolver {
 	}
 
 	@Override
-	public void setSelectionStrategy(SStrategy<?> strategy) {
+	public void setSelectionStrategy(SStrategy strategy) {
 		this.strategy = strategy;
-		if (strategy instanceof DefaultStrategy) {
-			setSelectionStrategy(new VarOrderHeap(new RSATPhaseSelectionStrategy()));
-		} else if (strategy instanceof DefaultStrategy) {
-			setSelectionStrategy(new VarOrderHeap(new RSATPhaseSelectionStrategy()));
-		} else if (strategy instanceof NegativeStrategy) {
+		switch (strategy.strategy()) {
+		case FastRandom:
+			setSelectionStrategy(new FixedOrderHeap(new RandomSelectionStrategy(), order));
+			break;
+		case Fixed:
+			setSelectionStrategy(new FixedOrderHeap( //
+				new FixedLiteralSelectionStrategy(((FixedStrategy) strategy).getModel()), //
+				order));
+			break;
+		case InverseFixed:
+			setSelectionStrategy(new FixedOrderHeap( //
+				new FixedLiteralSelectionStrategy(((InverseFixedStrategy) strategy).getModel()), //
+				order));
+			break;
+		case MIGRandom:
+			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy(
+				 ((MIGRandomStrategy) strategy).getDist()), order));
+			break;
+		case Negative:
 			setSelectionStrategy(new FixedOrderHeap(new NegativeLiteralSelectionStrategy(), order));
-		} else if (strategy instanceof PositiveStrategy) {
+			break;
+		case Original:
+			setSelectionStrategy(new VarOrderHeap(new RSATPhaseSelectionStrategy()));
+			break;
+		case Positive:
 			setSelectionStrategy(new FixedOrderHeap(new PositiveLiteralSelectionStrategy(), order));
-		} else if (strategy instanceof FastRandomStrategy) {
-			setSelectionStrategy(new FixedOrderHeap(new RandomLiteralSelectionStrategy(), order));
-		} else if (strategy instanceof FixedStrategy) {
-			setSelectionStrategy(
-					new FixedOrderHeap(new FixedLiteralSelectionStrategy((int[]) strategy.parameter), order));
-		} else if (strategy instanceof ReverseFixedStrategy) {
-			setSelectionStrategy(
-					new FixedOrderHeap(new ReverseFixedLiteralSelectionStrategy((int[]) strategy.parameter), order));
-		} else if (strategy instanceof UniformRandomStrategy) {
-			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy((SampleDistribution) strategy.parameter), order));
-		} else if (strategy instanceof MIGRandomStrategy) {
-			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy((MIGDistribution) strategy.parameter), order));
-		} else {
-			throw new AssertionError(strategy);
+			break;
+		case UniformRandom:
+			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy(
+				 ((UniformRandomStrategy) strategy).getDist()), order));
+			break;
+		default:
+			throw new IllegalStateException(String.valueOf(strategy.strategy()));
 		}
 	}
 
@@ -465,7 +495,7 @@ public class Sat4JSolver implements SatSolver {
 
 	protected void configureSolver() {
 		solver.setTimeoutMs(1_000_000);
-		solver.setDBSimplificationAllowed(false);
+		solver.setDBSimplificationAllowed(true);
 		solver.setKeepSolverHot(true);
 		solver.setVerbose(false);
 	}

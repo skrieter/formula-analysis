@@ -20,46 +20,49 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.cli;
+package org.spldev.formula.clause.solver.strategy;
 
-import java.util.List;
-import java.util.ListIterator;
+import static org.sat4j.core.LiteralsUtils.negLit;
+import static org.sat4j.core.LiteralsUtils.posLit;
 
-import org.spldev.formula.clause.configuration.ConfigurationGenerator;
-import org.spldev.util.Result;
+import java.util.Random;
+
+import org.sat4j.minisat.core.IPhaseSelectionStrategy;
 
 /**
- * Finds certain solutions of propositional formulas.
+ * Random phase selection.
  *
  * @author Sebastian Krieter
  */
-public abstract class AConfigurationGeneratorAlgorithm<T extends ConfigurationGenerator>
-		implements ConfigurationGeneratorAlgorithm {
+public class RandomSelectionStrategy implements IPhaseSelectionStrategy {
 
-	public Result<ConfigurationGenerator> parseArguments(List<String> args) {
-		final T gen = createConfigurationGenerator();
-		try {
-			for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {
-				final String arg = iterator.next();
-				if (!parseArgument(gen, arg, iterator)) {
-					throw new IllegalArgumentException("Unkown argument " + arg);
-				}
-			}
-			return Result.of(gen);
-		} catch (Exception e) {
-			return Result.empty(e);
-		}
-	}
+	private static final long serialVersionUID = 1L;
 
-	protected abstract T createConfigurationGenerator();
+	public final Random RAND = new Random(123456789);
 
-	protected boolean parseArgument(T gen, String arg, ListIterator<String> iterator) throws IllegalArgumentException {
-		return false;
+	@Override
+	public void assignLiteral(int p) {}
+
+	@Override
+	public void init(int nlength) {}
+
+	@Override
+	public void init(int var, int p) {}
+
+	@Override
+	public int select(int var) {
+		return RAND.nextBoolean() ? posLit(var) : negLit(var);
 	}
 
 	@Override
-	public String getId() {
-		return getClass().getCanonicalName();
+	public void updateVar(int p) {}
+
+	@Override
+	public void updateVarAtDecisionLevel(int q) {}
+
+	@Override
+	public String toString() {
+		return "random phase selection";
 	}
 
 }

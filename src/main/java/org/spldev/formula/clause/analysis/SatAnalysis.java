@@ -34,8 +34,6 @@ import org.spldev.formula.clause.solver.SatSolver;
 /**
  * Base class for an analysis using a {@link SatSolver sat solver}.
  *
- * @param <T> Type of the analysis result.
- *
  * @author Sebastian Krieter
  */
 public abstract class SatAnalysis {

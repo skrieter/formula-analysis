@@ -22,44 +22,22 @@
  */
 package org.spldev.formula.clause.cli;
 
-import java.util.List;
-import java.util.ListIterator;
-
-import org.spldev.formula.clause.configuration.ConfigurationGenerator;
-import org.spldev.util.Result;
+import org.spldev.util.extension.*;
 
 /**
- * Finds certain solutions of propositional formulas.
+ * Extension point for sampling algorithms.
  *
  * @author Sebastian Krieter
  */
-public abstract class AConfigurationGeneratorAlgorithm<T extends ConfigurationGenerator>
-		implements ConfigurationGeneratorAlgorithm {
+public class ConfigurationGeneratorAlgorithmManager extends ExtensionPoint<ConfigurationGeneratorAlgorithm> {
 
-	public Result<ConfigurationGenerator> parseArguments(List<String> args) {
-		final T gen = createConfigurationGenerator();
-		try {
-			for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {
-				final String arg = iterator.next();
-				if (!parseArgument(gen, arg, iterator)) {
-					throw new IllegalArgumentException("Unkown argument " + arg);
-				}
-			}
-			return Result.of(gen);
-		} catch (Exception e) {
-			return Result.empty(e);
-		}
+	private static final ConfigurationGeneratorAlgorithmManager INSTANCE = new ConfigurationGeneratorAlgorithmManager();
+
+	public static final ConfigurationGeneratorAlgorithmManager getInstance() {
+		return INSTANCE;
 	}
 
-	protected abstract T createConfigurationGenerator();
-
-	protected boolean parseArgument(T gen, String arg, ListIterator<String> iterator) throws IllegalArgumentException {
-		return false;
-	}
-
-	@Override
-	public String getId() {
-		return getClass().getCanonicalName();
+	private ConfigurationGeneratorAlgorithmManager() {
 	}
 
 }

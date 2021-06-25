@@ -184,9 +184,9 @@ public interface SatSolver {
 
 	void shuffleOrder(Random rnd);
 
-	SStrategy<?> getSelectionStrategy();
+	SStrategy getSelectionStrategy();
 
-	void setSelectionStrategy(SStrategy<?> strategy);
+	void setSelectionStrategy(SStrategy strategy);
 
 	void assignmentPop();
 

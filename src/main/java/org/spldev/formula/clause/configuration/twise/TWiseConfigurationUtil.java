@@ -65,50 +65,6 @@ import org.spldev.util.logging.Logger;
  */
 public class TWiseConfigurationUtil {
 
-//	private class SolverPool {
-//
-//		private final LinkedList<SatSolver> available = new LinkedList<>();
-//		private final HashMap<SatSolver, SatSolver> used = new HashMap<>();
-//		private final Semaphore s;
-//
-//		private final int assignmentSize;
-//
-//		public SolverPool(int size, SatSolver template) {
-//			s = new Semaphore(size);
-//			assignmentSize = template.getAssignmentSize();
-//			for (int i = 0; i < size; i++) {
-//				final SatSolver solver = new Sat4JSolver(template.getCnf());
-//				solver.assignmentPushAll(template.getAssignmentArray());
-//				solver.rememberSolutionHistory(0);
-//				solver.setSelectionStrategy(SelectionStrategy.ORG);
-//				available.add(solver);
-//			}
-//		}
-//
-//		public SatSolver acquire() {
-//			try {
-//				s.acquire();
-//				synchronized (this) {
-//					final SatSolver solver = available.removeFirst();
-//					used.put(solver, solver);
-//					return solver;
-//				}
-//			} catch (final InterruptedException e) {
-//				return null;
-//			}
-//		}
-//
-//		public void release(SatSolver solver) {
-//			synchronized (this) {
-//				final SatSolver freedSolver = used.remove(solver);
-//				freedSolver.assignmentClear(assignmentSize);
-//				available.addLast(freedSolver);
-//			}
-//			s.release();
-//		}
-//
-//	}
-
 	public static final int GLOBAL_SOLUTION_LIMIT = 100_000;
 
 	final static Comparator<Pair<LiteralList, TWiseConfiguration>> candidateLengthComparator = new CandidateLengthComparator();
@@ -125,7 +81,6 @@ public class TWiseConfigurationUtil {
 	protected final CNF cnf;
 	protected final SatSolver localSolver;
 	protected final boolean hasSolver;
-//	protected SolverPool localSolverPool;
 
 	protected MIG mig;
 	protected LiteralList[] strongHull;
@@ -148,7 +103,8 @@ public class TWiseConfigurationUtil {
 		final FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
-		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).orElse(Logger::logProblems);
+		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).orElse(
+			Logger::logProblems);
 
 		for (final LiteralList solution : randomSample) {
 			addSolverSolution(solution.getLiterals());
@@ -156,10 +112,8 @@ public class TWiseConfigurationUtil {
 	}
 
 	public void computeMIG(boolean migCheckRedundancy, boolean migDetectStrong) {
-		if (TWiseConfigurationGenerator.VERBOSE) {
-			System.out.println("Init graph... ");
-			System.out.println("\tCompute graph... ");
-		}
+		Logger.logDebug("Init graph... ");
+		Logger.logDebug("\tCompute graph... ");
 		final MIGBuilder migBuilder = new RegularMIGBuilder();
 		migBuilder.setCheckRedundancy(migCheckRedundancy);
 		migBuilder.setDetectStrong(migDetectStrong);
@@ -173,10 +127,8 @@ public class TWiseConfigurationUtil {
 	}
 
 	public void computeMIG(Path migPath) {
-		if (TWiseConfigurationGenerator.VERBOSE) {
-			System.out.println("Init graph... ");
-			System.out.println("\tLoad graph from " + migPath);
-		}
+		Logger.logDebug("Init graph... ");
+		Logger.logDebug("\tLoad graph from " + migPath);
 		mig = FileHandler.parse(migPath, new MIGFormat()).get();
 		strongHull = new LiteralList[mig.getVertices().size()];
 
@@ -193,7 +145,6 @@ public class TWiseConfigurationUtil {
 			} else {
 				computeDeadCoreFeatures();
 			}
-//			localSolverPool = new SolverPool(16, localSolver);
 		}
 		return coreDead;
 	}
@@ -352,13 +303,16 @@ public class TWiseConfigurationUtil {
 			}
 
 			final SatSolver solver = getSolver();
+//			solver.setSelectionStrategy(SStrategy.random(getRandom()));
 			final int orgAssingmentLength = solver.getAssignmentSize();
 			try {
 				solver.assignmentPushAll(literals.getLiterals());
 				final SatResult hasSolution = solver.hasSolution();
 				switch (hasSolution) {
 				case TRUE:
-					addSolverSolution(solver.getSolution());
+					final int[] solution = solver.getSolution();
+					addSolverSolution(Arrays.copyOf(solution, solution.length));
+					solver.shuffleOrder(random);
 					break;
 				case FALSE:
 				case TIMEOUT:
@@ -476,6 +430,7 @@ public class TWiseConfigurationUtil {
 	private boolean isSelectionPossibleSat(final LiteralList literals, final TWiseConfiguration configuration) {
 		if (hasSolver) {
 			final SatSolver localSolver = getSolver();
+//			localSolver.setSelectionStrategy(SStrategy.random());
 			final int orgAssignmentSize = configuration.setUpSolver(localSolver);
 			try {
 				final int[] configurationLiterals = configuration.getLiterals();
@@ -485,7 +440,11 @@ public class TWiseConfigurationUtil {
 					}
 				}
 				if (orgAssignmentSize < localSolver.getAssignmentSize()) {
-					if (localSolver.hasSolution() != SatResult.TRUE) {
+					final int[] solution = localSolver.findSolution();
+					if (solution != null) {
+						addSolverSolution(Arrays.copyOf(solution, solution.length));
+						localSolver.shuffleOrder(random);
+					} else {
 						return false;
 					}
 				}
@@ -495,27 +454,6 @@ public class TWiseConfigurationUtil {
 		}
 		return true;
 	}
-
-//	private boolean isSelectionPossibleSatPara(final LiteralList literals, final TWiseConfiguration configuration) {
-//		final SatSolver localSolver = localSolverPool.acquire();
-//		try {
-//			final int orgAssignmentSize = configuration.setUpSolver(localSolver);
-//			final int[] configurationLiterals = configuration.getLiterals();
-//			for (final int literal : literals.getLiterals()) {
-//				if (configurationLiterals[Math.abs(literal) - 1] == 0) {
-//					localSolver.assignmentPush(literal);
-//				}
-//			}
-//			if (orgAssignmentSize < localSolver.getAssignmentSize()) {
-//				if (localSolver.hasSolution() != SatResult.TRUE) {
-//					return false;
-//				}
-//			}
-//		} finally {
-//			localSolverPool.release(localSolver);
-//		}
-//		return true;
-//	}
 
 	public static boolean isCovered(ClauseList condition, Iterable<? extends LiteralList> solutionList) {
 		for (final LiteralList configuration : solutionList) {
@@ -617,12 +555,12 @@ public class TWiseConfigurationUtil {
 		}
 		Collections.sort(candidatesList, candidateLengthComparator);
 	}
-
+	
 	protected boolean coverSol(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		for (final Pair<LiteralList, TWiseConfiguration> pair : candidatesList) {
 			if (isSelectionPossibleSol(pair.getKey(), pair.getValue())) {
-				select(pair.getValue(), extendConfigurationDeduce, pair.getKey());
 				assert pair.getValue().isValid();
+				select(pair.getValue(), extendConfigurationDeduce, pair.getKey());
 				return true;
 			}
 		}
@@ -662,20 +600,6 @@ public class TWiseConfigurationUtil {
 			return false;
 		}
 	}
-
-//	public boolean coverSatPara(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
-//		final Optional<Pair<LiteralList, TWiseConfiguration>> findFirst = candidatesList.parallelStream().filter(
-//			pair -> isSelectionPossibleSatPara(pair.getKey(), pair.getValue())).findFirst();
-//
-//		if (findFirst.isPresent()) {
-//			final Pair<LiteralList, TWiseConfiguration> pair = findFirst.get();
-//			select(pair.getValue(), extendConfigurationDeduce, pair.getKey());
-//			assert pair.getValue().isValid();
-//			return true;
-//		} else {
-//			return false;
-//		}
-//	}
 
 	public void newConfiguration(final LiteralList literals) {
 		if (completeSolutionList.size() < maxSampleSize) {

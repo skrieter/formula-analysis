@@ -60,15 +60,9 @@ class CoverAll implements ICoverStrategy {
 				return CombinationStatus.INVALID;
 			}
 
-	//		if (candidatesList.size() < 32) {
-				if (util.coverSat(candidatesList)) {
-					return CombinationStatus.COVERED;
-				}
-	//		} else {
-	//			if (util.coverSatPara(candidatesList)) {
-	//				return CombinationStatus.COVERED;
-	//			}
-	//		}
+			if (util.coverSat(candidatesList)) {
+				return CombinationStatus.COVERED;
+			}
 		} else {
 			if (util.coverNoSat(candidatesList)) {
 				return CombinationStatus.COVERED;

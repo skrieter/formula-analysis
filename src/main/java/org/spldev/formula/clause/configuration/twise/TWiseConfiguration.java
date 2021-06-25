@@ -74,7 +74,7 @@ public class TWiseConfiguration extends LiteralList {
 			if (unkownValues == null) {
 				final SatSolver solver = util.getSolver();
 				setUpSolver(solver);
-				solver.setSelectionStrategy(SStrategy.positive());
+				solver.setSelectionStrategy(SStrategy.original());
 				switch (solver.hasSolution()) {
 				case FALSE:
 					return VisitResult.Cancel;
@@ -83,17 +83,17 @@ public class TWiseConfiguration extends LiteralList {
 				case TRUE:
 					unkownValues = solver.getSolution();
 					util.addSolverSolution(Arrays.copyOf(unkownValues, unkownValues.length));
+					solver.shuffleOrder(util.getRandom());
 					break;
 				default:
 					throw new RuntimeException();
 				}
 				if (unkownValues != null) {
-					solver.setSelectionStrategy(SStrategy.negative());
+					solver.setSelectionStrategy(SStrategy.inverse(unkownValues));
 					final int[] model2 = solver.findSolution();
-					util.addSolverSolution(model2);
+					util.addSolverSolution(Arrays.copyOf(model2, model2.length));
 
 					LiteralList.resetConflicts(unkownValues, model2);
-					solver.setSelectionStrategy(SStrategy.reversed(unkownValues));
 
 					final int[] literals = TWiseConfiguration.this.literals;
 					for (int k = 0; k < literals.length; k++) {
@@ -103,7 +103,6 @@ public class TWiseConfiguration extends LiteralList {
 						}
 					}
 				} else {
-					System.out.println(this);
 					throw new RuntimeException();
 				}
 			}
@@ -127,7 +126,7 @@ public class TWiseConfiguration extends LiteralList {
 				case TRUE:
 					solver.assignmentPop();
 					final int[] solution2 = solver.getSolution();
-					util.addSolverSolution(solution2);
+					util.addSolverSolution(Arrays.copyOf(solution2, solution2.length));
 					LiteralList.resetConflicts(unkownValues, solution2);
 					solver.shuffleOrder(util.getRandom());
 					break;
@@ -167,7 +166,6 @@ public class TWiseConfiguration extends LiteralList {
 		} else {
 			traverser = null;
 			visitor = null;
-//			numberOfVariableLiterals = 0;
 			numberOfVariableLiterals = literals.length - countLiterals;
 			solutionLiterals = new VecInt(numberOfVariableLiterals);
 		}
@@ -254,6 +252,8 @@ public class TWiseConfiguration extends LiteralList {
 	}
 
 	public void propagation() {
+		final SatSolver solver = util.getSolver();
+		final int orgAssignmentSize;
 		if (traverser != null) {
 			final DPVisitor visitor = new DPVisitor();
 
@@ -264,23 +264,21 @@ public class TWiseConfiguration extends LiteralList {
 			solutionLiterals.clear();
 			countLiterals = 0;
 
-			final int orgAssignmentSize = util.getSolver().getAssignmentSize();
+			orgAssignmentSize = solver.getAssignmentSize();
 			traverser.setVisitor(visitor);
 			traverser.traverse(literals);
-			util.getSolver().assignmentClear(orgAssignmentSize);
 		} else {
-			final SatSolver solver = util.getSolver();
-			final int orgAssignmentSize = setUpSolver(solver);
+			orgAssignmentSize = setUpSolver(solver);
 
-			solver.setSelectionStrategy(SStrategy.negative());
+			solver.setSelectionStrategy(SStrategy.original());
 			final int[] firstSolution = solver.findSolution();
 			if (firstSolution != null) {
-				solver.setSelectionStrategy(SStrategy.positive());
-				final int[] secondSolution = util.getSolver().findSolution();
-				LiteralList.resetConflicts(firstSolution, secondSolution);
-
 				util.addSolverSolution(Arrays.copyOf(firstSolution, firstSolution.length));
+				solver.setSelectionStrategy(SStrategy.inverse(firstSolution));
+				final int[] secondSolution = util.getSolver().findSolution();
 				util.addSolverSolution(Arrays.copyOf(secondSolution, secondSolution.length));
+
+				LiteralList.resetConflicts(firstSolution, secondSolution);
 				for (final int literal : literals) {
 					if (literal != 0) {
 						firstSolution[Math.abs(literal) - 1] = 0;
@@ -310,8 +308,9 @@ public class TWiseConfiguration extends LiteralList {
 					}
 				}
 			}
-			solver.assignmentClear(orgAssignmentSize);
 		}
+		solver.assignmentClear(orgAssignmentSize);
+		solver.setSelectionStrategy(SStrategy.random(util.getRandom()));
 	}
 
 	public void clear() {
@@ -404,11 +403,12 @@ public class TWiseConfiguration extends LiteralList {
 
 	public void generateRandomSolutions(int count) {
 		final SatSolver solver = util.getSolver();
-		solver.setSelectionStrategy(SStrategy.random());
+		solver.setSelectionStrategy(SStrategy.random(util.getRandom()));
 		final int orgAssignmentSize = setUpSolver(solver);
 		try {
 			for (int i = 0; i < count; i++) {
-				util.addSolverSolution(solver.findSolution());
+				final int[] randomSolution = solver.findSolution();
+				util.addSolverSolution(Arrays.copyOf(randomSolution, randomSolution.length));
 				solver.shuffleOrder(util.getRandom());
 			}
 		} finally {
@@ -418,17 +418,14 @@ public class TWiseConfiguration extends LiteralList {
 
 	public boolean isValid() {
 		final SatSolver solver = util.getSolver();
-		solver.setSelectionStrategy(SStrategy.random());
+		SStrategy selectionStrategy = solver.getSelectionStrategy();
 		final int orgAssignmentSize = setUpSolver(solver);
+		solver.setSelectionStrategy(SStrategy.original());
 		try {
-			final SatResult satResult = solver.hasSolution();
-			if (satResult == SatResult.TRUE) {
-				util.addSolverSolution(solver.getSolution());
-				solver.shuffleOrder(util.getRandom());
-			}
-			return satResult == SatResult.TRUE;
+			return solver.hasSolution() == SatResult.TRUE;
 		} finally {
 			solver.assignmentClear(orgAssignmentSize);
+			solver.setSelectionStrategy(selectionStrategy);
 		}
 	}
 

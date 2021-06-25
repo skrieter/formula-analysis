@@ -48,6 +48,11 @@ public final class Clauses {
 		return new LiteralList(clauses.stream().flatMapToInt(c -> Arrays.stream(c.getLiterals())).distinct().toArray());
 	}
 
+	public static LiteralList getLiterals(VariableMap variables) {
+		return new LiteralList(IntStream.rangeClosed(1, variables.getMaxIndex()).flatMap(i -> IntStream.of(-i, i))
+			.toArray());
+	}
+
 	/**
 	 * Negates all clauses in the list (applies De Morgan).
 	 *

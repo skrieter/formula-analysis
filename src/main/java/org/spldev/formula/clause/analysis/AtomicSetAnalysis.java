@@ -92,7 +92,7 @@ public class AtomicSetAnalysis extends AVariableAnalysis<List<LiteralList>> {
 			final int fixedSize = solver.getAssignmentSize();
 			result.add(new LiteralList(solver.getAssignmentArray(0, fixedSize)));
 
-			solver.setSelectionStrategy(SStrategy.random());
+			solver.setSelectionStrategy(SStrategy.random(getRandom()));
 
 			for (int i = 0; i < model1.length; i++) {
 				if (done[i] == 0) {

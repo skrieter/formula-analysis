@@ -352,7 +352,7 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 	}
 
 	protected void checkOldCoreLiterals(int[] coreDead) {
-		solver.setSelectionStrategy(SStrategy.reversed(fixedFeatures));
+		solver.setSelectionStrategy(SStrategy.inverse(fixedFeatures));
 		for (int literal : coreDead) {
 			final int varX = fixedFeatures[Math.abs(literal) - 1];
 			if (varX == 0) {

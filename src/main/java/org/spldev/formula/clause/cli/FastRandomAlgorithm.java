@@ -38,7 +38,7 @@ public class FastRandomAlgorithm extends RandomAlgorithm<FastRandomConfiguration
 
 	@Override
 	public String getName() {
-		return "frandom";
+		return "random";
 	}
 
 }

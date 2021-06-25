@@ -22,82 +22,26 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-import org.sat4j.specs.IConstr;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.SatSolver;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.mig.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.job.*;
 
 /**
- * Generates configurations for a given propositional formula such that two-wise
+ * IncLing sampling algorithm. Generates configurations for a given propositional formula such that two-wise
  * feature coverage is achieved.
  *
  * @author Sebastian Krieter
  */
 public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 
-	public static class Configuration {
-
-		private static final double minBackJumpingDelta = 0.0;
-
-		private IConstr blockingClauseConstraint = null;
-
-		private int deltaCoverage;
-		private final LiteralList model;
-		private int totalCoverage;
-
-		public Configuration(LiteralList model, int deltaCoverage, int totalCoverage) {
-			this.model = model;
-			this.deltaCoverage = deltaCoverage;
-			this.totalCoverage = totalCoverage;
-		}
-
-		public IConstr getBlockingClauseConstraint() {
-			return blockingClauseConstraint;
-		}
-
-		public int getDeltaCoverage() {
-			return deltaCoverage;
-		}
-
-		public LiteralList getModel() {
-			return model;
-		}
-
-		public int getTotalCoverage() {
-			return totalCoverage;
-		}
-
-		public boolean isBetterThan(Configuration o) {
-			return (0 > (o.deltaCoverage - (deltaCoverage * (1 - minBackJumpingDelta))));
-		}
-
-		public void setBlockingClauseConstraint(IConstr blockingClauseConstraint) {
-			this.blockingClauseConstraint = blockingClauseConstraint;
-		}
-
-		public void setDeltaCoverage(int deltaCoverage) {
-			this.deltaCoverage = deltaCoverage;
-		}
-
-		public void setTotalCoverage(int totalCoverage) {
-			this.totalCoverage = totalCoverage;
-		}
-	}
-
 	private static class FeatureIndex implements Comparable<FeatureIndex> {
 
 		private int coveredCombinations = 0, selected = 0;
 		private final int index;
-		private double priority = 0;
+		private int priority = 0;
 
 		public FeatureIndex(int index) {
 			this.index = index;
@@ -106,7 +50,7 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		@Override
 		public int compareTo(FeatureIndex o) {
 			final int result = coveredCombinations - o.coveredCombinations;
-			return result != 0 ? result : (int) Math.signum(priority - o.priority);
+			return result != 0 ? result : priority - o.priority;
 		}
 
 		public int getIndex() {
@@ -125,7 +69,7 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 			this.selected = selected;
 		}
 
-		public void setPriority(double priority) {
+		public void setPriority(int priority) {
 			this.priority = priority;
 		}
 
@@ -138,37 +82,25 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	public static final boolean VERBOSE = false;
 
-	protected static final byte BIT_00 = 1 << 0;
-	protected static final byte BIT_01 = 1 << 1;
-	protected static final byte BIT_10 = 1 << 2;
-	protected static final byte BIT_11 = 1 << 3;
-	protected static final byte BIT_CHECK = 1 << 6;
-	protected static final byte BITS_NEGATIVE_IMPLY = BIT_01 | BIT_00;
+	private static final byte BIT_00 = 1 << 0;
+	private static final byte BIT_01 = 1 << 1;
+	private static final byte BIT_10 = 1 << 2;
+	private static final byte BIT_11 = 1 << 3;
 
-	protected static final byte BITS_POSITIVE_IMPLY = BIT_11 | BIT_10;
+	private FeatureIndex[] featureIndexArray = new FeatureIndex[0];
+	private byte[] combinations = new byte[0];
+	private byte[] combinations2 = new byte[0];
+	private byte[] core = new byte[0];
 
-	protected static final int maxBackJumping = 0;
-
-	protected byte[] combinations = new byte[0];
-	protected byte[] combinations2 = new byte[0];
-	protected short[] comboIndex = new short[0];
-	protected byte[] core = new byte[0];
-	protected int count = 0, countLoops = 0, finalCount = 0, fixedPartCount, combinationCount;
-
-	protected FeatureIndex[] featureIndexArray = new FeatureIndex[0];
-	protected final List<Configuration> finalConfigurationList = new ArrayList<>();
-	protected int numVariables;
-	protected final Deque<Integer> parentStack = new LinkedList<>();
-	protected byte[] recArray = new byte[0];
-
-	private int[] allYesSolution, allNoSolution;
+	private int mode;
+	private int combinationCount;
+	private int numVariables;
+	private int numberOfFixedFeatures;
 
 	private boolean[] featuresUsedOrg;
 	private Random random = new Random(0);
 
-	private int numberOfFixedFeatures;
-
-	protected void addCombinationsFromModel(int[] curModel) {
+	private void addCombinationsFromModel(int[] curModel) {
 		for (int i = 0; i < combinations2.length; i++) {
 			final int a = (i / numVariables);
 			final int b = (i % numVariables);
@@ -190,24 +122,6 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 					bit1 = BIT_11;
 				}
 			}
-			if ((((combinations2[i])) & bit1) == 0) {
-				switch (bit1) {
-				case BIT_00:
-					comboIndex[(4 * i) + 0] = (short) count;
-					break;
-				case BIT_01:
-					comboIndex[(4 * i) + 1] = (short) count;
-					break;
-				case BIT_10:
-					comboIndex[(4 * i) + 2] = (short) count;
-					break;
-				case BIT_11:
-					comboIndex[(4 * i) + 3] = (short) count;
-					break;
-				default:
-					break;
-				}
-			}
 			combinations2[i] |= (bit1);
 		}
 	}
@@ -217,13 +131,13 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		for (int i = 0; i < combinations.length; i++) {
 			final int a = (i / numVariables);
 			final int b = (i % numVariables);
-			final byte coreA = core[a];
-			final byte coreB = core[b];
 			if (a == b) {
 				combinationCount -= 4;
 				combinations2[i] = 0x00;
 				continue;
 			}
+			final byte coreA = core[a];
+			final byte coreB = core[b];
 			if (coreA != 0) {
 				if (coreB != 0) {
 					if (coreA > 0) {
@@ -272,13 +186,9 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 				}
 			}
 		}
-		fixedPartCount = count2();
-		combinationCount /= 2;
-		combinationCount -= fixedPartCount;
 	}
 
 	private void addRelation(final int mx0, final int my0) {
-
 		final int indexX = Math.abs(mx0) - 1;
 		final int indexY = Math.abs(my0) - 1;
 		final int combinationIndexXY = (indexX * numVariables) + indexY;
@@ -303,219 +213,24 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		}
 	}
 
-	private boolean addRelation2(final int mx0, final int my0) {
-		final int indexX = Math.abs(mx0) - 1;
-		final int indexY = Math.abs(my0) - 1;
-		if (indexX == indexY) {
-			return false;
-		}
-		final int combinationIndexXY = (indexX * numVariables) + indexY;
-		final int combinationIndexYX = (indexY * numVariables) + indexX;
-
-		final byte oldXY = combinations[combinationIndexXY];
-		final byte oldYX = combinations[combinationIndexYX];
-
-		if (mx0 > 0) {
-			if (my0 > 0) {
-				combinations[combinationIndexXY] |= BIT_11;
-				combinations[combinationIndexYX] |= BIT_00;
-			} else {
-				combinations[combinationIndexXY] |= BIT_10;
-				combinations[combinationIndexYX] |= BIT_10;
-			}
-		} else {
-			if (my0 > 0) {
-				combinations[combinationIndexXY] |= BIT_01;
-				combinations[combinationIndexYX] |= BIT_01;
-			} else {
-				combinations[combinationIndexXY] |= BIT_00;
-				combinations[combinationIndexYX] |= BIT_11;
-			}
-		}
-
-		return (oldXY != combinations[combinationIndexXY]) || (oldYX != combinations[combinationIndexYX]);
-	}
-
-	protected int count(int[] curModel) {
-		int partCount = 0;
-		for (int i = 0; i < combinations2.length; i++) {
-			final int a = (i / numVariables);
-			final int b = (i % numVariables);
-			if (a == b) {
-				continue;
-			}
-
-			final byte bit1;
-			if (curModel[a] < 0) {
-				if (curModel[b] < 0) {
-					bit1 = BIT_00;
-				} else {
-					bit1 = BIT_01;
-				}
-			} else {
-				if (curModel[b] < 0) {
-					bit1 = BIT_10;
-				} else {
-					bit1 = BIT_11;
-				}
-			}
-
-			final int c = (combinations2[i]) | bit1;
-			partCount += c % 2;
-			partCount += (c >> 1) % 2;
-			partCount += (c >> 2) % 2;
-			partCount += (c >> 3) % 2;
-		}
-		return partCount / 2;
-	}
-
-	protected int count2() {
+	private int count() {
 		int partCount = 0;
 		for (int i = 0; i < combinations2.length; i++) {
 			final int c = (combinations2[i]);
-			partCount += c % 2;
-			partCount += (c >> 1) % 2;
-			partCount += (c >> 2) % 2;
-			partCount += (c >> 3) % 2;
+			partCount += c & 1;
+			partCount += (c >> 1) & 1;
+			partCount += (c >> 2) & 1;
+			partCount += (c >> 3) & 1;
 		}
-		return partCount / 2;
+		return partCount;
 	}
 
-	protected void findInvalid() {
-		parentStack.clear();
-
-		solver.setSelectionStrategy(SStrategy.positive());
-		allYesSolution = solver.findSolution();
-		allNoSolution = allYesSolution;
-
-		// satisfiable?
-		if (allYesSolution != null) {
-			solver.setSelectionStrategy(SStrategy.negative());
-			solver.hasSolution();
-			allNoSolution = solver.findSolution();
-			solver.setSelectionStrategy(SStrategy.positive());
-
-			// find core/dead features
-			core = new byte[numVariables];
-			recArray = new byte[numVariables];
-			final int[] model1Copy = Arrays.copyOf(allYesSolution, allYesSolution.length);
-			LiteralList.resetConflicts(model1Copy, allNoSolution);
-			for (int i = 0; i < model1Copy.length; i++) {
-				final int varX = model1Copy[i];
-				if (varX != 0) {
-					solver.assignmentPush(-varX);
-					switch (solver.hasSolution()) {
-					case FALSE:
-						core[i] = (byte) (varX > 0 ? 1 : -1);
-						solver.assignmentReplaceLast(varX);
-						break;
-					case TIMEOUT:
-						solver.assignmentPop();
-						break;
-					case TRUE:
-						solver.assignmentPop();
-						LiteralList.resetConflicts(model1Copy, solver.getSolution());
-						solver.shuffleOrder(getRandom());
-						break;
-					}
-				}
-			}
-			combinations = new byte[numVariables * numVariables];
-			combinations2 = new byte[numVariables * numVariables];
-
-			outer: for (final LiteralList clause : solver.getCnf().getClauses()) {
-				final int[] literals = clause.getLiterals();
-				final int[] nonCoreLiterals = new int[literals.length];
-				int nonCoreCount = 0;
-				for (int i = 0; i < literals.length; i++) {
-					final int var = literals[i];
-					final int coreB = var * core[Math.abs(var) - 1];
-					if (coreB > 0) {
-						continue outer;
-					} else if (coreB == 0) {
-						nonCoreLiterals[nonCoreCount++] = var;
-					}
-				}
-				if (nonCoreCount < 2) {
-					continue;
-				}
-				if (nonCoreCount == 2) {
-					final int x = nonCoreLiterals[0];
-					final int y = nonCoreLiterals[1];
-					if (Math.abs(x) < Math.abs(y)) {
-						addRelation(-x, y);
-					} else {
-						addRelation(-y, x);
-					}
-				}
-				for (int i = 0; i < nonCoreLiterals.length; i++) {
-					final int var = nonCoreLiterals[i];
-					if (var != 0) {
-						final int x = Math.abs(var) - 1;
-						for (int j = i + 1; j < nonCoreCount; j++) {
-							final int y = Math.abs(nonCoreLiterals[j]) - 1;
-							combinations[(x * numVariables) + y] |= BIT_CHECK;
-							combinations[(y * numVariables) + x] |= BIT_CHECK;
-						}
-					}
-				}
-			}
-
-			boolean incomplete;
-
-			do {
-				incomplete = false;
-				for (int x1 = 0; x1 < model1Copy.length; x1++) {
-					for (int y1 = 0; y1 < model1Copy.length; y1++) {
-						final int combinationIndexX1Y1 = (x1 * numVariables) + y1;
-						if ((combinations[combinationIndexX1Y1] & BIT_CHECK) != 0) {
-							for (int x2 = 0; x2 < model1Copy.length; x2++) {
-								final int combinationIndexY1X2 = (y1 * numVariables) + x2;
-								if ((combinations[combinationIndexY1X2] & BIT_CHECK) != 0) {
-									final int combinationIndexX1X2 = (x1 * numVariables) + x2;
-									if ((combinations[combinationIndexX1X2] & BIT_CHECK) == 0) {
-										combinations[combinationIndexX1X2] |= BIT_CHECK;
-										incomplete = true;
-									}
-								}
-							}
-						}
-					}
-				}
-			} while (incomplete);
-
-			do {
-				incomplete = false;
-				for (int i = 0; i < allYesSolution.length; i++) {
-					parentStack.add((i + 1));
-					if (testVariable2()) {
-						incomplete = true;
-					}
-					parentStack.add(-(i + 1));
-					if (testVariable2()) {
-						incomplete = true;
-					}
-				}
-			} while (incomplete);
-
-			Arrays.fill(recArray, (byte) 0);
-			for (int i = 0; i < allYesSolution.length; i++) {
-				parentStack.add((i + 1));
-				testVariable();
-				parentStack.add(-(i + 1));
-				testVariable();
-			}
-		}
-	}
-
-	protected void fix(final boolean[] featuresUsed, int a, int b) {
+	private void fix(final boolean[] featuresUsed, int a, int b) {
 		featuresUsed[a] = true;
 		featuresUsed[b] = true;
-		printCount();
-		printCount();
 	}
 
-	protected int[] getCombinationOrder(int selectedA, int selectedB, byte curCombo) {
+	private int[] getCombinationOrder(int selectedA, int selectedB, byte curCombo) {
 		final int[] combinationOrder = new int[4];
 		curCombo = (byte) ~curCombo;
 		if (selectedA >= 0) {
@@ -546,24 +261,12 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		return combinationOrder;
 	}
 
-	protected int getLastCoverage() {
-		return (finalConfigurationList.isEmpty()) ? 0
-				: finalConfigurationList.get(finalConfigurationList.size() - 1).getTotalCoverage();
-	}
-
-	protected int[] getModel(final Collection<int[]> solutions) {
-		final int[] model = solver.getSolution();
-		if (model != null) {
-			solutions.add(model);
+	private boolean handleNewConfig(LiteralList solution, final boolean[] featuresUsedOrg) {
+		if (solution == null) {
+			return true;
 		}
-		return model;
-	}
-
-	protected boolean handleNewConfig(LiteralList solution, final boolean[] featuresUsedOrg) {
-		final int partCount = count(solution.getLiterals()) - fixedPartCount;
-		final Configuration config = new Configuration(solution, partCount - getLastCoverage(), partCount);
-
 		addCombinationsFromModel(solution.getLiterals());
+		final int totalCount = count();
 
 		for (int i = 0; i < featureIndexArray.length; i++) {
 			final FeatureIndex featureIndex = featureIndexArray[i];
@@ -599,38 +302,13 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 			return true;
 		}
 
-		// Statistic numbers
-		final int absUncovered = printStatisticNumbers(config);
-
-		finalCount = Math.max(finalCount, count - maxBackJumping);
-		if (absUncovered <= 0) {
+		if (combinationCount <= totalCount) {
 			return true;
 		}
 		return false;
 	}
 
-	@SuppressWarnings("unused")
-	protected void printCount() {
-		if (VERBOSE && ((--countLoops % 100) == 0)) {
-			System.out.println("\t" + (countLoops / 100));
-		}
-	}
-
-	protected int printStatisticNumbers(final Configuration config) {
-		final int absUncovered = combinationCount - config.getTotalCoverage();
-		double relDelta = (double) (config.getDeltaCoverage()) / combinationCount;
-		double relTotal = (double) (config.getTotalCoverage()) / combinationCount;
-		relDelta = Math.floor(relDelta * 100000.0) / 1000.0;
-		relTotal = Math.floor(relTotal * 1000.0) / 10.0;
-		if (VERBOSE) {
-			System.out.println(count++ + ": " + config.getTotalCoverage() + "/" + combinationCount + " | " + relTotal
-					+ "% | left = " + absUncovered + " | new = " + config.getDeltaCoverage() + " | delta = "
-					+ relDelta);
-		}
-		return absUncovered;
-	}
-
-	protected boolean testCombination(int[] varStatus, boolean[] featuresUsed, int sa, int sb) {
+	private boolean testCombination(int[] varStatus, boolean[] featuresUsed, int sa, int sb) {
 		final int a = Math.abs(sa) - 1;
 		final int b = Math.abs(sb) - 1;
 
@@ -650,7 +328,6 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 					solver.assignmentReplaceLast(-sb);
 					varStatus[1] = -sigB;
 					featuresUsed[b] = true;
-					printCount();
 					return false;
 				case TIMEOUT:
 					throw new RuntimeException();
@@ -671,7 +348,6 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 					solver.assignmentReplaceLast(-sa);
 					varStatus[0] = -sigA;
 					featuresUsed[a] = true;
-					printCount();
 					return true;
 				} else {
 					if (varStatus[0] == 0) {
@@ -692,140 +368,34 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		return false;
 	}
 
-	protected void testVariable() {
-		final int mx1 = parentStack.peek();
-		final int i = Math.abs(mx1) - 1;
-		final boolean positive = mx1 > 0;
-		final byte compareB = (byte) (positive ? 1 : 2);
-
-		if ((core[i] == 0) && ((recArray[i] & compareB) == 0)) {
-			recArray[i] |= compareB;
-
-			int[] xModel1 = null;
-			for (final LiteralList solution : solver.getSolutionHistory()) {
-				if (mx1 == solution.getLiterals()[i]) {
-					xModel1 = solution.getLiterals();
-					break;
-				}
-			}
-
-			int c = 0;
-
-			solver.assignmentPush(mx1);
-			if (xModel1 == null) {
-				xModel1 = solver.findSolution();
-				if (xModel1 == null) {
-					throw new RuntimeException();
-				}
-			}
-			final int rowIndex = i * numVariables;
-
-			inner1: for (int j = i + 1; j < xModel1.length; j++) {
-				final byte b = combinations[rowIndex + j];
-				if ((core[j] == 0) && ((b & BIT_CHECK) != 0) && ((positive && ((b & BITS_POSITIVE_IMPLY) == 0))
-						|| (!positive && ((b & BITS_NEGATIVE_IMPLY) == 0)))) {
-
-					final int my1 = xModel1[j];
-					for (final LiteralList solution : solver.getSolutionHistory()) {
-						final int mxI = solution.getLiterals()[i];
-						final int myI = solution.getLiterals()[j];
-						if ((mx1 == mxI) && (my1 != myI)) {
-							continue inner1;
-						}
-					}
-
-					solver.assignmentPush(my1);
-					solver.setSelectionStrategy(
-							((c++ % 2) != 0) ? SStrategy.positive() : SStrategy.negative());
-
-					switch (solver.hasSolution()) {
-					case FALSE:
-						for (final int mx0 : parentStack) {
-							addRelation(mx0, my1);
-						}
-						parentStack.push(my1);
-						solver.assignmentPop();
-						solver.assignmentPop();
-						testVariable();
-						solver.assignmentPush(mx1);
-						break;
-					case TIMEOUT:
-						solver.assignmentPop();
-						break;
-					case TRUE:
-						solver.shuffleOrder(getRandom());
-						solver.assignmentPop();
-						break;
-					}
-				}
-			}
-			solver.assignmentPop();
-		}
-		parentStack.pop();
-	}
-
-	protected boolean testVariable2() {
-		boolean changed = false;
-		final int mx1 = parentStack.peek();
-		final int i = Math.abs(mx1) - 1;
-		final boolean positive = mx1 > 0;
-		final byte compareB = (byte) (positive ? 1 : 2);
-
-		if ((core[i] == 0) && ((recArray[i] & compareB) == 0)) {
-			recArray[i] |= compareB;
-
-			final int rowIndex = i * numVariables;
-
-			for (int j = 0; j < numVariables; j++) {
-				if ((i != j) && (core[j] == 0)) {
-					final byte b = combinations[rowIndex + j];
-					int my1 = 0;
-					if (positive) {
-						if ((b & BIT_11) == BIT_11) {
-							my1 = (j + 1);
-						} else if ((b & BIT_10) == BIT_10) {
-							my1 = -(j + 1);
-						}
-					} else {
-						if ((b & BIT_01) == BIT_01) {
-							my1 = (j + 1);
-						} else if ((b & BIT_00) == BIT_00) {
-							my1 = -(j + 1);
-						}
-					}
-					if (my1 != 0) {
-						for (final int mx0 : parentStack) {
-							if (addRelation2(mx0, my1)) {
-								changed = true;
-							}
-						}
-						parentStack.push(my1);
-						if (testVariable2()) {
-							changed = true;
-						}
-					}
-				}
-			}
-		}
-		parentStack.pop();
-		return changed;
-	}
-
-	public int getFixedPartCount() {
-		return fixedPartCount;
-	}
-
 	@Override
 	protected void init() {
 		numVariables = solver.getCnf().getVariableMap().size();
+		solver.rememberSolutionHistory(Math.min(numVariables, SatSolver.MAX_SOLUTION_BUFFER));
 
-		final int featureCount = solver.getCnf().getVariableMap().size();
-		solver.rememberSolutionHistory(Math.min(featureCount, SatSolver.MAX_SOLUTION_BUFFER));
+		final MIGBuilder migBuilder = new RegularMIGBuilder();
+		migBuilder.setCheckRedundancy(true);
+		migBuilder.setDetectStrong(true);
+		MIG mig = Executor.run(migBuilder, solver.getCnf()).get();
 
-		findInvalid();
+		combinations = new byte[numVariables * numVariables];
+		combinations2 = new byte[numVariables * numVariables];
+		core = new byte[numVariables];
+		for (Vertex vertex : mig.getVertices()) {
+			if (vertex.isCore()) {
+				core[Math.abs(vertex.getVar()) - 1] = (byte) (vertex.getVar() < 0 ? -1 : 1);
+				solver.assignmentPush(vertex.getVar());
+			} else {
+				for (Vertex strong : vertex.getStrongEdges()) {
+					if (strong.isNormal()) {
+						addRelation(vertex.getVar(), strong.getVar());
+					}
+				}
+			}
+		}
 
 		numberOfFixedFeatures = solver.getAssignmentSize();
-		featuresUsedOrg = new boolean[featureCount];
+		featuresUsedOrg = new boolean[numVariables];
 		for (int i = 0; i < numberOfFixedFeatures; i++) {
 			featuresUsedOrg[Math.abs(solver.assignmentGet(i)) - 1] = true;
 		}
@@ -840,99 +410,103 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 			}
 		}
 		addInvalidCombinations();
-
-		count = 1;
-		finalCount = count - maxBackJumping;
-
-		comboIndex = new short[combinations2.length << 2];
-
-		solver = solver.clone();
-		solver.setSelectionStrategy(SStrategy.random());
 	}
 
 	@Override
 	public LiteralList get() {
-		if (allYesSolution != null) {
-			LiteralList solution = new LiteralList(allYesSolution, LiteralList.Order.INDEX, false);
-			handleNewConfig(solution, featuresUsedOrg);
-			allYesSolution = null;
-			return solution;
+		switch (mode) {
+		case 0: {
+			return findFirstSolution(SStrategy.positive());
 		}
-		if (allNoSolution != null) {
-			LiteralList solution = new LiteralList(allNoSolution, LiteralList.Order.INDEX, false);
-			handleNewConfig(solution, featuresUsedOrg);
-			allNoSolution = null;
-			return solution;
+		case 1: {
+			return findFirstSolution(SStrategy.negative());
 		}
-		final int[] varStatus = new int[2];
-		final boolean[] featuresUsed = Arrays.copyOf(featuresUsedOrg, featuresUsedOrg.length);
+		case 2: {
+			solver.setSelectionStrategy(SStrategy.random(getRandom()));
+			final int[] varStatus = new int[2];
+			final boolean[] featuresUsed = Arrays.copyOf(featuresUsedOrg, featuresUsedOrg.length);
 
-		countLoops = featureIndexArray.length;
-		int prio = 0;
-		for (final FeatureIndex featureIndex : featureIndexArray) {
-			featureIndex.setPriority(prio++);
-		}
-		Arrays.sort(featureIndexArray);
-
-		for (int x = 1, end = featureIndexArray.length; x < end; x++) {
-			final FeatureIndex featureIndexA = featureIndexArray[x];
-			final int a = featureIndexA.getIndex();
-			if (featuresUsed[a]) {
-				continue;
+			int prio = 0;
+			for (final FeatureIndex featureIndex : featureIndexArray) {
+				featureIndex.setPriority(prio++);
 			}
-			bLoop: for (int y = 0; y < x; y++) {
-				final FeatureIndex featureIndexB = featureIndexArray[y];
-				final int b = featureIndexB.getIndex();
-				final int index = (a * numVariables) + b;
-				final byte curCombo = (combinations2[index]);
-				if ((curCombo == 15) || featuresUsed[b]) {
+			Arrays.sort(featureIndexArray);
+
+			for (int x = 1, end = featureIndexArray.length; x < end; x++) {
+				final FeatureIndex featureIndexA = featureIndexArray[x];
+				final int a = featureIndexA.getIndex();
+				if (featuresUsed[a]) {
 					continue;
 				}
-
-				varStatus[0] = 0;
-				varStatus[1] = 0;
-
-				final int[] combinationOrder = getCombinationOrder(featureIndexA.getSelected(),
-						featureIndexB.getSelected(), curCombo);
-				comboLoop: for (int i = 0; i < combinationOrder.length; i++) {
-					final boolean result;
-					switch (combinationOrder[i]) {
-					case BIT_00:
-						result = testCombination(varStatus, featuresUsed, -(a + 1), -(b + 1));
-						break;
-					case BIT_01:
-						result = testCombination(varStatus, featuresUsed, -(a + 1), (b + 1));
-						break;
-					case BIT_10:
-						result = testCombination(varStatus, featuresUsed, (a + 1), -(b + 1));
-						break;
-					case BIT_11:
-						result = testCombination(varStatus, featuresUsed, (a + 1), (b + 1));
-						break;
-					default:
-						continue comboLoop;
+				bLoop: for (int y = 0; y < x; y++) {
+					final FeatureIndex featureIndexB = featureIndexArray[y];
+					final int b = featureIndexB.getIndex();
+					final int index = (a * numVariables) + b;
+					final byte curCombo = (combinations2[index]);
+					if ((curCombo == 15) || featuresUsed[b]) {
+						continue;
 					}
-					if (result) {
-						break bLoop;
+
+					varStatus[0] = 0;
+					varStatus[1] = 0;
+
+					final int[] combinationOrder = getCombinationOrder(featureIndexA.getSelected(),
+						featureIndexB.getSelected(), curCombo);
+					comboLoop: for (int i = 0; i < combinationOrder.length; i++) {
+						final boolean result;
+						switch (combinationOrder[i]) {
+						case BIT_00:
+							result = testCombination(varStatus, featuresUsed, -(a + 1), -(b + 1));
+							break;
+						case BIT_01:
+							result = testCombination(varStatus, featuresUsed, -(a + 1), (b + 1));
+							break;
+						case BIT_10:
+							result = testCombination(varStatus, featuresUsed, (a + 1), -(b + 1));
+							break;
+						case BIT_11:
+							result = testCombination(varStatus, featuresUsed, (a + 1), (b + 1));
+							break;
+						default:
+							continue comboLoop;
+						}
+						if (result) {
+							break bLoop;
+						}
 					}
 				}
 			}
-		}
 
-		int[] curModel = solver.findSolution();
-		if (curModel == null) {
+			final LiteralList solution = findSolution();
+			if (handleNewConfig(solution, featuresUsedOrg)) {
+				mode = -1;
+			} else {
+				solver.shuffleOrder(getRandom());
+			}
+			solver.assignmentClear(numberOfFixedFeatures);
+			return solution;
+		}
+		default:
 			return null;
 		}
-		final LiteralList solution = new LiteralList(Arrays.copyOf(curModel, curModel.length), LiteralList.Order.INDEX,
-				false);
+	}
 
-		if (handleNewConfig(solution, featuresUsedOrg)) {
-			return null;
+	private LiteralList findFirstSolution(final SStrategy strategy) {
+		solver.setSelectionStrategy(strategy);
+		LiteralList allYesSolution = findSolution();
+		if (handleNewConfig(allYesSolution, featuresUsedOrg)) {
+			mode = -1;
 		} else {
-			solver.shuffleOrder(getRandom());
+			mode++;
 		}
-		solver.assignmentClear(numberOfFixedFeatures);
-		return solution;
+		return allYesSolution;
+	}
+
+	private LiteralList findSolution() {
+		final int[] curModel = solver.findSolution();
+		return curModel == null ? null
+			: new LiteralList(Arrays.copyOf(curModel, curModel.length), LiteralList.Order.INDEX,
+				false);
 	}
 
 	public Random getRandom() {

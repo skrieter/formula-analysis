@@ -22,25 +22,18 @@
  */
 package org.spldev.formula.clause.configuration.twise;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.ClauseList;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.configuration.ConfigurationGenerator;
-import org.spldev.formula.clause.configuration.twise.ICoverStrategy.CombinationStatus;
-import org.spldev.formula.clause.mig.MIG;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.util.job.UpdateThread;
-import org.spldev.util.logging.Logger;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.configuration.*;
+import org.spldev.formula.clause.configuration.twise.ICoverStrategy.*;
+import org.spldev.formula.clause.mig.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.job.*;
+import org.spldev.util.logging.*;
 
 /**
- * Generates configurations for a given propositional formula such that t-wise
+ * YASA sampling algorithm. Generates configurations for a given propositional formula such that t-wise
  * feature coverage is achieved.
  *
  * @author Sebastian Krieter
@@ -96,7 +89,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	public static boolean VERBOSE = false;
 
 	public static final int DEFAULT_ITERATIONS = 5;
-	public static final int DEFAULT_RANDOM_SAMPLE_SIZE = 10_000;
+	public static final int DEFAULT_RANDOM_SAMPLE_SIZE = 100;
 	public static final int DEFAULT_LOG_FREQUENCY = 60_000;
 
 	// TODO Variation Point: Iterations of removing low-contributing Configurations
@@ -105,9 +98,6 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	private int logFrequency = DEFAULT_LOG_FREQUENCY;
 	private boolean useMig = true;
 	private MIG mig;
-//	private boolean migCheckRedundancy = true;
-//	private boolean migDetectStrong = false;
-//	private Path migPath = null;
 	private Deduce createConfigurationDeduce = Deduce.DP;
 	private Deduce extendConfigurationDeduce = Deduce.NONE;
 
@@ -128,7 +118,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	protected UpdateThread samplingMonitor;
 	protected UpdateThread memoryMonitor;
 
-	private int maxSampleSize;
+	private int maxSampleSize = Integer.MAX_VALUE;
 
 	public int getMaxSampleSize() {
 		return maxSampleSize;
@@ -164,10 +154,11 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	@Override
 	protected void init() {
-		if (TWiseConfigurationGenerator.VERBOSE) {
-			System.out.println("Create util instance... ");
-		}
+		Logger.logDebug("Create util instance... ");
 		final CNF cnf = solver.getCnf();
+		solver.rememberSolutionHistory(10);
+		solver.setSelectionStrategy(SStrategy.random(getRandom()));
+		
 		if (nodes == null) {
 			nodes = convertLiterals(LiteralList.getLiterals(cnf));
 		}
@@ -181,9 +172,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 		util.setCreateConfigurationDeduce(createConfigurationDeduce);
 		util.setExtendConfigurationDeduce(extendConfigurationDeduce);
 
-		if (TWiseConfigurationGenerator.VERBOSE) {
-			System.out.println("Compute random sample... ");
-		}
+		Logger.logDebug("Compute random sample... ");
 
 		if (!cnf.getClauses().isEmpty()) {
 			util.computeRandomSample(randomSampleSize);
@@ -196,25 +185,21 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 			}
 		}
 
-		if (TWiseConfigurationGenerator.VERBOSE) {
-			System.out.println("Set up PresenceConditionManager... ");
-		}
+		Logger.logDebug("Set up PresenceConditionManager... ");
+		
 		// TODO Variation Point: Sorting Nodes
 		presenceConditionManager = new PresenceConditionManager(util, nodes);
 		// TODO Variation Point: Building Combinations
 		combiner = new TWiseCombiner(cnf.getVariableMap().size());
 
-		solver.rememberSolutionHistory(0);
-		solver.setSelectionStrategy(SStrategy.orgiginal());
-
 		phaseCount = 0;
 
-		memoryMonitor = new UpdateThread(new MemoryMonitor(), 1);
-		memoryMonitor.start();
-		if (TWiseConfigurationGenerator.VERBOSE) {
-			samplingMonitor = new UpdateThread(this::printStatus, logFrequency);
-			samplingMonitor.start();
-		}
+//		memoryMonitor = new UpdateThread(new MemoryMonitor(), 1);
+//		memoryMonitor.start();
+//		if (TWiseConfigurationGenerator.VERBOSE) {
+//			samplingMonitor = new UpdateThread(this::printStatus, logFrequency);
+//			samplingMonitor.start();
+//		}
 		try {
 			for (int i = 0; i < iterations; i++) {
 				trimConfigurations();
@@ -222,7 +207,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 			}
 			Collections.reverse(bestResult);
 		} finally {
-			memoryMonitor.finish();
+//			memoryMonitor.finish();
 			if (TWiseConfigurationGenerator.VERBOSE) {
 				samplingMonitor.finish();
 			}
@@ -231,13 +216,15 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	@Override
 	public LiteralList get() {
-		return bestResult.remove(bestResult.size()).getCompleteSolution();
+		return bestResult.isEmpty()
+			? null
+			: bestResult.remove(bestResult.size() - 1).getCompleteSolution();
 	}
 
 	private void trimConfigurations() {
-		if (curResult != null) {
-			final CoverageStatistic statistic = new TWiseStatisticFastGenerator(util).getCoverage(curResult,
-					presenceConditionManager.getGroupedPresenceConditions(), t);
+		if (curResult != null && !curResult.isEmpty()) {
+			final CoverageStatistic statistic = new TWiseStatisticFastGenerator().getCoverage(curResult,
+				presenceConditionManager.getGroupedPresenceConditions(), t);
 
 			final double[] normConfigValues = statistic.getConfigScores();
 			double mean = 0;
@@ -255,7 +242,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	}
 
 	private int removeSolutions(double[] values, final double reference, int index,
-			List<TWiseConfiguration> solutionList) {
+		List<TWiseConfiguration> solutionList) {
 		for (final Iterator<TWiseConfiguration> iterator = solutionList.iterator(); iterator.hasNext();) {
 			iterator.next();
 			if (values[index++] < reference) {
@@ -268,14 +255,14 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	private void buildCombinations() {
 		// TODO Variation Point: Cover Strategies
 		final List<? extends ICoverStrategy> phaseList = Arrays.asList(//
-				new CoverAll(util) //
+			new CoverAll(util) //
 		);
 
 		// TODO Variation Point: Combination order
 		final ICombinationSupplier<ClauseList> it;
 		presenceConditionManager.shuffleSort(getRandom());
 		final List<List<PresenceCondition>> groupedPresenceConditions = presenceConditionManager
-				.getGroupedPresenceConditions();
+			.getGroupedPresenceConditions();
 		if (groupedPresenceConditions.size() == 1) {
 			it = new SingleIterator(t, util.getCnf().getVariableMap().size(), groupedPresenceConditions.get(0));
 		} else {
@@ -356,13 +343,13 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 		if (VERBOSE) {
 			final long uncoveredCount = (numberOfCombinations - coveredCount) - invalidCount;
 			final double phaseProgress = ((int) Math.floor((1 - (((double) count) / numberOfCombinations)) * 1000))
-					/ 10.0;
+				/ 10.0;
 			final double coverProgress = ((int) Math.floor(((((double) coveredCount) / numberOfCombinations)) * 1000))
-					/ 10.0;
+				/ 10.0;
 			final double uncoverProgress = ((int) Math
-					.floor(((((double) uncoveredCount) / numberOfCombinations)) * 1000)) / 10.0;
+				.floor(((((double) uncoveredCount) / numberOfCombinations)) * 1000)) / 10.0;
 			final double invalidProgress = ((int) Math.floor(((((double) invalidCount) / numberOfCombinations)) * 1000))
-					/ 10.0;
+				/ 10.0;
 			final StringBuilder sb = new StringBuilder();
 
 			sb.append(phaseCount);
@@ -431,30 +418,6 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	public void setMIG(MIG mig) {
 		this.mig = mig;
 	}
-
-//	public Path getMigPath() {
-//		return migPath;
-//	}
-//
-//	public void setMigPath(Path migPath) {
-//		this.migPath = migPath;
-//	}
-//
-//	public boolean isMigCheckRedundancy() {
-//		return migCheckRedundancy;
-//	}
-//
-//	public void setMigCheckRedundancy(boolean migCheckRedundancy) {
-//		this.migCheckRedundancy = migCheckRedundancy;
-//	}
-//
-//	public boolean isMigDetectStrong() {
-//		return migDetectStrong;
-//	}
-//
-//	public void setMigDetectStrong(boolean migDetectStrong) {
-//		this.migDetectStrong = migDetectStrong;
-//	}
 
 	public MIG getMig() {
 		return mig;

@@ -82,7 +82,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 	protected void findCoreFeatures(InternalMonitor monitor) {
 		monitor.setTotalWork(fixedFeatures.length);
 
-		solver.setSelectionStrategy(SStrategy.reversed(fixedFeatures));
+		solver.setSelectionStrategy(SStrategy.inverse(fixedFeatures));
 
 		// find core/dead features
 		for (int i = 0; i < fixedFeatures.length; i++) {
@@ -290,7 +290,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 		final boolean[] mark = new boolean[mig.size() + 1];
 		final int[] fixed = new int[mig.size() + 1];
 		final int orgSize = solver.getAssignmentSize();
-		solver.setSelectionStrategy(SStrategy.orgiginal());
+		solver.setSelectionStrategy(SStrategy.original());
 		for (final Vertex vertex : mig.getVertices()) {
 			if (vertex.isNormal() && (affectedVariables == null
 					|| affectedVariables.containsAnyVariable(Math.abs(vertex.getVar())))) {
@@ -328,7 +328,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 					final int[] solution = solver.findSolution();
 					model = Arrays.copyOf(solution, solution.length);
 				}
-				solver.setSelectionStrategy(SStrategy.reversed(model));
+				solver.setSelectionStrategy(SStrategy.inverse(model));
 
 				for (Integer literal : literals) {
 					final int index = Math.abs(literal);

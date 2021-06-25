@@ -35,12 +35,6 @@ import org.spldev.util.data.*;
  */
 public class TWiseStatisticFastGenerator {
 
-	private final TWiseConfigurationUtil util;
-
-	public TWiseStatisticFastGenerator(TWiseConfigurationUtil util) {
-		this.util = util;
-	}
-
 	public CoverageStatistic getCoverage(List<? extends LiteralList> sample,
 		List<List<PresenceCondition>> groupedPresenceConditions, int t) {
 		final CoverageStatistic statistic = new CoverageStatistic();
@@ -153,26 +147,6 @@ public class TWiseStatisticFastGenerator {
 			confIndex++;
 		}
 		return statistic;
-	}
-
-	public List<ValidityStatistic> getValidity(List<List<? extends LiteralList>> samples) {
-		final List<ValidityStatistic> statisticList = new ArrayList<>(samples.size());
-		for (final List<? extends LiteralList> sample : samples) {
-			final ValidityStatistic statistic = new ValidityStatistic(sample.size());
-
-			int configurationIndex = 0;
-			configLoop: for (final LiteralList configuration : sample) {
-				for (final LiteralList clause : util.getCnf().getClauses()) {
-					if (!configuration.hasDuplicates(clause)) {
-						statistic.setConfigValidity(configurationIndex++, false);
-						continue configLoop;
-					}
-				}
-				statistic.setConfigValidity(configurationIndex++, true);
-			}
-			statisticList.add(statistic);
-		}
-		return statisticList;
 	}
 
 }

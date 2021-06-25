@@ -52,7 +52,7 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 
 		final RandomConfigurationGenerator gen = new FastRandomConfigurationGenerator();
 		gen.setAllowDuplicates(false);
-		gen.setRandom(random);
+		gen.setRandom(getRandom());
 		sample = Executor.run(new ConfigurationSampler(gen, sampleSize), solver.getCnf()).orElse(Logger::logProblems);
 		if (sample == null || sample.isEmpty()) {
 			satisfiable = false;
@@ -61,7 +61,7 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 		System.out.println(sample.size());
 
 		dist = new SampleDistribution(sample);
-		dist.setRandom(random);
+		dist.setRandom(getRandom());
 		solver.setSelectionStrategy(SStrategy.uniform(dist));
 	}
 
@@ -75,7 +75,7 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 		if (fixedFeatures == null) {
 			return false;
 		}
-		solver.setSelectionStrategy(SStrategy.reversed(fixedFeatures));
+		solver.setSelectionStrategy(SStrategy.inverse(fixedFeatures));
 
 		// find core/dead features
 		for (int i = 0; i < fixedFeatures.length; i++) {
@@ -93,7 +93,7 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 				case TRUE:
 					solver.assignmentPop();
 					LiteralList.resetConflicts(fixedFeatures, solver.getSolution());
-					solver.shuffleOrder(random);
+					solver.shuffleOrder(getRandom());
 					break;
 				}
 			}

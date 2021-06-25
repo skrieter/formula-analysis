@@ -142,7 +142,7 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 				monitor.step();
 
 				LiteralList.resetConflicts(unkownValues, model2);
-				solver.setSelectionStrategy(SStrategy.reversed(unkownValues));
+				solver.setSelectionStrategy(SStrategy.inverse(unkownValues));
 
 				for (int k = 0; k < knownValues.length; k++) {
 					final int var = knownValues[k];

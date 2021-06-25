@@ -50,7 +50,6 @@ public class AllConfigurationGenerator extends ConfigurationGenerator {
 			solver.addClause(result.negate());
 		} catch (final RuntimeContradictionException e) {
 			satisfiable = false;
-			return null;
 		}
 		return result;
 	}

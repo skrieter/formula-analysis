@@ -33,7 +33,7 @@ public class FastRandomConfigurationGenerator extends RandomConfigurationGenerat
 
 	@Override
 	protected void init() {
-		solver.setSelectionStrategy(SStrategy.random());
+		solver.setSelectionStrategy(SStrategy.random(getRandom()));
 	}
 
 }

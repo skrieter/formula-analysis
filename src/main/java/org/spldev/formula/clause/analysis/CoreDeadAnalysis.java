@@ -100,7 +100,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 			}
 
 			LiteralList.resetConflicts(model1, model2);
-			solver.setSelectionStrategy(SStrategy.reversed(model1));
+			solver.setSelectionStrategy(SStrategy.inverse(model1));
 
 			vars = new VecInt(model1.length);
 			split(model1, 0, model1.length);
@@ -210,7 +210,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 			}
 
 			LiteralList.resetConflicts(model1, model2);
-			solver.setSelectionStrategy(SStrategy.reversed(model1));
+			solver.setSelectionStrategy(SStrategy.inverse(model1));
 
 			for (int i = 0; i < model1.length; i++) {
 				final int varX = model1[i];
