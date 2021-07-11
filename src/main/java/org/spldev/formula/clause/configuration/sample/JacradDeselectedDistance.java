@@ -20,21 +20,35 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.configuration;
-
-import org.spldev.formula.clause.solver.SStrategy;
+package org.spldev.formula.clause.configuration.sample;
 
 /**
- * Generates random configurations for a given propositional formula.
- *
+ * Computes the Jacard distance between two literal arrays.
+ * Considers only negative literals.
+ * 
  * @author Sebastian Krieter
  */
-public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public class JacradDeselectedDistance implements DistanceFunction {
 
 	@Override
-	protected void init() {
-		super.init();
-		solver.setSelectionStrategy(SStrategy.random(getRandom()));
+	public double computeDistance(final int[] literals1, final int[] literals2) {
+		double sum = 0;
+		double sumA = 0;
+		double sumB = 0;
+		for (int k = 0; k < literals1.length; k++) {
+			final int a = literals1[k] >>> (Integer.SIZE-1);
+			final int b = literals2[k] >>> (Integer.SIZE-1);
+			sumA += a;
+			sumB += b;
+			sum += a & b;
+		}
+		final double similarity = sum / ((sumA + sumB) - sum);
+		return 1 - similarity;
+	}
+
+	@Override
+	public String getName() {
+		return "JacardDeselected";
 	}
 
 }

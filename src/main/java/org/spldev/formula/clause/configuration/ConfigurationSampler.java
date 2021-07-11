@@ -22,27 +22,26 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.*;
+import java.util.stream.*;
 
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.analysis.AbstractAnalysis;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.util.data.Identifier;
-import org.spldev.util.job.InternalMonitor;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.analysis.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
+import org.spldev.util.job.*;
 
 /**
  * Finds certain solutions of propositional formulas.
  *
  * @author Sebastian Krieter
  */
-public class ConfigurationSampler extends AbstractAnalysis<List<LiteralList>> {
+public class ConfigurationSampler extends AbstractAnalysis<SolutionList> {
 
-	public static final Identifier<List<LiteralList>> identifier = new Identifier<>();
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
 
 	@Override
-	public Identifier<List<LiteralList>> getIdentifier() {
+	public Identifier<SolutionList> getIdentifier() {
 		return identifier;
 	}
 
@@ -68,13 +67,13 @@ public class ConfigurationSampler extends AbstractAnalysis<List<LiteralList>> {
 	}
 
 	@Override
-	public final List<LiteralList> analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public final SolutionList analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
 		monitor.setTotalWork(maxSampleSize);
 		generator.init(solver);
-		return StreamSupport.stream(generator, false) //
-				.limit(maxSampleSize) //
-				.peek(c -> monitor.step()) //
-				.collect(Collectors.toList());
+		return new SolutionList(solver.getCnf().getVariables(), StreamSupport.stream(generator, false) //
+			.limit(maxSampleSize) //
+			.peek(c -> monitor.step()) //
+			.collect(Collectors.toCollection(ArrayList::new)));
 	}
 
 }

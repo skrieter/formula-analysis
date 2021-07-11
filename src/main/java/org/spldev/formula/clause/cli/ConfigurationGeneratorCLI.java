@@ -112,10 +112,10 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 				.map(Clauses::convertToCNF) //
 				.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
 			final Path out = outputFile;
-			final Result<List<LiteralList>> result = Executor.run(sampler, cnf);
+			final Result<SolutionList> result = Executor.run(sampler, cnf);
 			result.ifPresentOrElse(list -> {
 				try {
-					FileHandler.serialize(new SolutionList(cnf.getVariableMap(), list), out,
+					FileHandler.serialize(list, out,
 						new ConfigurationListFormat());
 				} catch (final IOException e) {
 					Logger.logError(e);

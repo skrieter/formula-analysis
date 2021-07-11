@@ -40,7 +40,7 @@ public abstract class SatAnalysis {
 
 	protected LiteralList assumptions = null;
 
-	private boolean timeoutOccured = false;
+	protected boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
 	private int timeout = 1000;
 	

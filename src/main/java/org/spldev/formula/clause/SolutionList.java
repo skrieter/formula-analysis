@@ -139,4 +139,16 @@ public class SolutionList implements Serializable {
 		return sb.toString();
 	}
 
+	public Stream<LiteralList> getInvalidSolutions(CNF cnf) {
+		return solutions.stream() //
+			.filter(s -> cnf.getClauses().stream() //
+				.anyMatch(clause -> s.containsAll(clause.negate())));
+	}
+
+	public Stream<LiteralList> getValidSolutions(CNF cnf) {
+		return solutions.stream() //
+			.filter(s -> cnf.getClauses().stream() //
+				.allMatch(clause -> s.hasDuplicates(clause)));
+	}
+
 }

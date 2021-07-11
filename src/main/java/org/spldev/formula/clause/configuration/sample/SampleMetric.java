@@ -20,21 +20,19 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.configuration;
+package org.spldev.formula.clause.configuration.sample;
 
-import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.formula.clause.*;
 
 /**
- * Generates random configurations for a given propositional formula.
+ * Calculates a certain coverage for a given sample.
  *
  * @author Sebastian Krieter
  */
-public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public interface SampleMetric {
 
-	@Override
-	protected void init() {
-		super.init();
-		solver.setSelectionStrategy(SStrategy.random(getRandom()));
-	}
+	double get(SolutionList sample);
+
+	String getName();
 
 }

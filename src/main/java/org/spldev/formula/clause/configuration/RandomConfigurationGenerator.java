@@ -40,6 +40,12 @@ public abstract class RandomConfigurationGenerator extends ConfigurationGenerato
 	protected boolean satisfiable = true;
 	protected boolean allowDuplicates = false;
 
+	@Override
+	protected void init() {
+		super.init();
+		satisfiable = true;
+	}
+
 	public Random getRandom() {
 		return random;
 	}

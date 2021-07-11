@@ -20,21 +20,27 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.configuration;
-
-import org.spldev.formula.clause.solver.SStrategy;
+package org.spldev.formula.clause.configuration.sample;
 
 /**
- * Generates random configurations for a given propositional formula.
+ * Computes the Hamming distance between two literal arrays.
  *
  * @author Sebastian Krieter
  */
-public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public class HammingDistance implements DistanceFunction {
 
 	@Override
-	protected void init() {
-		super.init();
-		solver.setSelectionStrategy(SStrategy.random(getRandom()));
+	public double computeDistance(final int[] literals1, final int[] literals2) {
+		double conflicts = 0;
+		for (int k = 0; k < literals1.length; k++) {
+			conflicts += (literals1[k] != literals2[k]) ? 1 : 0;
+		}
+		return conflicts / literals1.length;
+	}
+
+	@Override
+	public String getName() {
+		return "Hamming";
 	}
 
 }

@@ -22,12 +22,11 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.util.job.NullMonitor;
+import org.spldev.formula.clause.*;
+import org.spldev.util.job.*;
+import org.spldev.util.logging.*;
 
 /**
  * Finds certain solutions of propositional formulas.
@@ -40,8 +39,10 @@ public class EnumeratingRandomConfigurationGenerator extends RandomConfiguration
 
 	@Override
 	protected void init() {
-		allConfigurations = new ArrayList<>(
-				new ConfigurationSampler(new AllConfigurationGenerator()).execute(solver, new NullMonitor()));
+		final AllConfigurationGenerator gen = new AllConfigurationGenerator();
+		allConfigurations = Executor.run(new ConfigurationSampler(gen),	solver.getCnf())
+			.map(SolutionList::getSolutions)
+			.orElse(Collections::emptyList, Logger::logProblems);
 		if (!allowDuplicates) {
 			Collections.shuffle(allConfigurations, getRandom());
 		}

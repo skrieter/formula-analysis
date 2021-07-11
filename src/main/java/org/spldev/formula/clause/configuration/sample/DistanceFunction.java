@@ -20,21 +20,17 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.configuration;
-
-import org.spldev.formula.clause.solver.SStrategy;
+package org.spldev.formula.clause.configuration.sample;
 
 /**
- * Generates random configurations for a given propositional formula.
+ * Computes the distance between to literal arrays (e.g., configurations).
  *
  * @author Sebastian Krieter
  */
-public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public interface DistanceFunction {
 
-	@Override
-	protected void init() {
-		super.init();
-		solver.setSelectionStrategy(SStrategy.random(getRandom()));
-	}
+	double computeDistance(final int[] literals1, final int[] literals2);
+
+	String getName();
 
 }

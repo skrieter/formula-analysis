@@ -24,8 +24,7 @@ package org.spldev.formula.clause.analysis;
 
 import java.util.Random;
 
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.CNFProvider;
+import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.SatSolver;
 import org.spldev.util.Provider;
 import org.spldev.util.Result;
@@ -62,7 +61,6 @@ public abstract class AbstractAnalysis<T> extends SatAnalysis implements Analysi
 		try {
 			return analyze(solver, monitor);
 		} catch (final Exception e) {
-			e.printStackTrace();
 			throw new RuntimeException(e);
 		} finally {
 			solver.assignmentClear(0);

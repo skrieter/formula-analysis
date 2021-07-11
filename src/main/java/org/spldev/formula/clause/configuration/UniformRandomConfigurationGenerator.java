@@ -24,7 +24,7 @@ package org.spldev.formula.clause.configuration;
 
 import java.util.List;
 
-import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.SStrategy;
 import org.spldev.formula.clause.solver.SampleDistribution;
 import org.spldev.formula.clause.solver.SatSolver;
@@ -53,12 +53,11 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 		final RandomConfigurationGenerator gen = new FastRandomConfigurationGenerator();
 		gen.setAllowDuplicates(false);
 		gen.setRandom(getRandom());
-		sample = Executor.run(new ConfigurationSampler(gen, sampleSize), solver.getCnf()).orElse(Logger::logProblems);
+		sample = Executor.run(new ConfigurationSampler(gen, sampleSize), solver.getCnf()).map(SolutionList::getSolutions).orElse(Logger::logProblems);
 		if (sample == null || sample.isEmpty()) {
 			satisfiable = false;
 			return;
 		}
-		System.out.println(sample.size());
 
 		dist = new SampleDistribution(sample);
 		dist.setRandom(getRandom());

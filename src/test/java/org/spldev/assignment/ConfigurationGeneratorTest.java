@@ -1,22 +1,24 @@
-/* FeatureIDE - A Framework for Feature-Oriented Software Development
- * Copyright (C) 2005-2017  FeatureIDE team, University of Magdeburg, Germany
- *
- * This file is part of FeatureIDE.
- *
- * FeatureIDE is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * FeatureIDE is distributed in the hope that it will be useful,
+/* -----------------------------------------------------------------------------
+ * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Copyright (C) 2021  Sebastian Krieter
+ * 
+ * This file is part of Formula-Analysis-Lib.
+ * 
+ * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ * 
+ * Formula-Analysis-Lib is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * 
  * You should have received a copy of the GNU Lesser General Public License
- * along with FeatureIDE.  If not, see <http://www.gnu.org/licenses/>.
- *
- * See http://featureide.cs.ovgu.de/ for further information.
+ * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * See <https://github.com/skrieter/formula> for further information.
+ * -----------------------------------------------------------------------------
  */
 package org.spldev.assignment;
 
@@ -29,6 +31,7 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.cli.*;
+import org.spldev.formula.clause.configuration.sample.*;
 import org.spldev.formula.clause.io.*;
 import org.spldev.formula.expression.io.*;
 import org.spldev.util.extension.*;
@@ -52,10 +55,8 @@ public class ConfigurationGeneratorTest {
 		"basic", //
 		"simple", //
 		"car", //
-		"gpl_medium_model", //
-		"apl_model", //
-		"berkeley_db_model", //
-		"500-100");
+		"gpl_medium_model"
+		);
 
 	@Test
 	public void AllCoverage() {
@@ -104,20 +105,6 @@ public class ConfigurationGeneratorTest {
 		testLimitedSize("apl_model", "random", 100, 100);
 	}
 
-//	@Test
-//	public void ChvatalLimit() {
-//		testTWiseLimitedSize("gpl_medium_model", "chvatal", 1, 5);
-//		testTWiseLimitedSize("gpl_medium_model", "chvatal", 2, 5);
-//		testTWiseLimitedSize("gpl_medium_model", "chvatal", 3, 5);
-//	}
-//
-//	@Test
-//	public void ICPLLimit() {
-//		testTWiseLimitedSize("gpl_medium_model", "icpl", 1, 5);
-//		testTWiseLimitedSize("gpl_medium_model", "icpl", 2, 5);
-//		testTWiseLimitedSize("gpl_medium_model", "icpl", 3, 5);
-//	}
-
 	@Test
 	public void InclingLimit() {
 		testPairWiseLimitedSize("gpl_medium_model", "incling", 5);
@@ -142,7 +129,7 @@ public class ConfigurationGeneratorTest {
 
 	@Test
 	public void YASAThreeWiseCoverage() {
-		testCoverageAndDeterminism("yasa", 3, modelNames.subList(0, 6));
+		testCoverageAndDeterminism("yasa", 3, modelNames);
 	}
 
 	@Test
@@ -150,101 +137,69 @@ public class ConfigurationGeneratorTest {
 		testPairWiseCoverageAndDeterminism("incling", modelNames);
 	}
 
-////	@Test
-////	public void ICPLOneWiseCoverage() {
-////		testCoverage("icpl", 1, modelNames);
-////	}
-////
-//	@Test
-//	public void ICPLTwoWiseCoverage() {
-//		testCoverage("icpl", 2, modelNames);
-//	}
-//
-//	@Test
-//	public void ICPLThreeWiseCoverage() {
-//		testCoverage("icpl", 3, modelNames.subList(0, 6));
-//	}
-//
-////	@Test
-////	public void ChvatalOneWiseCoverage() {
-////		testCoverage("chvatal", 1, modelNames);
-////	}
-////
-//	@Test
-//	public void ChvatalTwoWiseCoverage() {
-//		testCoverage("chvatal", 2, modelNames);
-//	}
-//
-//	@Test
-//	public void ChvatalThreeWiseCoverage() {
-//		testCoverage("chvatal", 3, modelNames.subList(0, 6));
-//	}
-
-	private void testCoverage(final String algorithmName, final int t, final List<String> modelNameList) {
-		for (final String modelName : modelNameList) {
-			final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-			final SampleTester tester = sample(modelFile, algorithmName, t, null);
-			assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-			assertEquals(1.0, tester.getCoverage(new TWiseCoverageCriterion(tester.getCnf(), t)), 0.0,
-				"Wrong coverage for " + modelName);
-		}
-	}
-
 	private void testCoverageAndDeterminism(final String algorithmName, final int t, final List<String> modelNameList) {
 		for (final String modelName : modelNameList) {
 			final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-			final SampleTester tester = sample(modelFile, algorithmName, t, null);
-			assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-			assertEquals(1.0, tester.getCoverage(new TWiseCoverageCriterion(tester.getCnf(), t)), 0.0,
+			final CNF cnf = loadCNF(modelFile);
+			final SolutionList sample = sample(modelFile, algorithmName, t, null);
+			assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
+			final TWiseCoverageMetrics tWiseCoverageMetrics = new TWiseCoverageMetrics();
+			tWiseCoverageMetrics.setCNF(cnf);
+			assertEquals(1.0, tWiseCoverageMetrics.getTWiseCoverageMetric(t).get(sample), 0.0,
 				"Wrong coverage for " + modelName);
-			final SampleTester tester2 = sample(modelFile, algorithmName, t, null);
-			assertEquals(tester.getSize(), tester2.getSize(), "Wrong size for " + modelName);
+			final SolutionList sample2 = sample(modelFile, algorithmName, t, null);
+			assertEquals(sample.getSolutions().size(), sample2.getSolutions().size(), "Wrong size for " + modelName);
 		}
 	}
 
 	private void testPairWiseCoverageAndDeterminism(final String algorithmName, final List<String> modelNameList) {
 		for (final String modelName : modelNameList) {
 			final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-			final SampleTester tester = sample(modelFile, algorithmName, null, null);
-			assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-			assertEquals(1.0, tester.getCoverage(new TWiseCoverageCriterion(tester.getCnf(), 2)), 0.0,
+			final CNF cnf = loadCNF(modelFile);
+			final SolutionList sample = sample(modelFile, algorithmName, null, null);
+			assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
+			final TWiseCoverageMetrics tWiseCoverageMetrics = new TWiseCoverageMetrics();
+			tWiseCoverageMetrics.setCNF(cnf);
+			assertEquals(1.0, tWiseCoverageMetrics.getTWiseCoverageMetric(2).get(sample), 0.0,
 				"Wrong coverage for " + modelName);
-			final SampleTester tester2 = sample(modelFile, algorithmName, null, null);
-			assertEquals(tester.getSize(), tester2.getSize(), "Wrong size for " + modelName);
+			final SolutionList sample2 = sample(modelFile, algorithmName, null, null);
+			assertEquals(sample.getSolutions().size(), sample2.getSolutions().size(), "Wrong size for " + modelName);
 		}
 	}
 
 	private static void testSize(String modelName, String algorithm, int numberOfConfigurations) {
 		final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-		final SampleTester tester = sample(modelFile, algorithm, null, null);
-		assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-		assertEquals(numberOfConfigurations, tester.getSize(), "Wrong number of configurations for " + modelName);
+		final CNF cnf = loadCNF(modelFile);
+		final SolutionList sample = sample(modelFile, algorithm, null, null);
+		assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
+		assertEquals(numberOfConfigurations, sample.getSolutions().size(), "Wrong number of configurations for " + modelName);
 	}
 
 	private static void testLimitedSize(String modelName, String algorithm, int numberOfConfigurations, int limit) {
 		final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-		final SampleTester tester = sample(modelFile, algorithm, null, limit);
-		assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-		assertTrue(limit >= tester.getSize(), "Number of configurations larger than limit for " + modelName);
-		assertTrue(Math.min(limit, numberOfConfigurations) == tester.getSize(), "Wrong number of configurations for "
+		final CNF cnf = loadCNF(modelFile);
+		final SolutionList sample = sample(modelFile, algorithm, null, limit);
+		assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
+		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for " + modelName);
+		assertTrue(Math.min(limit, numberOfConfigurations) == sample.getSolutions().size(), "Wrong number of configurations for "
 			+ modelName);
 	}
 
 	private static void testTWiseLimitedSize(String modelName, String algorithm, int t, int limit) {
 		final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-		final SampleTester tester = sample(modelFile, algorithm, t, limit);
-		assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-		assertTrue(limit >= tester.getSize(), "Number of configurations larger than limit for " + modelName);
+		final SolutionList sample = sample(modelFile, algorithm, t, limit);
+		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for " + modelName);
 	}
 
 	private static void testPairWiseLimitedSize(String modelName, String algorithm, int limit) {
 		final Path modelFile = modelDirectory.resolve(modelName + ".xml");
-		final SampleTester tester = sample(modelFile, algorithm, null, limit);
-		assertFalse(tester.hasInvalidSolutions(), "Invalid solutions for " + modelName);
-		assertTrue(limit >= tester.getSize(), "Number of configurations larger than limit for " + modelName);
+		final CNF cnf = loadCNF(modelFile);
+		final SolutionList sample = sample(modelFile, algorithm, null, limit);
+		assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
+		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for " + modelName);
 	}
 
-	private static SampleTester sample(final Path modelFile, String algorithm, Integer t, Integer limit) {
+	private static SolutionList sample(final Path modelFile, String algorithm, Integer t, Integer limit) {
 		try {
 			final Path inFile = Files.createTempFile("input", ".xml");
 			Files.write(inFile, Files.readAllBytes(modelFile));
@@ -274,20 +229,20 @@ public class ConfigurationGeneratorTest {
 			if (sample == null) {
 				fail("Sample for " + modelFile.toString() + " could not be read!");
 			}
-
-			final CNF cnf = FileHandler.parse(modelFile, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF)
-				.orElse(Logger::logProblems);
-			if (cnf == null) {
-				fail("CNF could not be read!");
-			}
-
-			final SampleTester tester = new SampleTester(cnf);
-			tester.setSample(sample.getSolutions());
-			return tester;
+			return sample;
 		} catch (final IOException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 			return null;
 		}
+	}
+
+	private static CNF loadCNF(final Path modelFile) {
+		final CNF cnf = FileHandler.parse(modelFile, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF)
+			.orElse(Logger::logProblems);
+		if (cnf == null) {
+			fail("CNF could not be read!");
+		}
+		return cnf;
 	}
 }

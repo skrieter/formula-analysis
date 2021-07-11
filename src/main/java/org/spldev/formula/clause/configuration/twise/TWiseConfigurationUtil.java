@@ -36,9 +36,7 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 import org.sat4j.core.VecInt;
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.ClauseList;
-import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.Order;
 import org.spldev.formula.clause.configuration.ConfigurationSampler;
 import org.spldev.formula.clause.configuration.FastRandomConfigurationGenerator;
@@ -103,7 +101,7 @@ public class TWiseConfigurationUtil {
 		final FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
-		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).orElse(
+		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).map(SolutionList::getSolutions).orElse(
 			Logger::logProblems);
 
 		for (final LiteralList solution : randomSample) {

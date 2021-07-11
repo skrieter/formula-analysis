@@ -20,21 +20,19 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.configuration;
+package org.spldev.formula.clause.configuration.sample;
 
-import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.formula.clause.*;
 
 /**
- * Generates random configurations for a given propositional formula.
+ * Computes the count of some property within a literal array (e.g., number of positive literals).
  *
  * @author Sebastian Krieter
  */
-public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public interface CountFunction {
 
-	@Override
-	protected void init() {
-		super.init();
-		solver.setSelectionStrategy(SStrategy.random(getRandom()));
-	}
+	double computeCount(final LiteralList literals);
+
+	String getName();
 
 }

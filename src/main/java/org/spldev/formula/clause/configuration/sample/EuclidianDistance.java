@@ -20,21 +20,28 @@
  * See <https://github.com/skrieter/formula> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.clause.configuration;
-
-import org.spldev.formula.clause.solver.SStrategy;
+package org.spldev.formula.clause.configuration.sample;
 
 /**
- * Generates random configurations for a given propositional formula.
+ * Computes the Euclidian distance between two literal arrays.
+ * Negative literals are treated as zero, positive literals as one.
  *
  * @author Sebastian Krieter
  */
-public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public class EuclidianDistance implements DistanceFunction {
 
 	@Override
-	protected void init() {
-		super.init();
-		solver.setSelectionStrategy(SStrategy.random(getRandom()));
+	public double computeDistance(final int[] literals1, final int[] literals2) {
+		double conflicts = 0;
+		for (int k = 0; k < literals1.length; k++) {
+			conflicts += (literals1[k] != literals2[k]) ? 1 : 0;
+		}
+		return Math.sqrt(conflicts);
+	}
+
+	@Override
+	public String getName() {
+		return "Euclidian";
 	}
 
 }
