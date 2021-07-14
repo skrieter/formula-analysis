@@ -22,11 +22,11 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import java.util.Random;
+import java.util.*;
 
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.LiteralList.Order;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.clause.solver.*;
 
 /**
  * Finds random valid solutions of propositional formulas.

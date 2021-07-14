@@ -22,15 +22,13 @@
  */
 package org.spldev.formula.clause.analysis;
 
-import java.util.Random;
+import java.util.*;
 
 import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.util.Provider;
-import org.spldev.util.Result;
-import org.spldev.util.data.CacheHolder;
-import org.spldev.util.job.Executor;
-import org.spldev.util.job.InternalMonitor;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.*;
+import org.spldev.util.data.*;
+import org.spldev.util.job.*;
 
 /**
  * Base class for an analysis using a {@link SatSolver sat solver}.

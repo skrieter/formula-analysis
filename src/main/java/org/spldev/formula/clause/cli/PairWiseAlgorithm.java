@@ -22,11 +22,10 @@
  */
 package org.spldev.formula.clause.cli;
 
-import java.util.ListIterator;
-import java.util.Random;
+import java.util.*;
 
 import org.spldev.formula.clause.configuration.*;
-import org.spldev.util.cli.CLI;
+import org.spldev.util.cli.*;
 
 /**
  * Generates configurations for a given propositional formula such that two-wise
@@ -40,20 +39,20 @@ public class PairWiseAlgorithm extends AConfigurationGeneratorAlgorithm<PairWise
 	protected PairWiseConfigurationGenerator createConfigurationGenerator() {
 		return new PairWiseConfigurationGenerator();
 	}
-	
+
 	@Override
 	protected boolean parseArgument(PairWiseConfigurationGenerator gen, String arg, ListIterator<String> iterator)
-			throws IllegalArgumentException {
-			switch (arg) {
-			case "-s":
-				gen.setRandom(new Random(Long.parseLong(CLI.getArgValue(iterator, arg))));
-				break;
-			default:
-				return false;
-			}
-			return true;
+		throws IllegalArgumentException {
+		switch (arg) {
+		case "-s":
+			gen.setRandom(new Random(Long.parseLong(CLI.getArgValue(iterator, arg))));
+			break;
+		default:
+			return false;
 		}
-	
+		return true;
+	}
+
 	@Override
 	public String getName() {
 		return "incling";

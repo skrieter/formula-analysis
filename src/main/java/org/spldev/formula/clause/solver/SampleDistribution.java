@@ -22,12 +22,9 @@
  */
 package org.spldev.formula.clause.solver;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.*;
 
 /**
  * Uses a sample of configurations to achieve a phase selection that corresponds
@@ -48,11 +45,13 @@ public class SampleDistribution extends LiteralDistribution {
 		model = new byte[sample.get(0).size()];
 	}
 
+	@Override
 	public void reset() {
 		Arrays.fill(model, (byte) 0);
 		startIndex = 0;
 	}
 
+	@Override
 	public void unset(int var) {
 		final int index = var - 1;
 		final byte sign = model[index];
@@ -67,6 +66,7 @@ public class SampleDistribution extends LiteralDistribution {
 		}
 	}
 
+	@Override
 	public void set(int literal) {
 		final int index = Math.abs(literal) - 1;
 		if (model[index] == 0) {
@@ -79,9 +79,10 @@ public class SampleDistribution extends LiteralDistribution {
 		}
 	}
 
+	@Override
 	public int getRandomLiteral(int var) {
 		if (samples.size() > (startIndex + 1)) {
-			return (random.nextInt((samples.size() - startIndex) + 2) < getPositiveCount(var - 1) + 1) ? var : -var;
+			return (random.nextInt((samples.size() - startIndex) + 2) < (getPositiveCount(var - 1) + 1)) ? var : -var;
 		} else {
 			return random.nextBoolean() ? var : -var;
 		}
@@ -89,7 +90,7 @@ public class SampleDistribution extends LiteralDistribution {
 
 	public int getPositiveCount(int index) {
 		int sum = 0;
-		for (LiteralList l : samples.subList(startIndex, samples.size())) {
+		for (final LiteralList l : samples.subList(startIndex, samples.size())) {
 			sum += (~l.getLiterals()[index]) >>> 31;
 		}
 		return sum;

@@ -22,11 +22,10 @@
  */
 package org.spldev.formula.clause.cli;
 
-import java.util.ListIterator;
-import java.util.Random;
+import java.util.*;
 
 import org.spldev.formula.clause.configuration.*;
-import org.spldev.util.cli.CLI;
+import org.spldev.util.cli.*;
 
 /**
  * Generates random configurations for a given propositional formula.
@@ -34,7 +33,7 @@ import org.spldev.util.cli.CLI;
  * @author Sebastian Krieter
  */
 public abstract class RandomAlgorithm<T extends RandomConfigurationGenerator>
-		extends AConfigurationGeneratorAlgorithm<T> {
+	extends AConfigurationGeneratorAlgorithm<T> {
 
 	@Override
 	protected boolean parseArgument(T gen, String arg, ListIterator<String> iterator) throws IllegalArgumentException {

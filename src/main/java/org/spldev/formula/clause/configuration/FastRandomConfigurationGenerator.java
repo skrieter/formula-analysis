@@ -22,7 +22,7 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import org.spldev.formula.clause.solver.SStrategy;
+import org.spldev.formula.clause.solver.*;
 
 /**
  * Generates random configurations for a given propositional formula.

@@ -63,7 +63,7 @@ public class ConfigurationSampler extends AbstractAnalysis<SolutionList> {
 	}
 
 	public void setLimit(int limit) {
-		this.maxSampleSize = limit;
+		maxSampleSize = limit;
 	}
 
 	@Override

@@ -40,7 +40,7 @@ public class EnumeratingRandomConfigurationGenerator extends RandomConfiguration
 	@Override
 	protected void init() {
 		final AllConfigurationGenerator gen = new AllConfigurationGenerator();
-		allConfigurations = Executor.run(new ConfigurationSampler(gen),	solver.getCnf())
+		allConfigurations = Executor.run(new ConfigurationSampler(gen), solver.getCnf())
 			.map(SolutionList::getSolutions)
 			.orElse(Collections::emptyList, Logger::logProblems);
 		if (!allowDuplicates) {

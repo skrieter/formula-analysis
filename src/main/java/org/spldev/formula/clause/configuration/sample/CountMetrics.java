@@ -40,7 +40,7 @@ public class CountMetrics {
 
 		@Override
 		public double get(SolutionList sample) {
-			CountMetrics.this.setSample(sample);
+			setSample(sample);
 			return aggregate.getAsDouble();
 		}
 
@@ -84,7 +84,7 @@ public class CountMetrics {
 			final List<LiteralList> solutions = sample.getSolutions();
 			final int size = solutions.size();
 			counts = new double[size];
-			for (int i = 0; i < size - 1; i++) {
+			for (int i = 0; i < (size - 1); i++) {
 				counts[i] = countFunction.computeCount(solutions.get(i));
 			}
 		}
@@ -92,7 +92,7 @@ public class CountMetrics {
 	}
 
 	public void setSample(SolutionList sample) {
-		if (this.sample == null || this.sample != sample) {
+		if ((this.sample == null) || (this.sample != sample)) {
 			this.sample = sample;
 			counts = null;
 			min = -1;
@@ -131,7 +131,7 @@ public class CountMetrics {
 	private double getMin() {
 		if (min < 0) {
 			min = Double.MAX_VALUE;
-			for (double count : getCounts()) {
+			for (final double count : getCounts()) {
 				if (min > count) {
 					min = count;
 				}
@@ -143,7 +143,7 @@ public class CountMetrics {
 	private double getMax() {
 		if (max < 0) {
 			max = 0;
-			for (double count : getCounts()) {
+			for (final double count : getCounts()) {
 				if (max < count) {
 					max = count;
 				}
@@ -155,7 +155,7 @@ public class CountMetrics {
 	private double getMean() {
 		if (mean < 0) {
 			double sum = 0;
-			for (double count : getCounts()) {
+			for (final double count : getCounts()) {
 				sum += count;
 			}
 			mean = sum / counts.length;
@@ -170,7 +170,7 @@ public class CountMetrics {
 			Arrays.sort(sortedCounts);
 
 			final int middle = sortedCounts.length / 2;
-			median = (sortedCounts.length % 2 != 0) //
+			median = ((sortedCounts.length % 2) != 0) //
 				? sortedCounts[middle] //
 				: (sortedCounts[middle - 1] + sortedCounts[middle]) / 2.0;
 		}
@@ -181,8 +181,8 @@ public class CountMetrics {
 		if (variance < 0) {
 			final double mean = getMean();
 			variance = 0;
-			for (double count : getCounts()) {
-				double diff = count - mean;
+			for (final double count : getCounts()) {
+				final double diff = count - mean;
 				variance += diff * diff;
 			}
 			variance /= counts.length;

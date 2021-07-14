@@ -27,7 +27,7 @@ import java.util.*;
 
 import org.spldev.formula.clause.*;
 import org.spldev.util.*;
-import org.spldev.util.io.LineIterator;
+import org.spldev.util.io.*;
 import org.spldev.util.io.format.*;
 import org.spldev.util.logging.*;
 

@@ -22,27 +22,15 @@
  */
 package org.spldev.formula.clause.mig;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.stream.*;
 
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.LiteralList.Order;
-import org.spldev.formula.clause.mig.Vertex.Status;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.Sat4JSolver;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.formula.clause.solver.SatSolver.SatResult;
-import org.spldev.util.job.InternalMonitor;
-import org.spldev.util.job.MonitorableFunction;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.clause.mig.Vertex.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.formula.clause.solver.SatSolver.*;
+import org.spldev.util.job.*;
 
 /**
  * Adjacency matrix implementation for a feature graph.
@@ -118,8 +106,8 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 			final Sat4JSolver newSolver = new Sat4JSolver(new CNF(cnf.getVariableMap()));
 			stream = stream.sorted(lengthComparator).distinct().peek(c -> monitor.step()).filter(clause -> //
 			(clause.getLiterals().length < 3) //
-					|| !isRedundant(newSolver, clause)) //
-					.peek(newSolver::addClause); //
+				|| !isRedundant(newSolver, clause)) //
+				.peek(newSolver::addClause); //
 		} else {
 			stream = stream.distinct().peek(c -> monitor.step());
 		}
@@ -202,7 +190,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 	protected void cleanClauses() {
 		cleanedClausesList = new ArrayList<>(mig.getCnf().getClauses().size());
 		mig.getCnf().getClauses().stream().map(c -> cleanClause(c, mig)).filter(Objects::nonNull)
-				.forEach(cleanedClausesList::add);
+			.forEach(cleanedClausesList::add);
 	}
 
 	protected LiteralList cleanClause(LiteralList clause, MIG mig) {
@@ -286,21 +274,21 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 	protected void bfsWeak(LiteralList affectedVariables, InternalMonitor monitor) {
 		monitor.setTotalWork(mig.getVertices().size());
 		final ArrayDeque<Vertex> queue = new ArrayDeque<>();
-		ArrayList<Integer> literals = new ArrayList<>();
+		final ArrayList<Integer> literals = new ArrayList<>();
 		final boolean[] mark = new boolean[mig.size() + 1];
 		final int[] fixed = new int[mig.size() + 1];
 		final int orgSize = solver.getAssignmentSize();
 		solver.setSelectionStrategy(SStrategy.original());
 		for (final Vertex vertex : mig.getVertices()) {
-			if (vertex.isNormal() && (affectedVariables == null
-					|| affectedVariables.containsAnyVariable(Math.abs(vertex.getVar())))) {
+			if (vertex.isNormal() && ((affectedVariables == null)
+				|| affectedVariables.containsAnyVariable(Math.abs(vertex.getVar())))) {
 				final int var = vertex.getVar();
 				final int negVar = -var;
 				Arrays.fill(mark, false);
 				Arrays.fill(fixed, 0);
 				int[] model = null;
 
-				for (LiteralList solution : solver.getSolutionHistory()) {
+				for (final LiteralList solution : solver.getSolutionHistory()) {
 					if (solution.containsAllLiterals(var)) {
 						if (model == null) {
 							model = Arrays.copyOf(solution.getLiterals(), solution.size());
@@ -319,18 +307,20 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 					final int index = Math.abs(strongVar);
 					fixed[index] = strongVar;
 					mark[index] = true;
-					strongVertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(literals::add);
+					strongVertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(
+						literals::add);
 				}
-				
-				vertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(literals::add);
-				
+
+				vertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(
+					literals::add);
+
 				if (model == null) {
 					final int[] solution = solver.findSolution();
 					model = Arrays.copyOf(solution, solution.length);
 				}
 				solver.setSelectionStrategy(SStrategy.inverse(model));
 
-				for (Integer literal : literals) {
+				for (final Integer literal : literals) {
 					final int index = Math.abs(literal);
 					if (!mark[index]) {
 						mark[index] = true;
@@ -360,7 +350,8 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 									solver.assignmentPush(strongVertex.getVar());
 									fixed[index] = strongVertex.getVar();
 								}
-								strongVertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(literals::add);
+								strongVertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c
+									.getLiterals())).forEach(literals::add);
 							}
 							break;
 						case TIMEOUT:
@@ -372,7 +363,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 							LiteralList.resetConflicts(model, solver.getSolution());
 							solver.shuffleOrder(random);
 							curVertex.getStrongEdges().stream().map(Vertex::getVar).forEach(literals::add);
-							
+
 //							Vertex complement = mig.getVertex(-curVertex.getVar());
 //							for (final Vertex strongVertex : complement.getStrongEdges()) {
 //								literals.add(strongVertex.getVar());
@@ -381,14 +372,15 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 						}
 					} else {
 						curVertex.getStrongEdges().stream().map(Vertex::getVar).forEach(literals::add);
-						
+
 //						Vertex complement = mig.getVertex(-curVertex.getVar());
 //						for (final Vertex strongVertex : complement.getStrongEdges()) {
 //							literals.add(strongVertex.getVar());
 //						}
 					}
-					curVertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(literals::add);
-					
+					curVertex.getComplexClauses().stream().flatMapToInt(c -> IntStream.of(c.getLiterals())).forEach(
+						literals::add);
+
 //					Vertex complement = mig.getVertex(-curVertex.getVar());
 //					for (final LiteralList complexClause : complement.getComplexClauses()) {
 //						for (int literal : complexClause.getLiterals()) {
@@ -396,7 +388,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 //						}
 //					}
 
-					for (Integer literal : literals) {
+					for (final Integer literal : literals) {
 						final int index = Math.abs(literal);
 						if (!mark[index]) {
 							mark[index] = true;
@@ -409,7 +401,7 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 			solver.assignmentClear(orgSize);
 			monitor.step();
 		}
-		for (Vertex vertex : mig.getVertices()) {
+		for (final Vertex vertex : mig.getVertices()) {
 			vertex.getStrongEdges().clear();
 			vertex.getComplexClauses().clear();
 		}

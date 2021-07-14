@@ -35,7 +35,7 @@ public class EnumeratingRandomAlgorithm extends RandomAlgorithm<EnumeratingRando
 	protected EnumeratingRandomConfigurationGenerator createConfigurationGenerator() {
 		return new EnumeratingRandomConfigurationGenerator();
 	}
-	
+
 	@Override
 	public String getName() {
 		return "erandom";

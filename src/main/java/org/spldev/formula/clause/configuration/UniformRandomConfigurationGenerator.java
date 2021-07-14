@@ -22,15 +22,13 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import java.util.List;
+import java.util.*;
 
 import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.SampleDistribution;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.formula.clause.solver.SatSolver.SatResult;
-import org.spldev.util.job.Executor;
-import org.spldev.util.logging.Logger;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.formula.clause.solver.SatSolver.*;
+import org.spldev.util.job.*;
+import org.spldev.util.logging.*;
 
 /**
  * Finds certain solutions of propositional formulas.
@@ -53,8 +51,9 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 		final RandomConfigurationGenerator gen = new FastRandomConfigurationGenerator();
 		gen.setAllowDuplicates(false);
 		gen.setRandom(getRandom());
-		sample = Executor.run(new ConfigurationSampler(gen, sampleSize), solver.getCnf()).map(SolutionList::getSolutions).orElse(Logger::logProblems);
-		if (sample == null || sample.isEmpty()) {
+		sample = Executor.run(new ConfigurationSampler(gen, sampleSize), solver.getCnf()).map(
+			SolutionList::getSolutions).orElse(Logger::logProblems);
+		if ((sample == null) || sample.isEmpty()) {
 			satisfiable = false;
 			return;
 		}
@@ -70,7 +69,7 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 	}
 
 	private boolean findCoreFeatures(SatSolver solver) {
-		int[] fixedFeatures = solver.findSolution();
+		final int[] fixedFeatures = solver.findSolution();
 		if (fixedFeatures == null) {
 			return false;
 		}

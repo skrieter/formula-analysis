@@ -22,7 +22,7 @@
  */
 package org.spldev.formula.clause.solver.strategy;
 
-import org.sat4j.specs.ISolver;
+import org.sat4j.specs.*;
 
 /**
  * Modified variable order for {@link ISolver}.<br>

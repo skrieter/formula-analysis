@@ -22,10 +22,10 @@
  */
 package org.spldev.formula.clause.mig;
 
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.mig.MIG.BuildStatus;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
-import org.spldev.util.job.InternalMonitor;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.mig.MIG.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.job.*;
 
 /**
  * Adjacency matrix implementation for a feature graph.

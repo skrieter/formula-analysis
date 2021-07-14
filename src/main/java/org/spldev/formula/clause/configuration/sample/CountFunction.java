@@ -25,7 +25,8 @@ package org.spldev.formula.clause.configuration.sample;
 import org.spldev.formula.clause.*;
 
 /**
- * Computes the count of some property within a literal array (e.g., number of positive literals).
+ * Computes the count of some property within a literal array (e.g., number of
+ * positive literals).
  *
  * @author Sebastian Krieter
  */

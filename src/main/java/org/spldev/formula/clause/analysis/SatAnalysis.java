@@ -22,14 +22,10 @@
  */
 package org.spldev.formula.clause.analysis;
 
-import java.util.Objects;
+import java.util.*;
 
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
-import org.spldev.formula.clause.solver.RuntimeTimeoutException;
-import org.spldev.formula.clause.solver.Sat4JSolver;
-import org.spldev.formula.clause.solver.SatSolver;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.solver.*;
 
 /**
  * Base class for an analysis using a {@link SatSolver sat solver}.
@@ -43,7 +39,7 @@ public abstract class SatAnalysis {
 	protected boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
 	private int timeout = 1000;
-	
+
 	protected void prepareSolver(SatSolver solver) {
 		Objects.nonNull(solver);
 		solver.setTimeout(timeout);

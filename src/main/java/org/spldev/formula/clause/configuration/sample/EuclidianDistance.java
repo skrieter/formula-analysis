@@ -23,8 +23,8 @@
 package org.spldev.formula.clause.configuration.sample;
 
 /**
- * Computes the Euclidian distance between two literal arrays.
- * Negative literals are treated as zero, positive literals as one.
+ * Computes the Euclidian distance between two literal arrays. Negative literals
+ * are treated as zero, positive literals as one.
  *
  * @author Sebastian Krieter
  */

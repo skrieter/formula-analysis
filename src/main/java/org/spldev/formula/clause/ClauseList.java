@@ -25,8 +25,8 @@ package org.spldev.formula.clause;
 import java.io.*;
 import java.util.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.*;
 
 /**
@@ -73,7 +73,7 @@ public class ClauseList extends ArrayList<LiteralList> implements Cloneable, Ser
 
 	public Result<ClauseList> adapt(VariableMap oldVariableMap, VariableMap newVariableMap) {
 		final ClauseList adaptedClauseList = new ClauseList();
-		for (LiteralList clause : this) {
+		for (final LiteralList clause : this) {
 			final Result<LiteralList> adapted = clause.adapt(oldVariableMap, newVariableMap);
 			if (adapted.isEmpty()) {
 				return Result.empty(adapted.getProblems());

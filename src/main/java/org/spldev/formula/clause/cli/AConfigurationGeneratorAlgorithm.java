@@ -22,11 +22,10 @@
  */
 package org.spldev.formula.clause.cli;
 
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
-import org.spldev.formula.clause.configuration.ConfigurationGenerator;
-import org.spldev.util.Result;
+import org.spldev.formula.clause.configuration.*;
+import org.spldev.util.*;
 
 /**
  * Finds certain solutions of propositional formulas.
@@ -34,8 +33,9 @@ import org.spldev.util.Result;
  * @author Sebastian Krieter
  */
 public abstract class AConfigurationGeneratorAlgorithm<T extends ConfigurationGenerator>
-		implements ConfigurationGeneratorAlgorithm {
+	implements ConfigurationGeneratorAlgorithm {
 
+	@Override
 	public Result<ConfigurationGenerator> parseArguments(List<String> args) {
 		final T gen = createConfigurationGenerator();
 		try {
@@ -46,7 +46,7 @@ public abstract class AConfigurationGeneratorAlgorithm<T extends ConfigurationGe
 				}
 			}
 			return Result.of(gen);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			return Result.empty(e);
 		}
 	}

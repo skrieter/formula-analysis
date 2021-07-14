@@ -35,7 +35,7 @@ public class UniformRandomAlgorithm extends RandomAlgorithm<UniformRandomConfigu
 	protected UniformRandomConfigurationGenerator createConfigurationGenerator() {
 		return new UniformRandomConfigurationGenerator();
 	}
-	
+
 	@Override
 	public String getName() {
 		return "urandom";

@@ -24,9 +24,9 @@ package org.spldev.formula.clause.mig.io;
 
 import java.util.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.mig.*;
+import org.spldev.formula.expression.atomic.literal.*;
 
 /**
  * Computes a textual representation of the feature relationships in a modal

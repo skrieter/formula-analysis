@@ -22,7 +22,7 @@
  */
 package org.spldev.formula.clause.cli;
 
-import org.spldev.formula.clause.configuration.FastRandomConfigurationGenerator;
+import org.spldev.formula.clause.configuration.*;
 
 /**
  * Generates random configurations for a given propositional formula.

@@ -26,7 +26,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
-import org.spldev.formula.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.*;
 import org.spldev.util.Problem.*;
 

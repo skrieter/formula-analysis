@@ -26,10 +26,10 @@ import java.util.*;
 import java.util.stream.*;
 
 import org.sat4j.specs.*;
-import org.spldev.formula.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.*;
 import org.spldev.formula.clause.solver.SatSolver.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.job.*;
 
 /**

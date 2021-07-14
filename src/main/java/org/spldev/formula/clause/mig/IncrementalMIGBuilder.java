@@ -22,29 +22,20 @@
  */
 package org.spldev.formula.clause.mig;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.stream.*;
 
-import org.spldev.formula.VariableMap;
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.Clauses;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.LiteralList.Order;
-import org.spldev.formula.clause.mig.MIG.BuildStatus;
-import org.spldev.formula.clause.mig.Vertex.Status;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.Sat4JSolver;
-import org.spldev.util.job.InternalMonitor;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.clause.mig.MIG.*;
+import org.spldev.formula.clause.mig.Vertex.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.formula.expression.atomic.literal.*;
+import org.spldev.util.job.*;
 
 public class IncrementalMIGBuilder extends MIGBuilder {
 
-	private static enum Changes {
+	private enum Changes {
 		UNCHANGED, ADDED, REMOVED, REPLACED
 	}
 
@@ -87,12 +78,12 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 				bfsStrong(monitor.subTask(10));
 
 				final LiteralList affectedVariables = new LiteralList(addedClauses.stream() //
-						.map(c -> c.adapt(variables, cnf.getVariableMap()).get()) //
-						.flatMapToInt(c -> IntStream.of(c.getLiterals())) //
-						.map(Math::abs) //
-						.distinct() //
-						.toArray(), //
-						Order.NATURAL);
+					.map(c -> c.adapt(variables, cnf.getVariableMap()).get()) //
+					.flatMapToInt(c -> IntStream.of(c.getLiterals())) //
+					.map(Math::abs) //
+					.distinct() //
+					.toArray(), //
+					Order.NATURAL);
 				bfsWeak(affectedVariables, monitor.subTask(1000));
 			}
 			mig.setStrongStatus(BuildStatus.Incremental);
@@ -113,25 +104,25 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 	public static double getChangeRatio(CNF cnf1, CNF cnf2) {
 		final Set<String> allVariables = new HashSet<>(cnf2.getVariableMap().getNames());
 		allVariables.addAll(cnf1.getVariableMap().getNames());
-		VariableMap variables = new VariableMap(allVariables);
+		final VariableMap variables = new VariableMap(allVariables);
 
 		final HashSet<LiteralList> adaptedNewClauses = cnf1.getClauses().stream()
-				.map(c -> c.adapt(cnf1.getVariableMap(), variables).get()) //
-				.peek(c -> c.setOrder(Order.NATURAL)).collect(Collectors.toCollection(HashSet::new));
+			.map(c -> c.adapt(cnf1.getVariableMap(), variables).get()) //
+			.peek(c -> c.setOrder(Order.NATURAL)).collect(Collectors.toCollection(HashSet::new));
 
 		final HashSet<LiteralList> adaptedOldClauses = cnf2.getClauses().stream() //
-				.map(c -> c.adapt(cnf2.getVariableMap(), variables).get()) //
-				.peek(c -> c.setOrder(Order.NATURAL)) //
-				.collect(Collectors.toCollection(HashSet::new));
+			.map(c -> c.adapt(cnf2.getVariableMap(), variables).get()) //
+			.peek(c -> c.setOrder(Order.NATURAL)) //
+			.collect(Collectors.toCollection(HashSet::new));
 
 		final HashSet<LiteralList> addedClauses = adaptedNewClauses.stream() //
-				.filter(c -> !adaptedOldClauses.contains(c)) //
-				.collect(Collectors.toCollection(HashSet::new));
+			.filter(c -> !adaptedOldClauses.contains(c)) //
+			.collect(Collectors.toCollection(HashSet::new));
 		final HashSet<LiteralList> removedClauses = adaptedOldClauses.stream() //
-				.filter(c -> !adaptedNewClauses.contains(c)) //
-				.collect(Collectors.toCollection(HashSet::new));
+			.filter(c -> !adaptedNewClauses.contains(c)) //
+			.collect(Collectors.toCollection(HashSet::new));
 
-		HashSet<LiteralList> allClauses = new HashSet<>(adaptedNewClauses);
+		final HashSet<LiteralList> allClauses = new HashSet<>(adaptedNewClauses);
 		allClauses.addAll(adaptedOldClauses);
 		return (addedClauses.size() + removedClauses.size()) / (double) allClauses.size();
 	}
@@ -145,42 +136,42 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 		variables = new VariableMap(allVariables);
 
 		final HashSet<LiteralList> adaptedNewClauses = cnf.getClauses().stream()
-				.map(c -> c.adapt(cnf.getVariableMap(), variables).get()) //
-				.peek(c -> c.setOrder(Order.NATURAL)).collect(Collectors.toCollection(HashSet::new));
+			.map(c -> c.adapt(cnf.getVariableMap(), variables).get()) //
+			.peek(c -> c.setOrder(Order.NATURAL)).collect(Collectors.toCollection(HashSet::new));
 
 		final HashSet<LiteralList> adaptedOldClauses = oldCnf.getClauses().stream() //
-				.map(c -> c.adapt(oldCnf.getVariableMap(), variables).get()) //
-				.peek(c -> c.setOrder(Order.NATURAL)) //
-				.collect(Collectors.toCollection(HashSet::new));
+			.map(c -> c.adapt(oldCnf.getVariableMap(), variables).get()) //
+			.peek(c -> c.setOrder(Order.NATURAL)) //
+			.collect(Collectors.toCollection(HashSet::new));
 
 		addedClauses = adaptedNewClauses.stream() //
-				.filter(c -> !adaptedOldClauses.contains(c)) //
-				.collect(Collectors.toCollection(HashSet::new));
+			.filter(c -> !adaptedOldClauses.contains(c)) //
+			.collect(Collectors.toCollection(HashSet::new));
 		final HashSet<LiteralList> removedClauses = adaptedOldClauses.stream() //
-				.filter(c -> !adaptedNewClauses.contains(c)) //
-				.collect(Collectors.toCollection(HashSet::new));
+			.filter(c -> !adaptedNewClauses.contains(c)) //
+			.collect(Collectors.toCollection(HashSet::new));
 
 		changes = addedClauses.isEmpty() ? removedClauses.isEmpty() ? Changes.UNCHANGED : Changes.REMOVED
-				: removedClauses.isEmpty() ? Changes.ADDED : Changes.REPLACED;
+			: removedClauses.isEmpty() ? Changes.ADDED : Changes.REPLACED;
 
-		HashSet<LiteralList> allClauses = new HashSet<>(adaptedNewClauses);
+		final HashSet<LiteralList> allClauses = new HashSet<>(adaptedNewClauses);
 		allClauses.addAll(adaptedOldClauses);
 //		changeRatio = (addedClauses.size() + removedClauses.size()) / (double) allClauses.size();
 	}
 
 	private void core(CNF cnf, InternalMonitor monitor) {
-		int[] coreDead = oldMig.getVertices().stream() //
-				.filter(Vertex::isCore) //
-				.mapToInt(Vertex::getVar) //
-				.map(l -> Clauses.adapt(l, oldMig.getCnf().getVariableMap(), cnf.getVariableMap())) //
-				.filter(l -> l != 0) //
-				.peek(l -> {
-					mig.getVertex(l).setStatus(Status.Core);
-					mig.getVertex(-l).setStatus(Status.Dead);
-				}).toArray();
+		final int[] coreDead = oldMig.getVertices().stream() //
+			.filter(Vertex::isCore) //
+			.mapToInt(Vertex::getVar) //
+			.map(l -> Clauses.adapt(l, oldMig.getCnf().getVariableMap(), cnf.getVariableMap())) //
+			.filter(l -> l != 0) //
+			.peek(l -> {
+				mig.getVertex(l).setStatus(Status.Core);
+				mig.getVertex(-l).setStatus(Status.Dead);
+			}).toArray();
 		switch (changes) {
 		case ADDED:
-			for (int literal : coreDead) {
+			for (final int literal : coreDead) {
 				solver.assignmentPush(literal);
 				fixedFeatures[Math.abs(literal) - 1] = 0;
 			}
@@ -191,7 +182,7 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 			break;
 		case REPLACED:
 			checkOldCoreLiterals(coreDead);
-			for (int literal : coreDead) {
+			for (final int literal : coreDead) {
 				fixedFeatures[Math.abs(literal) - 1] = 0;
 			}
 			findCoreFeatures(monitor);
@@ -207,26 +198,26 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 		Stream<LiteralList> cnfStream = cleanedClausesList.stream();
 		if (checkRedundancy) {
 			final Set<LiteralList> oldMigClauses = oldMig.getVertices().stream()
-					.flatMap(v -> v.getComplexClauses().stream()).collect(Collectors.toCollection(HashSet::new));
+				.flatMap(v -> v.getComplexClauses().stream()).collect(Collectors.toCollection(HashSet::new));
 			final HashSet<LiteralList> redundantClauses = oldMig.getCnf().getClauses().stream()
-					.map(c -> cleanClause(c, oldMig)) //
-					.filter(Objects::nonNull) //
-					.filter(c -> c.size() > 2) //
-					.filter(c -> !oldMigClauses.contains(c)) //
-					.map(c -> c.adapt(oldMig.getCnf().getVariableMap(), variables).get()) //
-					.peek(c -> c.setOrder(Order.NATURAL)) //
-					.collect(Collectors.toCollection(HashSet::new));
+				.map(c -> cleanClause(c, oldMig)) //
+				.filter(Objects::nonNull) //
+				.filter(c -> c.size() > 2) //
+				.filter(c -> !oldMigClauses.contains(c)) //
+				.map(c -> c.adapt(oldMig.getCnf().getVariableMap(), variables).get()) //
+				.peek(c -> c.setOrder(Order.NATURAL)) //
+				.collect(Collectors.toCollection(HashSet::new));
 
 			cnfStream = cnfStream //
-					.map(c -> c.adapt(cnf.getVariableMap(), variables).get()) //
-					.peek(c -> c.setOrder(Order.NATURAL));
+				.map(c -> c.adapt(cnf.getVariableMap(), variables).get()) //
+				.peek(c -> c.setOrder(Order.NATURAL));
 
 			switch (changes) {
 			case ADDED: {
 				if (add) {
 					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
 					final int[] affectedVariables = addedClauses.stream()
-							.flatMapToInt(c -> IntStream.of(c.getLiterals())).map(Math::abs).distinct().toArray();
+						.flatMapToInt(c -> IntStream.of(c.getLiterals())).map(Math::abs).distinct().toArray();
 					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> {
 						if (c.size() < 3) {
 							return true;
@@ -240,8 +231,8 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 						return true;
 					}).peek(redundancySolver::addClause);
 				} else {
-					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c ->
-						c.size() < 3 || !redundantClauses.contains(c));
+					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> (c.size() < 3)
+						|| !redundantClauses.contains(c));
 				}
 				mig.setRedundancyStatus(BuildStatus.Incremental);
 				break;
@@ -264,7 +255,7 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 				if (add) {
 					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
 					final int[] affectedVariables = addedClauses.stream()
-							.flatMapToInt(c -> IntStream.of(c.getLiterals())).map(Math::abs).distinct().toArray();
+						.flatMapToInt(c -> IntStream.of(c.getLiterals())).map(Math::abs).distinct().toArray();
 					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> {
 						if (c.size() < 3) {
 							return true;
@@ -280,15 +271,15 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 					}).peek(redundancySolver::addClause);
 				} else {
 					final Sat4JSolver redundancySolver = new Sat4JSolver(new CNF(variables));
-					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> 
-						c.size() < 3 || !redundantClauses.contains(c) || !isRedundant(redundancySolver, c)
-					).peek(redundancySolver::addClause);
+					cnfStream = cnfStream.sorted(lengthComparator).distinct().filter(c -> (c.size() < 3)
+						|| !redundantClauses.contains(c) || !isRedundant(redundancySolver, c)).peek(
+							redundancySolver::addClause);
 				}
 				mig.setRedundancyStatus(BuildStatus.Incremental);
 				break;
 			}
 			case UNCHANGED: {
-				cnfStream = cnfStream.distinct().filter(c -> c.size() < 3 || !redundantClauses.contains(c));
+				cnfStream = cnfStream.distinct().filter(c -> (c.size() < 3) || !redundantClauses.contains(c));
 				mig.setRedundancyStatus(mig.getRedundancyStatus());
 				break;
 			}
@@ -296,7 +287,7 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 				throw new IllegalStateException(String.valueOf(changes));
 			}
 			cnfStream = cnfStream.map(c -> c.adapt(variables, cnf.getVariableMap()).get())
-					.peek(c -> c.setOrder(Order.NATURAL));
+				.peek(c -> c.setOrder(Order.NATURAL));
 		} else {
 			cnfStream = cnfStream.distinct();
 			mig.setRedundancyStatus(BuildStatus.None);
@@ -308,14 +299,14 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 		switch (changes) {
 		case REMOVED:
 		case REPLACED:
-			loop: for (LiteralList strongEdge : oldMig.getDetectedStrong()) {
+			loop: for (final LiteralList strongEdge : oldMig.getDetectedStrong()) {
 				final LiteralList adaptClause = strongEdge
-						.adapt(oldMig.getCnf().getVariableMap(), mig.getCnf().getVariableMap()).get();
+					.adapt(oldMig.getCnf().getVariableMap(), mig.getCnf().getVariableMap()).get();
 				if (adaptClause != null) {
 					final int[] literals = adaptClause.getLiterals();
 					final int l1 = -literals[0];
 					final int l2 = -literals[1];
-					for (LiteralList solution : solver.getSolutionHistory()) {
+					for (final LiteralList solution : solver.getSolutionHistory()) {
 						if (solution.containsAllLiterals(l1, l2)) {
 							continue loop;
 						}
@@ -337,9 +328,9 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 			break;
 		case ADDED:
 		case UNCHANGED:
-			for (LiteralList strongEdge : oldMig.getDetectedStrong()) {
+			for (final LiteralList strongEdge : oldMig.getDetectedStrong()) {
 				final LiteralList adaptClause = strongEdge
-						.adapt(oldMig.getCnf().getVariableMap(), mig.getCnf().getVariableMap()).get();
+					.adapt(oldMig.getCnf().getVariableMap(), mig.getCnf().getVariableMap()).get();
 				if (adaptClause != null) {
 					cleanedClausesList.add(adaptClause);
 					mig.getDetectedStrong().add(adaptClause);
@@ -353,7 +344,7 @@ public class IncrementalMIGBuilder extends MIGBuilder {
 
 	protected void checkOldCoreLiterals(int[] coreDead) {
 		solver.setSelectionStrategy(SStrategy.inverse(fixedFeatures));
-		for (int literal : coreDead) {
+		for (final int literal : coreDead) {
 			final int varX = fixedFeatures[Math.abs(literal) - 1];
 			if (varX == 0) {
 				mig.getVertex(-literal).setStatus(Status.Normal);

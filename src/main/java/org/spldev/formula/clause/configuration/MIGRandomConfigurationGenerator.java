@@ -22,12 +22,10 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import org.spldev.formula.clause.mig.MIG;
-import org.spldev.formula.clause.mig.RegularMIGBuilder;
-import org.spldev.formula.clause.solver.MIGDistribution;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.util.job.Executor;
-import org.spldev.util.logging.Logger;
+import org.spldev.formula.clause.mig.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.job.*;
+import org.spldev.util.logging.*;
 
 /**
  * Finds certain solutions of propositional formulas.
@@ -40,8 +38,8 @@ public class MIGRandomConfigurationGenerator extends RandomConfigurationGenerato
 
 	@Override
 	protected void init() {
-		RegularMIGBuilder migBuilder = new RegularMIGBuilder();
-		MIG mig = Executor.run(migBuilder, solver.getCnf()).orElse(Logger::logProblems);
+		final RegularMIGBuilder migBuilder = new RegularMIGBuilder();
+		final MIG mig = Executor.run(migBuilder, solver.getCnf()).orElse(Logger::logProblems);
 		satisfiable = mig != null;
 		if (!satisfiable) {
 			return;

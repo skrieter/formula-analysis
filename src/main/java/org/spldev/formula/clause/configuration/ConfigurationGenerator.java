@@ -22,14 +22,12 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.function.*;
 
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.analysis.SatAnalysis;
-import org.spldev.formula.clause.solver.SatSolver;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.analysis.*;
+import org.spldev.formula.clause.solver.*;
 
 /**
  * Finds certain solutions of propositional formulas.
@@ -37,7 +35,7 @@ import org.spldev.formula.clause.solver.SatSolver;
  * @author Sebastian Krieter
  */
 public abstract class ConfigurationGenerator extends SatAnalysis
-		implements Supplier<LiteralList>, Spliterator<LiteralList> {
+	implements Supplier<LiteralList>, Spliterator<LiteralList> {
 
 	protected SatSolver solver;
 

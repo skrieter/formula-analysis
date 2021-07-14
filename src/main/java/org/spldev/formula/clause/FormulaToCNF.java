@@ -24,9 +24,9 @@ package org.spldev.formula.clause;
 
 import java.util.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.clause.LiteralList.*;
 import org.spldev.formula.expression.*;
+import org.spldev.formula.expression.atomic.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.job.*;
 

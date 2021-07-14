@@ -46,7 +46,7 @@ public class TWiseAlgorithm extends AConfigurationGeneratorAlgorithm<TWiseConfig
 
 	@Override
 	protected boolean parseArgument(TWiseConfigurationGenerator gen, String arg, ListIterator<String> iterator)
-			throws IllegalArgumentException {
+		throws IllegalArgumentException {
 		if (!super.parseArgument(gen, arg, iterator)) {
 			switch (arg) {
 			case "-s":
@@ -72,7 +72,7 @@ public class TWiseAlgorithm extends AConfigurationGeneratorAlgorithm<TWiseConfig
 		final List<List<ClauseList>> expressionGroups;
 		if (expressionFile != null) {
 			expressionGroups = FileHandler.parse(expressionFile, new ExpressionGroupFormat())
-					.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
+				.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
 		} else {
 			expressionGroups = null;
 		}

@@ -26,9 +26,10 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.clause.transform.*;
 import org.spldev.formula.expression.*;
+import org.spldev.formula.expression.atomic.literal.*;
+import org.spldev.formula.expression.io.*;
 import org.spldev.util.*;
 import org.spldev.util.data.*;
 import org.spldev.util.job.*;
@@ -115,9 +116,9 @@ public final class Clauses {
 
 	private static void convertNF(List<LiteralList> cnf, List<LiteralList> dnf, int[] literals, int index) {
 		if (index == cnf.size()) {
-			int[] newClauseLiterals = new int[literals.length];
+			final int[] newClauseLiterals = new int[literals.length];
 			int count = 0;
-			for (int literal : literals) {
+			for (final int literal : literals) {
 				if (literal != 0) {
 					newClauseLiterals[count++] = literal;
 				}
@@ -128,7 +129,7 @@ public final class Clauses {
 				dnf.add(new LiteralList(newClauseLiterals));
 			}
 		} else {
-			HashSet<Integer> literalSet = new HashSet<>();
+			final HashSet<Integer> literalSet = new HashSet<>();
 			for (int i = 0; i <= index; i++) {
 				literalSet.add(literals[i]);
 			}
@@ -152,11 +153,12 @@ public final class Clauses {
 	}
 
 	public static CNF open(Path path) {
-		return Provider.load(path, CNFFormatManager.getInstance()).orElse(Logger::logProblems);
+		return Provider.load(path, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF).orElse(
+			Logger::logProblems);
 	}
 
 	public static Result<CNF> load(Path path) {
-		return Provider.load(path, CNFFormatManager.getInstance());
+		return Provider.load(path, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF);
 	}
 
 	public static Result<CNF> load(Path path, CacheHolder cache) {

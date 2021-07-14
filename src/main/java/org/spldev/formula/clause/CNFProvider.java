@@ -25,6 +25,7 @@ package org.spldev.formula.clause;
 import java.nio.file.*;
 
 import org.spldev.formula.expression.*;
+import org.spldev.formula.expression.io.*;
 import org.spldev.util.*;
 import org.spldev.util.data.*;
 
@@ -56,7 +57,7 @@ public interface CNFProvider extends Provider<CNF> {
 	}
 
 	static CNFProvider loader(Path path) {
-		return (c, m) -> Provider.load(path, CNFFormatManager.getInstance());
+		return (c, m) -> Provider.load(path, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF);
 	}
 
 	static <T> CNFProvider fromExpression() {

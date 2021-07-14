@@ -25,7 +25,7 @@ package org.spldev.formula.clause;
 import java.io.*;
 import java.util.*;
 
-import org.spldev.formula.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.*;
 
 // TODO rename, as it can represent both CNF and DNF
@@ -35,7 +35,7 @@ import org.spldev.util.*;
  * @author Sebastian Krieter
  */
 public class CNF implements Serializable {
-	
+
 	private static final long serialVersionUID = -7716526687669886274L;
 
 	protected ClauseList clauses;

@@ -35,8 +35,8 @@ import org.spldev.formula.clause.solver.*;
  * @author Sebastian Krieter
  */
 public class MIG {
-	
-	public static enum BuildStatus {
+
+	public enum BuildStatus {
 		None, Incremental, Complete
 	}
 
@@ -54,7 +54,7 @@ public class MIG {
 
 	private final List<Vertex> adjList;
 	private final CNF cnf;
-	
+
 	private BuildStatus redundancyStatus = BuildStatus.None;
 	private BuildStatus strongStatus = BuildStatus.None;
 

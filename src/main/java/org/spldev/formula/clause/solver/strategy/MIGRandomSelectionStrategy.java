@@ -22,12 +22,11 @@
  */
 package org.spldev.formula.clause.solver.strategy;
 
-import static org.sat4j.core.LiteralsUtils.negLit;
-import static org.sat4j.core.LiteralsUtils.posLit;
+import static org.sat4j.core.LiteralsUtils.*;
 
-import org.sat4j.core.LiteralsUtils;
-import org.sat4j.minisat.core.IPhaseSelectionStrategy;
-import org.spldev.formula.clause.solver.SampleDistribution;
+import org.sat4j.core.*;
+import org.sat4j.minisat.core.*;
+import org.spldev.formula.clause.solver.*;
 
 /**
  * Uses a sample of configurations to achieve a phase selection that corresponds
@@ -42,7 +41,7 @@ public class MIGRandomSelectionStrategy implements IPhaseSelectionStrategy {
 	private final SampleDistribution dist;
 
 	public MIGRandomSelectionStrategy(SampleDistribution sampleDistribution) {
-		this.dist = sampleDistribution;
+		dist = sampleDistribution;
 	}
 
 	public void undo(int var) {

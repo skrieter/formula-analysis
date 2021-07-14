@@ -40,7 +40,7 @@ public class DistanceMetrics {
 
 		@Override
 		public double get(SolutionList sample) {
-			DistanceMetrics.this.setSample(sample);
+			setSample(sample);
 			return aggregate.getAsDouble();
 		}
 
@@ -89,7 +89,7 @@ public class DistanceMetrics {
 			final int size = solutions.size();
 			distances = new double[(size * (size - 1)) >> 1];
 			int index = 0;
-			for (int i = 0; i < size - 1; i++) {
+			for (int i = 0; i < (size - 1); i++) {
 				final int[] literals1 = solutions.get(i).getLiterals();
 				for (int j = i + 1; j < size; j++) {
 					distances[index++] = distanceFunction.computeDistance(literals1, solutions.get(j).getLiterals());
@@ -100,7 +100,7 @@ public class DistanceMetrics {
 	}
 
 	public void setSample(SolutionList sample) {
-		if (this.sample == null || this.sample != sample) {
+		if ((this.sample == null) || (this.sample != sample)) {
 			this.sample = sample;
 			distances = null;
 			min = -1;
@@ -153,7 +153,7 @@ public class DistanceMetrics {
 				min = 0;
 			} else {
 				min = Double.MAX_VALUE;
-				for (double distance : distances) {
+				for (final double distance : distances) {
 					if (min > distance) {
 						min = distance;
 					}
@@ -166,7 +166,7 @@ public class DistanceMetrics {
 	private double getMax() {
 		if (max < 0) {
 			max = 0;
-			for (double distance : getDistances()) {
+			for (final double distance : getDistances()) {
 				if (max < distance) {
 					max = distance;
 				}
@@ -180,7 +180,7 @@ public class DistanceMetrics {
 			mean = 0;
 			final double[] distances = getDistances();
 			if (distances.length > 0) {
-				for (double distance : distances) {
+				for (final double distance : distances) {
 					mean += distance;
 				}
 				mean /= distances.length;
@@ -214,8 +214,8 @@ public class DistanceMetrics {
 			final double[] distances = getDistances();
 			if (distances.length > 0) {
 				final double mean = getMean();
-				for (double distance : getDistances()) {
-					double diff = distance - mean;
+				for (final double distance : getDistances()) {
+					final double diff = distance - mean;
 					variance += diff * diff;
 				}
 				variance /= distances.length;

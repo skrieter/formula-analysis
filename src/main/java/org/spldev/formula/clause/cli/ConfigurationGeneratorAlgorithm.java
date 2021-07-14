@@ -38,5 +38,5 @@ public interface ConfigurationGeneratorAlgorithm extends Extension {
 	Result<ConfigurationGenerator> parseArguments(List<String> args);
 
 	String getName();
-	
+
 }

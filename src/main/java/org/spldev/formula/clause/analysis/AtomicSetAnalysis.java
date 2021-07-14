@@ -22,15 +22,12 @@
  */
 package org.spldev.formula.clause.analysis;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.util.data.Identifier;
-import org.spldev.util.job.InternalMonitor;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
+import org.spldev.util.job.*;
 
 /**
  * Finds atomic sets.

@@ -22,18 +22,14 @@
  */
 package org.spldev.formula.clause.analysis;
 
-import java.util.Arrays;
+import java.util.*;
 
-import org.sat4j.core.VecInt;
-import org.sat4j.specs.IteratorInt;
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.Sat4JSolver;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.util.data.Identifier;
-import org.spldev.util.job.InternalMonitor;
+import org.sat4j.core.*;
+import org.sat4j.specs.*;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
+import org.spldev.util.job.*;
 
 /**
  * Finds core and dead features.

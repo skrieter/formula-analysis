@@ -25,9 +25,9 @@ package org.spldev.formula.clause.io;
 import java.util.*;
 import java.util.regex.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.*;
 import org.spldev.util.Problem.*;
 import org.spldev.util.io.format.*;

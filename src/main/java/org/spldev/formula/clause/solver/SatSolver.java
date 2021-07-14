@@ -22,13 +22,10 @@
  */
 package org.spldev.formula.clause.solver;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-import org.sat4j.specs.IConstr;
-import org.spldev.formula.clause.CNF;
-import org.spldev.formula.clause.LiteralList;
+import org.sat4j.specs.*;
+import org.spldev.formula.clause.*;
 
 /**
  * Finds certain solutions of propositional formulas.

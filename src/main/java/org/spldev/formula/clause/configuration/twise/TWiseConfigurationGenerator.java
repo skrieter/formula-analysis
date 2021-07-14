@@ -33,8 +33,8 @@ import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
 /**
- * YASA sampling algorithm. Generates configurations for a given propositional formula such that t-wise
- * feature coverage is achieved.
+ * YASA sampling algorithm. Generates configurations for a given propositional
+ * formula such that t-wise feature coverage is achieved.
  *
  * @author Sebastian Krieter
  */
@@ -158,7 +158,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 		final CNF cnf = solver.getCnf();
 		solver.rememberSolutionHistory(10);
 		solver.setSelectionStrategy(SStrategy.random(getRandom()));
-		
+
 		if (nodes == null) {
 			nodes = convertLiterals(LiteralList.getLiterals(cnf));
 		}
@@ -186,7 +186,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 		}
 
 		Logger.logDebug("Set up PresenceConditionManager... ");
-		
+
 		// TODO Variation Point: Sorting Nodes
 		presenceConditionManager = new PresenceConditionManager(util, nodes);
 		// TODO Variation Point: Building Combinations
@@ -222,7 +222,7 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 	}
 
 	private void trimConfigurations() {
-		if (curResult != null && !curResult.isEmpty()) {
+		if ((curResult != null) && !curResult.isEmpty()) {
 			final CoverageStatistic statistic = new TWiseStatisticFastGenerator().getCoverage(curResult,
 				presenceConditionManager.getGroupedPresenceConditions(), t);
 

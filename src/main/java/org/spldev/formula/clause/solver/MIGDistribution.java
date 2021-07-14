@@ -22,11 +22,10 @@
  */
 package org.spldev.formula.clause.solver;
 
-import java.util.Arrays;
+import java.util.*;
 
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.mig.MIG;
-import org.spldev.formula.clause.mig.Vertex;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.mig.*;
 
 /**
  * Uses a sample of configurations to achieve a phase selection that corresponds
@@ -44,7 +43,7 @@ public class MIGDistribution extends LiteralDistribution {
 		this.mig = mig;
 		model = new byte[mig.size()];
 		count = 0;
-		for (Vertex vertex : mig.getVertices()) {
+		for (final Vertex vertex : mig.getVertices()) {
 			if (vertex.isNormal()) {
 				count++;
 			}
@@ -52,10 +51,12 @@ public class MIGDistribution extends LiteralDistribution {
 		count /= 2;
 	}
 
+	@Override
 	public void reset() {
 		Arrays.fill(model, (byte) 0);
 	}
 
+	@Override
 	public void unset(int var) {
 		final int index = var - 1;
 		final byte sign = model[index];
@@ -64,6 +65,7 @@ public class MIGDistribution extends LiteralDistribution {
 		}
 	}
 
+	@Override
 	public void set(int literal) {
 		final int index = Math.abs(literal) - 1;
 		if (model[index] == 0) {
@@ -71,6 +73,7 @@ public class MIGDistribution extends LiteralDistribution {
 		}
 	}
 
+	@Override
 	public int getRandomLiteral(int var) {
 		int strongInPositive = 0;
 		int strongInNegative = 0;
@@ -78,13 +81,13 @@ public class MIGDistribution extends LiteralDistribution {
 		int weakInNegative = 0;
 
 //		count = 0;
-		for (Vertex vertex : mig.getVertices()) {
-			if (vertex.isNormal() && model[Math.abs(vertex.getVar()) - 1] == 0) {
+		for (final Vertex vertex : mig.getVertices()) {
+			if (vertex.isNormal() && (model[Math.abs(vertex.getVar()) - 1] == 0)) {
 //				if (vertex.getVar() > 0) {
 //					count++;
 //				}s
-				for (Vertex strong : vertex.getStrongEdges()) {
-					int strongLiteral = strong.getVar();
+				for (final Vertex strong : vertex.getStrongEdges()) {
+					final int strongLiteral = strong.getVar();
 					if (Math.abs(strongLiteral) == var) {
 						if (strongLiteral > 0) {
 							strongInPositive++;
@@ -93,8 +96,8 @@ public class MIGDistribution extends LiteralDistribution {
 						}
 					}
 				}
-				for (LiteralList weak : vertex.getComplexClauses()) {
-					for (int l : weak.getLiterals()) {
+				for (final LiteralList weak : vertex.getComplexClauses()) {
+					for (final int l : weak.getLiterals()) {
 						if (Math.abs(l) == var) {
 							if (l > 0) {
 								weakInPositive += 1.0 / (weak.getLiterals().length - 1);

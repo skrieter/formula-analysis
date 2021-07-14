@@ -22,9 +22,9 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.LiteralList.Order;
-import org.spldev.formula.clause.solver.RuntimeContradictionException;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.LiteralList.*;
+import org.spldev.formula.clause.solver.*;
 
 /**
  * Generates all configurations for a given propositional formula.
@@ -34,7 +34,7 @@ import org.spldev.formula.clause.solver.RuntimeContradictionException;
 public class AllConfigurationGenerator extends ConfigurationGenerator {
 
 	private boolean satisfiable = true;
-	
+
 	@Override
 	public LiteralList get() {
 		if (!satisfiable) {
@@ -53,6 +53,5 @@ public class AllConfigurationGenerator extends ConfigurationGenerator {
 		}
 		return result;
 	}
-
 
 }

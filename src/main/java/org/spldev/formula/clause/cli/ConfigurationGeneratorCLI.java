@@ -62,8 +62,9 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 			switch (arg) {
 			case "-a": {
 				// TODO add plugin for icpl and chvatal
-				String name = CLI.getArgValue(iterator, arg).toLowerCase();
-				for (ConfigurationGeneratorAlgorithm algExtension : ConfigurationGeneratorAlgorithmManager.getInstance()
+				final String name = CLI.getArgValue(iterator, arg).toLowerCase();
+				for (final ConfigurationGeneratorAlgorithm algExtension : ConfigurationGeneratorAlgorithmManager
+					.getInstance()
 					.getExtensions()) {
 					if (Objects.equals(name, algExtension.getName())) {
 						algorithm = algExtension;
@@ -105,7 +106,7 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments)
 			.orElse(Logger::logProblems);
 		if (generator != null) {
-			ConfigurationSampler sampler = new ConfigurationSampler(generator, limit);
+			final ConfigurationSampler sampler = new ConfigurationSampler(generator, limit);
 
 			final CNF cnf = FileHandler.parse(fmFile, FormulaFormatManager.getInstance()) //
 				.map(Formulas::toCNF) //

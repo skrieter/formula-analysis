@@ -22,7 +22,7 @@
  */
 package org.spldev.formula.clause.cli;
 
-import org.spldev.formula.clause.configuration.OneWiseConfigurationGenerator;
+import org.spldev.formula.clause.configuration.*;
 
 /**
  * Generates configurations for a given propositional formula such that one-wise

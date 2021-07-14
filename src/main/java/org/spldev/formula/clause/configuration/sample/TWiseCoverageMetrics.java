@@ -98,7 +98,7 @@ public class TWiseCoverageMetrics {
 			metrics.setCNF(cnf);
 		}
 		final List<TWiseCoverageMetric> coverageMetrics = new ArrayList<>(tValues.length);
-		for (int t : tValues) {
+		for (final int t : tValues) {
 			coverageMetrics.add(metrics.getTWiseCoverageMetric(t));
 		}
 		return coverageMetrics;

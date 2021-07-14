@@ -23,8 +23,8 @@
 package org.spldev.formula.clause.configuration.sample;
 
 /**
- * Computes the Cosine distance between two literal arrays.
- * Negative literals are treated as zero, positive literals as one.
+ * Computes the Cosine distance between two literal arrays. Negative literals
+ * are treated as zero, positive literals as one.
  *
  * @author Sebastian Krieter
  */
@@ -36,8 +36,8 @@ public class CosineZeroDistance implements DistanceFunction {
 		double sumA = 0;
 		double sumB = 0;
 		for (int k = 0; k < literals1.length; k++) {
-			final int a = ~literals1[k] >>> (Integer.SIZE-1);
-			final int b = ~literals2[k] >>> (Integer.SIZE-1);
+			final int a = ~literals1[k] >>> (Integer.SIZE - 1);
+			final int b = ~literals2[k] >>> (Integer.SIZE - 1);
 			sumA += a;
 			sumB += b;
 			sum += a & b;

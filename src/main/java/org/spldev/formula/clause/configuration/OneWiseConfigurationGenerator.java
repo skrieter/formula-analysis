@@ -22,10 +22,10 @@
  */
 package org.spldev.formula.clause.configuration;
 
-import org.sat4j.core.VecInt;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.SatSolver.SatResult;
+import org.sat4j.core.*;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.formula.clause.solver.SatSolver.*;
 
 /**
  * Generates configurations for a given propositional formula such that one-wise
@@ -72,6 +72,7 @@ public class OneWiseConfigurationGenerator extends ConfigurationGenerator {
 		this.coverStrategy = coverStrategy;
 	}
 
+	@Override
 	protected void init() {
 		initialAssignmentLength = solver.getAssignmentSize();
 
@@ -102,7 +103,7 @@ public class OneWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	@Override
 	public LiteralList get() {
-		if (variablesToCover != null && !variablesToCover.isEmpty()) {
+		if ((variablesToCover != null) && !variablesToCover.isEmpty()) {
 			boolean firstVar = true;
 			int[] lastSolution = null;
 			for (int i = variablesToCover.size() - 1; i >= 0; i--) {
@@ -157,8 +158,8 @@ public class OneWiseConfigurationGenerator extends ConfigurationGenerator {
 					break;
 				}
 			}
-			LiteralList result = lastSolution == null ? null
-					: new LiteralList(lastSolution, LiteralList.Order.INDEX, false);
+			final LiteralList result = lastSolution == null ? null
+				: new LiteralList(lastSolution, LiteralList.Order.INDEX, false);
 			solver.assignmentClear(initialAssignmentLength);
 			while (!variablesToCover.isEmpty()) {
 				final int var = variablesToCover.last();

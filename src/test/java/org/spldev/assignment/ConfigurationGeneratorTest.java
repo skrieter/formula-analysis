@@ -55,8 +55,7 @@ public class ConfigurationGeneratorTest {
 		"basic", //
 		"simple", //
 		"car", //
-		"gpl_medium_model"
-		);
+		"gpl_medium_model");
 
 	@Test
 	public void AllCoverage() {
@@ -172,7 +171,8 @@ public class ConfigurationGeneratorTest {
 		final CNF cnf = loadCNF(modelFile);
 		final SolutionList sample = sample(modelFile, algorithm, null, null);
 		assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
-		assertEquals(numberOfConfigurations, sample.getSolutions().size(), "Wrong number of configurations for " + modelName);
+		assertEquals(numberOfConfigurations, sample.getSolutions().size(), "Wrong number of configurations for "
+			+ modelName);
 	}
 
 	private static void testLimitedSize(String modelName, String algorithm, int numberOfConfigurations, int limit) {
@@ -180,15 +180,18 @@ public class ConfigurationGeneratorTest {
 		final CNF cnf = loadCNF(modelFile);
 		final SolutionList sample = sample(modelFile, algorithm, null, limit);
 		assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
-		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for " + modelName);
-		assertTrue(Math.min(limit, numberOfConfigurations) == sample.getSolutions().size(), "Wrong number of configurations for "
+		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for "
 			+ modelName);
+		assertTrue(Math.min(limit, numberOfConfigurations) == sample.getSolutions().size(),
+			"Wrong number of configurations for "
+				+ modelName);
 	}
 
 	private static void testTWiseLimitedSize(String modelName, String algorithm, int t, int limit) {
 		final Path modelFile = modelDirectory.resolve(modelName + ".xml");
 		final SolutionList sample = sample(modelFile, algorithm, t, limit);
-		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for " + modelName);
+		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for "
+			+ modelName);
 	}
 
 	private static void testPairWiseLimitedSize(String modelName, String algorithm, int limit) {
@@ -196,7 +199,8 @@ public class ConfigurationGeneratorTest {
 		final CNF cnf = loadCNF(modelFile);
 		final SolutionList sample = sample(modelFile, algorithm, null, limit);
 		assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
-		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for " + modelName);
+		assertTrue(limit >= sample.getSolutions().size(), "Number of configurations larger than limit for "
+			+ modelName);
 	}
 
 	private static SolutionList sample(final Path modelFile, String algorithm, Integer t, Integer limit) {

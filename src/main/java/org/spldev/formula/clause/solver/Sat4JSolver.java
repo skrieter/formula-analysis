@@ -296,7 +296,7 @@ public class Sat4JSolver implements SatSolver {
 
 		if (solutionHistory != null) {
 			final int[] array = Arrays.copyOf(assignment.toArray(), assignment.size());
-			for (LiteralList solution : solutionHistory) {
+			for (final LiteralList solution : solutionHistory) {
 				if (solution.containsAllLiterals(array)) {
 					lastModel = solution.getLiterals();
 					return SatResult.TRUE;
@@ -332,7 +332,7 @@ public class Sat4JSolver implements SatSolver {
 		}
 
 		if (solutionHistory != null) {
-			for (LiteralList solution : solutionHistory) {
+			for (final LiteralList solution : solutionHistory) {
 				if (solution.containsAllLiterals(assignment)) {
 					lastModel = solution.getLiterals();
 					return SatResult.TRUE;
@@ -426,7 +426,7 @@ public class Sat4JSolver implements SatSolver {
 			break;
 		case MIGRandom:
 			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy(
-				 ((MIGRandomStrategy) strategy).getDist()), order));
+				((MIGRandomStrategy) strategy).getDist()), order));
 			break;
 		case Negative:
 			setSelectionStrategy(new FixedOrderHeap(new NegativeLiteralSelectionStrategy(), order));
@@ -439,7 +439,7 @@ public class Sat4JSolver implements SatSolver {
 			break;
 		case UniformRandom:
 			setSelectionStrategy(new FixedOrderHeap2(new UniformRandomSelectionStrategy(
-				 ((UniformRandomStrategy) strategy).getDist()), order));
+				((UniformRandomStrategy) strategy).getDist()), order));
 			break;
 		default:
 			throw new IllegalStateException(String.valueOf(strategy.strategy()));

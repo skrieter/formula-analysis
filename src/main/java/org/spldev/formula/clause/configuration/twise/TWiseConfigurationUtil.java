@@ -22,38 +22,23 @@
  */
 package org.spldev.formula.clause.configuration.twise;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.stream.Stream;
+import java.nio.file.*;
+import java.util.*;
+import java.util.stream.*;
 
-import org.sat4j.core.VecInt;
+import org.sat4j.core.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.Order;
-import org.spldev.formula.clause.configuration.ConfigurationSampler;
-import org.spldev.formula.clause.configuration.FastRandomConfigurationGenerator;
-import org.spldev.formula.clause.configuration.twise.TWiseConfigurationGenerator.Deduce;
-import org.spldev.formula.clause.mig.MIG;
-import org.spldev.formula.clause.mig.MIGBuilder;
-import org.spldev.formula.clause.mig.RegularMIGBuilder;
-import org.spldev.formula.clause.mig.Vertex;
-import org.spldev.formula.clause.mig.io.MIGFormat;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.Sat4JSolver;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.formula.clause.solver.SatSolver.SatResult;
-import org.spldev.util.data.Pair;
-import org.spldev.util.io.FileHandler;
-import org.spldev.util.job.Executor;
-import org.spldev.util.logging.Logger;
+import org.spldev.formula.clause.configuration.*;
+import org.spldev.formula.clause.configuration.twise.TWiseConfigurationGenerator.*;
+import org.spldev.formula.clause.mig.*;
+import org.spldev.formula.clause.mig.io.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.formula.clause.solver.SatSolver.*;
+import org.spldev.util.data.*;
+import org.spldev.util.io.*;
+import org.spldev.util.job.*;
+import org.spldev.util.logging.*;
 
 /**
  * Contains several intermediate results and functions for generating a t-wise
@@ -101,8 +86,9 @@ public class TWiseConfigurationUtil {
 		final FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
-		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).map(SolutionList::getSolutions).orElse(
-			Logger::logProblems);
+		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).map(
+			SolutionList::getSolutions).orElse(
+				Logger::logProblems);
 
 		for (final LiteralList solution : randomSample) {
 			addSolverSolution(solution.getLiterals());
@@ -553,7 +539,7 @@ public class TWiseConfigurationUtil {
 		}
 		Collections.sort(candidatesList, candidateLengthComparator);
 	}
-	
+
 	protected boolean coverSol(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		for (final Pair<LiteralList, TWiseConfiguration> pair : candidatesList) {
 			if (isSelectionPossibleSol(pair.getKey(), pair.getValue())) {

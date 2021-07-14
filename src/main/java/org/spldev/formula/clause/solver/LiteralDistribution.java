@@ -22,7 +22,7 @@
  */
 package org.spldev.formula.clause.solver;
 
-import java.util.Random;
+import java.util.*;
 
 /**
  * Uses a sample of configurations to achieve a phase selection that corresponds

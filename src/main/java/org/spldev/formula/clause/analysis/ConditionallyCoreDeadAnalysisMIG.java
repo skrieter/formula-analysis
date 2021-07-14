@@ -22,19 +22,14 @@
  */
 package org.spldev.formula.clause.analysis;
 
-import org.sat4j.core.VecInt;
-import org.spldev.formula.clause.LiteralList;
-import org.spldev.formula.clause.mig.MIG;
-import org.spldev.formula.clause.mig.MIGProvider;
-import org.spldev.formula.clause.mig.Vertex;
-import org.spldev.formula.clause.mig.visitor.CollectingVisitor;
-import org.spldev.formula.clause.mig.visitor.Traverser;
-import org.spldev.formula.clause.solver.SStrategy;
-import org.spldev.formula.clause.solver.SatSolver;
-import org.spldev.util.Result;
-import org.spldev.util.data.CacheHolder;
-import org.spldev.util.data.Identifier;
-import org.spldev.util.job.InternalMonitor;
+import org.sat4j.core.*;
+import org.spldev.formula.clause.*;
+import org.spldev.formula.clause.mig.*;
+import org.spldev.formula.clause.mig.visitor.*;
+import org.spldev.formula.clause.solver.*;
+import org.spldev.util.*;
+import org.spldev.util.data.*;
+import org.spldev.util.job.*;
 
 /**
  * Finds core and dead features using a {@link MIG model implication graph}.

@@ -22,12 +22,11 @@
  */
 package org.spldev.formula.clause.solver.strategy;
 
-import static org.sat4j.core.LiteralsUtils.negLit;
-import static org.sat4j.core.LiteralsUtils.posLit;
+import static org.sat4j.core.LiteralsUtils.*;
 
-import java.util.Random;
+import java.util.*;
 
-import org.sat4j.minisat.core.IPhaseSelectionStrategy;
+import org.sat4j.minisat.core.*;
 
 /**
  * Random phase selection.
@@ -41,13 +40,16 @@ public class RandomSelectionStrategy implements IPhaseSelectionStrategy {
 	public final Random RAND = new Random(123456789);
 
 	@Override
-	public void assignLiteral(int p) {}
+	public void assignLiteral(int p) {
+	}
 
 	@Override
-	public void init(int nlength) {}
+	public void init(int nlength) {
+	}
 
 	@Override
-	public void init(int var, int p) {}
+	public void init(int var, int p) {
+	}
 
 	@Override
 	public int select(int var) {
@@ -55,10 +57,12 @@ public class RandomSelectionStrategy implements IPhaseSelectionStrategy {
 	}
 
 	@Override
-	public void updateVar(int p) {}
+	public void updateVar(int p) {
+	}
 
 	@Override
-	public void updateVarAtDecisionLevel(int q) {}
+	public void updateVarAtDecisionLevel(int q) {
+	}
 
 	@Override
 	public String toString() {

@@ -418,7 +418,7 @@ public class TWiseConfiguration extends LiteralList {
 
 	public boolean isValid() {
 		final SatSolver solver = util.getSolver();
-		SStrategy selectionStrategy = solver.getSelectionStrategy();
+		final SStrategy selectionStrategy = solver.getSelectionStrategy();
 		final int orgAssignmentSize = setUpSolver(solver);
 		solver.setSelectionStrategy(SStrategy.original());
 		try {

@@ -30,8 +30,8 @@ import org.spldev.formula.clause.solver.*;
 import org.spldev.util.job.*;
 
 /**
- * IncLing sampling algorithm. Generates configurations for a given propositional formula such that two-wise
- * feature coverage is achieved.
+ * IncLing sampling algorithm. Generates configurations for a given
+ * propositional formula such that two-wise feature coverage is achieved.
  *
  * @author Sebastian Krieter
  */
@@ -376,17 +376,17 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		final MIGBuilder migBuilder = new RegularMIGBuilder();
 		migBuilder.setCheckRedundancy(true);
 		migBuilder.setDetectStrong(true);
-		MIG mig = Executor.run(migBuilder, solver.getCnf()).get();
+		final MIG mig = Executor.run(migBuilder, solver.getCnf()).get();
 
 		combinations = new byte[numVariables * numVariables];
 		combinations2 = new byte[numVariables * numVariables];
 		core = new byte[numVariables];
-		for (Vertex vertex : mig.getVertices()) {
+		for (final Vertex vertex : mig.getVertices()) {
 			if (vertex.isCore()) {
 				core[Math.abs(vertex.getVar()) - 1] = (byte) (vertex.getVar() < 0 ? -1 : 1);
 				solver.assignmentPush(vertex.getVar());
 			} else {
-				for (Vertex strong : vertex.getStrongEdges()) {
+				for (final Vertex strong : vertex.getStrongEdges()) {
 					if (strong.isNormal()) {
 						addRelation(vertex.getVar(), strong.getVar());
 					}
@@ -493,7 +493,7 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 
 	private LiteralList findFirstSolution(final SStrategy strategy) {
 		solver.setSelectionStrategy(strategy);
-		LiteralList allYesSolution = findSolution();
+		final LiteralList allYesSolution = findSolution();
 		if (handleNewConfig(allYesSolution, featuresUsedOrg)) {
 			mode = -1;
 		} else {

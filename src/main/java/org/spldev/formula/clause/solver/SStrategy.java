@@ -26,7 +26,7 @@ import java.util.*;
 
 public interface SStrategy {
 
-	public static enum Strategy {
+	public enum Strategy {
 		Original, Negative, Positive, Fixed, InverseFixed, FastRandom, UniformRandom, MIGRandom
 	}
 
@@ -37,21 +37,21 @@ public interface SStrategy {
 		public Strategy strategy() {
 			return Strategy.Original;
 		}
-	};
+	}
 
 	public static final class NegativeStrategy implements SStrategy {
 		@Override
 		public Strategy strategy() {
 			return Strategy.Negative;
 		}
-	};
+	}
 
 	public static final class PositiveStrategy implements SStrategy {
 		@Override
 		public Strategy strategy() {
 			return Strategy.Positive;
 		}
-	};
+	}
 
 	public static final class FixedStrategy implements SStrategy {
 		private final int[] model;
@@ -68,7 +68,7 @@ public interface SStrategy {
 		public int[] getModel() {
 			return model;
 		}
-	};
+	}
 
 	public static final class InverseFixedStrategy implements SStrategy {
 		private final int[] model;
@@ -85,7 +85,7 @@ public interface SStrategy {
 		public int[] getModel() {
 			return model;
 		}
-	};
+	}
 
 	public static final class FastRandomStrategy implements SStrategy {
 		private final Random random;
@@ -102,7 +102,7 @@ public interface SStrategy {
 		public Random getRandom() {
 			return random;
 		}
-	};
+	}
 
 	public static final class UniformRandomStrategy implements SStrategy {
 		private final SampleDistribution dist;
@@ -119,7 +119,7 @@ public interface SStrategy {
 		public SampleDistribution getDist() {
 			return dist;
 		}
-	};
+	}
 
 	public static final class MIGRandomStrategy implements SStrategy {
 		private final MIGDistribution dist;
@@ -136,41 +136,41 @@ public interface SStrategy {
 		public MIGDistribution getDist() {
 			return dist;
 		}
-	};
+	}
 
-	public static OriginalStrategy original() {
+	static OriginalStrategy original() {
 		return new OriginalStrategy();
 	}
 
-	public static NegativeStrategy negative() {
+	static NegativeStrategy negative() {
 		return new NegativeStrategy();
 	}
 
-	public static PositiveStrategy positive() {
+	static PositiveStrategy positive() {
 		return new PositiveStrategy();
 	}
 
-	public static FastRandomStrategy random(Random random) {
+	static FastRandomStrategy random(Random random) {
 		return new FastRandomStrategy(random);
 	}
 
-	public static FastRandomStrategy random() {
+	static FastRandomStrategy random() {
 		return new FastRandomStrategy(new Random());
 	}
 
-	public static FixedStrategy fixed(int[] model) {
+	static FixedStrategy fixed(int[] model) {
 		return new FixedStrategy(model);
 	}
 
-	public static InverseFixedStrategy inverse(int[] model) {
+	static InverseFixedStrategy inverse(int[] model) {
 		return new InverseFixedStrategy(model);
 	}
 
-	public static UniformRandomStrategy uniform(SampleDistribution dist) {
+	static UniformRandomStrategy uniform(SampleDistribution dist) {
 		return new UniformRandomStrategy(dist);
 	}
 
-	public static MIGRandomStrategy mig(MIGDistribution dist) {
+	static MIGRandomStrategy mig(MIGDistribution dist) {
 		return new MIGRandomStrategy(dist);
 	}
 
