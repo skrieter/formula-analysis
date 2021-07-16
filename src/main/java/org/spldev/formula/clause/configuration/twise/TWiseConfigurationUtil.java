@@ -60,6 +60,7 @@ public class TWiseConfigurationUtil {
 
 	private final List<TWiseConfiguration> incompleteSolutionList = new LinkedList<>();
 	private final List<TWiseConfiguration> completeSolutionList = new ArrayList<>();
+	private final HashSet<LiteralList> invalidClauses = new HashSet<>();
 
 	protected final CNF cnf;
 	protected final SatSolver localSolver;
@@ -250,9 +251,15 @@ public class TWiseConfigurationUtil {
 
 	public boolean isCombinationValid(ClauseList clauses) {
 		if (hasSolver()) {
+			for (final LiteralList literalSet : clauses) {
+				if (invalidClauses.contains(literalSet)) {
+					return false;
+				}
+			}
 			if (hasMig()) {
 				for (final LiteralList literalSet : clauses) {
 					if (isCombinationInvalidMIG(literalSet)) {
+						invalidClauses.add(literalSet);
 						return false;
 					}
 				}
@@ -260,6 +267,8 @@ public class TWiseConfigurationUtil {
 			for (final LiteralList literalSet : clauses) {
 				if (isCombinationValidSAT(literalSet)) {
 					return true;
+				} else {
+					invalidClauses.add(literalSet);
 				}
 			}
 			return false;
