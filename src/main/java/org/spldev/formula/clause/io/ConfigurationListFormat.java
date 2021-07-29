@@ -22,15 +22,19 @@
  */
 package org.spldev.formula.clause.io;
 
-import java.util.*;
-import java.util.regex.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
-import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.LiteralList.*;
-import org.spldev.formula.expression.atomic.literal.*;
-import org.spldev.util.*;
-import org.spldev.util.Problem.*;
-import org.spldev.util.io.format.*;
+import org.spldev.formula.clause.LiteralList;
+import org.spldev.formula.clause.LiteralList.Order;
+import org.spldev.formula.clause.SolutionList;
+import org.spldev.formula.expression.atomic.literal.VariableMap;
+import org.spldev.util.Problem.Severity;
+import org.spldev.util.Result;
+import org.spldev.util.io.format.Format;
+import org.spldev.util.io.format.Input;
+import org.spldev.util.io.format.ParseProblem;
 
 /**
  * Reads / Writes a list of configuration.
@@ -65,13 +69,16 @@ public class ConfigurationListFormat implements Format<SolutionList> {
 	}
 
 	@Override
-	public Result<SolutionList> parse(CharSequence source) {
+	public Result<SolutionList> parse(Input source) {
 		int lineNumber = 0;
 		final SolutionList configurationList = new SolutionList();
-		try (final Scanner scanner = new Scanner(source.toString())) {
-			scanner.useDelimiter(Pattern.compile("\\n+\\Z|\\n+|\\Z"));
+		Iterator<String> iterator = source.getLines().iterator();
+		try {
 			{
-				final String line = scanner.next();
+				if (!iterator.hasNext()) {
+					return Result.empty(new ParseProblem("Empty file!", lineNumber, Severity.ERROR));
+				}
+				final String line = iterator.next();
 				if (line.trim().isEmpty()) {
 					return Result.empty(new ParseProblem("Empty file!", lineNumber, Severity.ERROR));
 				}
@@ -79,13 +86,13 @@ public class ConfigurationListFormat implements Format<SolutionList> {
 				configurationList.setVariables(new VariableMap(Arrays.asList(names).subList(1, names.length)));
 			}
 
-			while (scanner.hasNext()) {
-				final String line = scanner.next();
+			while (iterator.hasNext()) {
+				final String line = iterator.next();
 				lineNumber++;
 				final String[] split = line.split(";");
 				if ((split.length - 1) != configurationList.getVariables().size()) {
 					return Result.empty(new ParseProblem("Number of selections does not match number of features!",
-						lineNumber, Severity.ERROR));
+							lineNumber, Severity.ERROR));
 				}
 				final int[] literals = new int[configurationList.getVariables().size()];
 				for (int i = 1; i < split.length; i++) {

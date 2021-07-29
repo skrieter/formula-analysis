@@ -22,28 +22,17 @@
  */
 package org.spldev.formula.clause.mig.io;
 
-import org.spldev.formula.clause.mig.*;
-import org.spldev.util.*;
-import org.spldev.util.io.format.*;
+import org.spldev.formula.clause.mig.MIG;
+import org.spldev.util.io.format.Format;
 
 /**
- * Reads / Writes a feature graph.
+ * Reads / Writes a MIG.
  *
  * @author Sebastian Krieter
  */
 public class MIGFormat implements Format<MIG> {
 
 	public static final String ID = "format.mig." + MIGFormat.class.getSimpleName();
-
-	@Override
-	public Result<MIG> parse(CharSequence source) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String serialize(MIG object) {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public boolean supportsParse() {

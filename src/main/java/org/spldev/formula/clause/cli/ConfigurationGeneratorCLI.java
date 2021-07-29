@@ -64,8 +64,7 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 				// TODO add plugin for icpl and chvatal
 				final String name = CLI.getArgValue(iterator, arg).toLowerCase();
 				for (final ConfigurationGeneratorAlgorithm algExtension : ConfigurationGeneratorAlgorithmManager
-					.getInstance()
-					.getExtensions()) {
+						.getInstance().getExtensions()) {
 					if (Objects.equals(name, algExtension.getName())) {
 						algorithm = algExtension;
 						break;
@@ -104,20 +103,19 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 			throw new IllegalArgumentException("No algorithm specified!");
 		}
 		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments)
-			.orElse(Logger::logProblems);
+				.orElse(Logger::logProblems);
 		if (generator != null) {
 			final ConfigurationSampler sampler = new ConfigurationSampler(generator, limit);
 
-			final CNF cnf = FileHandler.parse(fmFile, FormulaFormatManager.getInstance()) //
-				.map(Formulas::toCNF) //
-				.map(Clauses::convertToCNF) //
-				.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
+			final CNF cnf = FileHandler.load(fmFile, FormulaFormatManager.getInstance()) //
+					.map(Formulas::toCNF) //
+					.map(Clauses::convertToCNF) //
+					.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
 			final Path out = outputFile;
 			final Result<SolutionList> result = Executor.run(sampler, cnf);
 			result.ifPresentOrElse(list -> {
 				try {
-					FileHandler.serialize(list, out,
-						new ConfigurationListFormat());
+					FileHandler.save(list, out, new ConfigurationListFormat());
 				} catch (final IOException e) {
 					Logger.logError(e);
 				}

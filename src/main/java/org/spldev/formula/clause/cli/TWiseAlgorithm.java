@@ -71,7 +71,7 @@ public class TWiseAlgorithm extends AConfigurationGeneratorAlgorithm<TWiseConfig
 	private List<List<ClauseList>> readExpressionFile(Path expressionFile) {
 		final List<List<ClauseList>> expressionGroups;
 		if (expressionFile != null) {
-			expressionGroups = FileHandler.parse(expressionFile, new ExpressionGroupFormat())
+			expressionGroups = FileHandler.load(expressionFile, new ExpressionGroupFormat())
 				.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
 		} else {
 			expressionGroups = null;

@@ -22,14 +22,17 @@
  */
 package org.spldev.formula.clause.io;
 
-import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
-import org.spldev.formula.clause.*;
-import org.spldev.util.*;
-import org.spldev.util.io.*;
-import org.spldev.util.io.format.*;
-import org.spldev.util.logging.*;
+import org.spldev.formula.clause.ClauseList;
+import org.spldev.formula.clause.LiteralList;
+import org.spldev.util.Result;
+import org.spldev.util.io.format.Format;
+import org.spldev.util.io.format.Input;
+import org.spldev.util.io.format.ParseProblem;
 
 /**
  * Reads and writes grouped propositional expressions in CNF.
@@ -63,51 +66,49 @@ public class ExpressionGroupFormat implements Format<List<List<ClauseList>>> {
 	}
 
 	@Override
-	public Result<List<List<ClauseList>>> parse(CharSequence source) {
+	public Result<List<List<ClauseList>>> parse(Input source) {
 		final ArrayList<List<ClauseList>> expressionGroups = new ArrayList<>();
 		ArrayList<ClauseList> expressionGroup = null;
-		try (final BufferedReader reader = new BufferedReader(new StringReader(source.toString()))) {
-			final LineIterator lineIterator = new LineIterator(reader);
-			try {
-				for (String line = lineIterator.get(); line != null; line = lineIterator.get()) {
-					final char firstChar = line.charAt(0);
-					switch (firstChar) {
-					case 'g':
-						final int groupSize = Integer.parseInt(line.substring(2).trim());
-						expressionGroup = new ArrayList<>(groupSize);
-						expressionGroups.add(expressionGroup);
-						break;
-					case 'e':
-						if (expressionGroup == null) {
-							throw new Exception("No group defined.");
-						}
-						final String expressionString = line.substring(2).trim();
-						final String[] clauseStrings = expressionString.split("\\|");
-						final ClauseList expression = new ClauseList();
-						for (final String clauseString : clauseStrings) {
-							final String[] literalStrings = clauseString.split("\\s+");
-							final int[] literals = new int[literalStrings.length];
-							int index = 0;
-							for (final String literalString : literalStrings) {
-								if (!literalString.isEmpty()) {
-									final int literal = Integer.parseInt(literalString);
-									literals[index++] = literal;
-								}
-							}
-							expression.add(new LiteralList(Arrays.copyOfRange(literals, 0, index)));
-						}
-						expressionGroup.add(expression);
-						break;
-					default:
-						break;
+		final Iterator<String> lineIterator = source.getLines().iterator();
+		int lineCount = 0;
+		try {
+			while (lineIterator.hasNext()) {
+				final String line = lineIterator.next();
+				lineCount++;
+				final char firstChar = line.charAt(0);
+				switch (firstChar) {
+				case 'g':
+					final int groupSize = Integer.parseInt(line.substring(2).trim());
+					expressionGroup = new ArrayList<>(groupSize);
+					expressionGroups.add(expressionGroup);
+					break;
+				case 'e':
+					if (expressionGroup == null) {
+						throw new Exception("No group defined.");
 					}
+					final String expressionString = line.substring(2).trim();
+					final String[] clauseStrings = expressionString.split("\\|");
+					final ClauseList expression = new ClauseList();
+					for (final String clauseString : clauseStrings) {
+						final String[] literalStrings = clauseString.split("\\s+");
+						final int[] literals = new int[literalStrings.length];
+						int index = 0;
+						for (final String literalString : literalStrings) {
+							if (!literalString.isEmpty()) {
+								final int literal = Integer.parseInt(literalString);
+								literals[index++] = literal;
+							}
+						}
+						expression.add(new LiteralList(Arrays.copyOfRange(literals, 0, index)));
+					}
+					expressionGroup.add(expression);
+					break;
+				default:
+					break;
 				}
-			} catch (final Exception e) {
-				return Result.empty(new ParseProblem(e, lineIterator.getLineCount()));
 			}
-
-		} catch (final IOException e) {
-			Logger.logError(e);
+		} catch (final Exception e) {
+			return Result.empty(new ParseProblem(e, lineCount));
 		}
 		return Result.of(expressionGroups);
 	}

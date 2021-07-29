@@ -228,7 +228,7 @@ public class ConfigurationGeneratorTest {
 			}
 			new ConfigurationGeneratorCLI().run(args);
 
-			final SolutionList sample = FileHandler.parse(outFile, new ConfigurationListFormat()).orElse(
+			final SolutionList sample = FileHandler.load(outFile, new ConfigurationListFormat()).orElse(
 				Logger::logProblems);
 			if (sample == null) {
 				fail("Sample for " + modelFile.toString() + " could not be read!");
@@ -242,7 +242,7 @@ public class ConfigurationGeneratorTest {
 	}
 
 	private static CNF loadCNF(final Path modelFile) {
-		final CNF cnf = FileHandler.parse(modelFile, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF)
+		final CNF cnf = FileHandler.load(modelFile, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF)
 			.orElse(Logger::logProblems);
 		if (cnf == null) {
 			fail("CNF could not be read!");
