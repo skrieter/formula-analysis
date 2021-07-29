@@ -64,6 +64,8 @@ public class DistanceMetrics {
 	private double standardDeviation = -1;
 	private double leastMean = -1;
 	private double mostMean = -1;
+	private double meanMin = -1;
+	private double meanMax = -1;
 
 	public DistanceMetrics(DistanceFunction distanceFunction) {
 		this.distanceFunction = distanceFunction;
@@ -80,6 +82,8 @@ public class DistanceMetrics {
 		aggregates.add(metrics.getStandardDeviationDistance());
 		aggregates.add(metrics.getLeastMeanDistance());
 		aggregates.add(metrics.getMostMeanDistance());
+		aggregates.add(metrics.getMeanMinDistance());
+		aggregates.add(metrics.getMeanMaxDistance());
 		return aggregates;
 	}
 
@@ -144,6 +148,14 @@ public class DistanceMetrics {
 
 	public DistanceMetric getMostMeanDistance() {
 		return new DistanceMetric("MostMean", this::getMostMean);
+	}
+
+	public DistanceMetric getMeanMinDistance() {
+		return new DistanceMetric("MeanMin", this::getMeanMin);
+	}
+
+	public DistanceMetric getMeanMaxDistance() {
+		return new DistanceMetric("MeanMax", this::getMeanMax);
 	}
 
 	private double getMin() {
@@ -283,6 +295,58 @@ public class DistanceMetrics {
 			}
 		}
 		return mostMean;
+	}
+
+	private double getMeanMin() {
+		if (meanMin < 0) {
+			final double[] distances = getDistances();
+			if (distances.length == 0) {
+				meanMin = 0;
+			} else {
+				final int size = (((int) Math.sqrt((distances.length << 3) + 1)) >> 1) + 1;
+				double minLocalMean = Double.MAX_VALUE;
+				for (int i = 0; i < size; i++) {
+					double localMean = 0;
+					for (int j = 0; j < size; j++) {
+						if (i != j) {
+							localMean += getDistance(distances, size, i, j);
+						}
+					}
+					localMean /= size;
+					if (localMean < minLocalMean) {
+						minLocalMean = localMean;
+					}
+				}
+				meanMin = minLocalMean;
+			}
+		}
+		return meanMin;
+	}
+	
+	private double getMeanMax() {
+		if (meanMax < 0) {
+			final double[] distances = getDistances();
+			if (distances.length == 0) {
+				meanMax = 0;
+			} else {
+				final int size = (((int) Math.sqrt((distances.length << 3) + 1)) >> 1) + 1;
+				double maxLocalMean = 0;
+				for (int i = 0; i < size; i++) {
+					double localMean = 0;
+					for (int j = 0; j < size; j++) {
+						if (i != j) {
+							localMean += getDistance(distances, size, i, j);
+						}
+					}
+					localMean /= size;
+					if (localMean > maxLocalMean) {
+						maxLocalMean = localMean;
+					}
+				}
+				meanMax = maxLocalMean;
+			}
+		}
+		return meanMax;
 	}
 
 	private double getDistance(final double[] distances, final int size, int i, int j) {
