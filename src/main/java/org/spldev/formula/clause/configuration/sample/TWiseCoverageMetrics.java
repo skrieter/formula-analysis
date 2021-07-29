@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.configuration.twise.*;
+import org.spldev.formula.clause.configuration.twise.TWiseConfigurationUtil.InvalidClausesList;
 import org.spldev.formula.clause.solver.*;
 
 /**
@@ -37,6 +38,7 @@ public class TWiseCoverageMetrics {
 
 	public final class TWiseCoverageMetric implements SampleMetric {
 		private final int t;
+		private boolean firstUse = true;
 
 		public TWiseCoverageMetric(int t) {
 			this.t = t;
@@ -45,6 +47,11 @@ public class TWiseCoverageMetrics {
 		@Override
 		public double get(SolutionList sample) {
 			final TWiseStatisticGenerator tWiseStatisticGenerator = new TWiseStatisticGenerator(util);
+			if (firstUse) {
+				firstUse = false;
+			} else {
+				util.setInvalidClausesList(InvalidClausesList.Use);
+			}
 
 			final CoverageStatistic statistic = tWiseStatisticGenerator
 				.getCoverage(Arrays.asList(sample.getSolutions()), //
@@ -79,6 +86,7 @@ public class TWiseCoverageMetrics {
 			util = new TWiseConfigurationUtil(cnf, null);
 		}
 
+		util.setInvalidClausesList(InvalidClausesList.Create);
 		util.computeRandomSample(1000);
 		if (!cnf.getClauses().isEmpty()) {
 			util.computeMIG(false, false);

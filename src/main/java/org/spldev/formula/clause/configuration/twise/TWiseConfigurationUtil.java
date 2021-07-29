@@ -48,6 +48,10 @@ import org.spldev.util.logging.*;
  */
 public class TWiseConfigurationUtil {
 
+	public static enum InvalidClausesList {
+		None, Create, Use
+	}
+
 	public static final int GLOBAL_SOLUTION_LIMIT = 100_000;
 
 	final static Comparator<Pair<LiteralList, TWiseConfiguration>> candidateLengthComparator = new CandidateLengthComparator();
@@ -61,6 +65,7 @@ public class TWiseConfigurationUtil {
 	private final List<TWiseConfiguration> incompleteSolutionList = new LinkedList<>();
 	private final List<TWiseConfiguration> completeSolutionList = new ArrayList<>();
 	private final HashSet<LiteralList> invalidClauses = new HashSet<>();
+	private InvalidClausesList invalidClausesList = InvalidClausesList.None;
 
 	protected final CNF cnf;
 	protected final SatSolver localSolver;
@@ -87,9 +92,8 @@ public class TWiseConfigurationUtil {
 		final FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
-		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf).map(
-			SolutionList::getSolutions).orElse(
-				Logger::logProblems);
+		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf)
+				.map(SolutionList::getSolutions).orElse(Logger::logProblems);
 
 		for (final LiteralList solution : randomSample) {
 			addSolverSolution(solution.getLiterals());
@@ -106,20 +110,20 @@ public class TWiseConfigurationUtil {
 		strongHull = new LiteralList[mig.getVertices().size()];
 
 		for (final Vertex vertex : mig.getVertices()) {
-			strongHull[MIG.getVertexIndex(vertex)] = new LiteralList(vertex.getStrongEdges().stream()
-				.mapToInt(Vertex::getVar).toArray());
+			strongHull[MIG.getVertexIndex(vertex)] = new LiteralList(
+					vertex.getStrongEdges().stream().mapToInt(Vertex::getVar).toArray());
 		}
 	}
 
 	public void computeMIG(Path migPath) {
 		Logger.logDebug("Init graph... ");
 		Logger.logDebug("\tLoad graph from " + migPath);
-		mig = FileHandler.parse(migPath, new MIGFormat()).get();
+		mig = FileHandler.load(migPath, new MIGFormat()).get();
 		strongHull = new LiteralList[mig.getVertices().size()];
 
 		for (final Vertex vertex : mig.getVertices()) {
-			strongHull[MIG.getVertexIndex(vertex)] = new LiteralList(vertex.getStrongEdges().stream()
-				.mapToInt(Vertex::getVar).toArray());
+			strongHull[MIG.getVertexIndex(vertex)] = new LiteralList(
+					vertex.getStrongEdges().stream().mapToInt(Vertex::getVar).toArray());
 		}
 	}
 
@@ -251,15 +255,20 @@ public class TWiseConfigurationUtil {
 
 	public boolean isCombinationValid(ClauseList clauses) {
 		if (hasSolver()) {
-			for (final LiteralList literalSet : clauses) {
-				if (invalidClauses.contains(literalSet)) {
-					return false;
+			if (invalidClausesList == InvalidClausesList.Use) {
+				for (final LiteralList literalSet : clauses) {
+					if (invalidClauses.contains(literalSet)) {
+						return false;
+					}
 				}
+				return !clauses.isEmpty();
 			}
 			if (hasMig()) {
 				for (final LiteralList literalSet : clauses) {
 					if (isCombinationInvalidMIG(literalSet)) {
-						invalidClauses.add(literalSet);
+						if (invalidClausesList == InvalidClausesList.Create) {
+							invalidClauses.add(literalSet);
+						}
 						return false;
 					}
 				}
@@ -268,7 +277,9 @@ public class TWiseConfigurationUtil {
 				if (isCombinationValidSAT(literalSet)) {
 					return true;
 				} else {
-					invalidClauses.add(literalSet);
+					if (invalidClausesList == InvalidClausesList.Create) {
+						invalidClauses.add(literalSet);
+					}
 				}
 			}
 			return false;
@@ -321,7 +332,7 @@ public class TWiseConfigurationUtil {
 	}
 
 	public boolean removeInvalidClauses(ClauseList nextCondition,
-		List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+			List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		final LinkedList<LiteralList> invalidClauses = new LinkedList<>();
 		for (final Iterator<LiteralList> conditionIterator = nextCondition.iterator(); conditionIterator.hasNext();) {
 			final LiteralList literals = conditionIterator.next();
@@ -340,7 +351,7 @@ public class TWiseConfigurationUtil {
 	}
 
 	public boolean removeInvalidClausesSat(ClauseList nextCondition,
-		List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+			List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		final LinkedList<LiteralList> invalidClauses = new LinkedList<>();
 		for (final Iterator<LiteralList> conditionIterator = nextCondition.iterator(); conditionIterator.hasNext();) {
 			final LiteralList literals = conditionIterator.next();
@@ -359,7 +370,7 @@ public class TWiseConfigurationUtil {
 	}
 
 	public boolean removeInvalidClausesLight(ClauseList nextCondition,
-		List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+			List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		final LinkedList<LiteralList> invalidClauses = new LinkedList<>();
 		for (final Iterator<LiteralList> conditionIterator = nextCondition.iterator(); conditionIterator.hasNext();) {
 			final LiteralList literals = conditionIterator.next();
@@ -378,10 +389,10 @@ public class TWiseConfigurationUtil {
 	}
 
 	private void removeInvalidCandidates(List<Pair<LiteralList, TWiseConfiguration>> candidatesList,
-		final LinkedList<LiteralList> invalidClauses) {
+			final LinkedList<LiteralList> invalidClauses) {
 		for (final LiteralList literals : invalidClauses) {
 			for (final Iterator<Pair<LiteralList, TWiseConfiguration>> candidateIterator = candidatesList
-				.iterator(); candidateIterator.hasNext();) {
+					.iterator(); candidateIterator.hasNext();) {
 				final Pair<LiteralList, TWiseConfiguration> pair = candidateIterator.next();
 				if (pair.getKey().equals(literals)) {
 					candidateIterator.remove();
@@ -465,9 +476,9 @@ public class TWiseConfigurationUtil {
 
 	public boolean isCoveredPara(ClauseList condition) {
 		final Optional<TWiseConfiguration> coveringSolution = condition.stream() //
-			.flatMap(literals -> getConfigurationStream() //
-				.filter(configuration -> configuration.containsAll(literals)))//
-			.findAny();
+				.flatMap(literals -> getConfigurationStream() //
+						.filter(configuration -> configuration.containsAll(literals)))//
+				.findAny();
 		return coveringSolution.isPresent();
 	}
 
@@ -526,18 +537,18 @@ public class TWiseConfigurationUtil {
 	}
 
 	public void initCandidatesListPara(ClauseList nextCondition,
-		List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+			List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		candidatesList.clear();
 		nextCondition.stream() //
-			.flatMap(literals -> getIncompleteSolutionList().parallelStream() //
-				.filter(configuration -> isCandidate(literals, configuration)) //
-				.map(configuration -> new Pair<>(literals, configuration)))//
-			.sorted(candidateLengthComparator) //
-			.forEach(candidatesList::add);
+				.flatMap(literals -> getIncompleteSolutionList().parallelStream() //
+						.filter(configuration -> isCandidate(literals, configuration)) //
+						.map(configuration -> new Pair<>(literals, configuration)))//
+				.sorted(candidateLengthComparator) //
+				.forEach(candidatesList::add);
 	}
 
 	public void initCandidatesList(ClauseList nextCondition,
-		List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
+			List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		candidatesList.clear();
 		for (final LiteralList literals : nextCondition) {
 			for (final TWiseConfiguration configuration : getIncompleteSolutionList()) {
@@ -581,8 +592,8 @@ public class TWiseConfigurationUtil {
 
 	protected boolean coverSolPara(List<Pair<LiteralList, TWiseConfiguration>> candidatesList) {
 		final Optional<Pair<LiteralList, TWiseConfiguration>> candidate = candidatesList.parallelStream() //
-			.filter(this::isSelectionPossibleSol) //
-			.findFirst();
+				.filter(this::isSelectionPossibleSol) //
+				.findFirst();
 
 		if (candidate.isPresent()) {
 			final Pair<LiteralList, TWiseConfiguration> pair = candidate.get();
@@ -619,8 +630,8 @@ public class TWiseConfigurationUtil {
 	}
 
 	public List<TWiseConfiguration> getResultList() {
-		final ArrayList<TWiseConfiguration> resultList = new ArrayList<>(completeSolutionList.size()
-			+ incompleteSolutionList.size());
+		final ArrayList<TWiseConfiguration> resultList = new ArrayList<>(
+				completeSolutionList.size() + incompleteSolutionList.size());
 		resultList.addAll(incompleteSolutionList);
 		resultList.addAll(completeSolutionList);
 		return resultList;
@@ -648,6 +659,10 @@ public class TWiseConfigurationUtil {
 
 	public void setMIG(MIG mig) {
 		this.mig = mig;
+	}
+
+	public void setInvalidClausesList(InvalidClausesList invalidClausesList) {
+		this.invalidClausesList = invalidClausesList;
 	}
 
 }
