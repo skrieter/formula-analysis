@@ -27,6 +27,7 @@ import java.util.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.mig.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 
 /**
@@ -36,6 +37,13 @@ import org.spldev.util.job.*;
  * @author Sebastian Krieter
  */
 public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
+
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
 
 	private static class FeatureIndex implements Comparable<FeatureIndex> {
 
@@ -369,7 +377,7 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 	}
 
 	@Override
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 		numVariables = solver.getCnf().getVariableMap().size();
 		solver.rememberSolutionHistory(Math.min(numVariables, SatSolver.MAX_SOLUTION_BUFFER));
 
@@ -509,10 +517,12 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 				false);
 	}
 
+	@Override
 	public Random getRandom() {
 		return random;
 	}
 
+	@Override
 	public void setRandom(Random random) {
 		this.random = random;
 	}

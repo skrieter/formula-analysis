@@ -26,6 +26,8 @@ import org.sat4j.core.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.*;
 import org.spldev.formula.clause.solver.SatSolver.*;
+import org.spldev.util.data.*;
+import org.spldev.util.job.*;
 
 /**
  * Generates configurations for a given propositional formula such that one-wise
@@ -34,6 +36,13 @@ import org.spldev.formula.clause.solver.SatSolver.*;
  * @author Sebastian Krieter
  */
 public class OneWiseConfigurationGenerator extends ConfigurationGenerator {
+
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
 
 	public enum CoverStrategy {
 		POSITIVE, NEGATIVE
@@ -73,7 +82,7 @@ public class OneWiseConfigurationGenerator extends ConfigurationGenerator {
 	}
 
 	@Override
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 		initialAssignmentLength = solver.getAssignmentSize();
 
 		switch (coverStrategy) {

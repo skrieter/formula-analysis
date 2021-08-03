@@ -29,6 +29,7 @@ import org.spldev.formula.clause.configuration.*;
 import org.spldev.formula.clause.configuration.twise.ICoverStrategy.*;
 import org.spldev.formula.clause.mig.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
@@ -39,6 +40,13 @@ import org.spldev.util.logging.*;
  * @author Sebastian Krieter
  */
 public class TWiseConfigurationGenerator extends ConfigurationGenerator {
+
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
 
 	enum Deduce {
 		DP, AC, NONE
@@ -144,16 +152,18 @@ public class TWiseConfigurationGenerator extends ConfigurationGenerator {
 		this.nodes = nodes;
 	}
 
+	@Override
 	public Random getRandom() {
 		return random;
 	}
 
+	@Override
 	public void setRandom(Random random) {
 		this.random = random;
 	}
 
 	@Override
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 		Logger.logDebug("Create util instance... ");
 		final CNF cnf = solver.getCnf();
 		solver.rememberSolutionHistory(10);

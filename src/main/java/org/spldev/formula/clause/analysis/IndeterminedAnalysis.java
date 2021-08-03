@@ -48,12 +48,7 @@ public class IndeterminedAnalysis extends AVariableAnalysis<LiteralList> {
 	}
 
 	@Override
-	protected SatSolver createSolver(CNF satInstance) {
-		return new Sat4JSolver(satInstance);
-	}
-
-	@Override
-	public LiteralList analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public LiteralList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		if (variables == null) {
 			variables = LiteralList.getVariables(solver.getCnf());
 		}

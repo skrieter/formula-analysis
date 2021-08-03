@@ -34,7 +34,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class CountSolutionsAnalysis extends AbstractAnalysis<Long> {
+public class CountSolutionsAnalysis extends Sat4JAnalysis<Long> {
 
 	public static final Identifier<Long> identifier = new Identifier<>();
 
@@ -44,7 +44,7 @@ public class CountSolutionsAnalysis extends AbstractAnalysis<Long> {
 	}
 
 	@Override
-	public Long analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public Long analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		solver.setGlobalTimeout(true);
 		long solutionCount = 0;
 		SatResult hasSolution = solver.hasSolution();

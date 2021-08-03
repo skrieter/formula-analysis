@@ -27,6 +27,7 @@ import java.util.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.job.*;
 
 /**
  * Finds random valid solutions of propositional formulas.
@@ -41,15 +42,17 @@ public abstract class RandomConfigurationGenerator extends ConfigurationGenerato
 	protected boolean allowDuplicates = false;
 
 	@Override
-	protected void init() {
-		super.init();
+	protected void init(InternalMonitor monitor) {
+		super.init(monitor);
 		satisfiable = true;
 	}
 
+	@Override
 	public Random getRandom() {
 		return random;
 	}
 
+	@Override
 	public void setRandom(Random random) {
 		this.random = random;
 	}

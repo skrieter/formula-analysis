@@ -92,8 +92,10 @@ public class TWiseConfigurationUtil {
 		final FastRandomConfigurationGenerator randomGenerator = new FastRandomConfigurationGenerator();
 		randomGenerator.setAllowDuplicates(true);
 		randomGenerator.setRandom(random);
-		randomSample = Executor.run(new ConfigurationSampler(randomGenerator, randomSampleSize), cnf)
-				.map(SolutionList::getSolutions).orElse(Logger::logProblems);
+		randomGenerator.setLimit(randomSampleSize);
+		randomSample = Executor.run(randomGenerator::execute, cnf) //
+			.map(SolutionList::getSolutions) //
+			.orElse(Logger::logProblems);
 
 		for (final LiteralList solution : randomSample) {
 			addSolverSolution(solution.getLiterals());

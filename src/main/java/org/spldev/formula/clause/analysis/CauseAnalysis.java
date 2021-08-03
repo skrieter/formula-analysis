@@ -95,7 +95,7 @@ public class CauseAnalysis extends AClauseAnalysis<List<CauseAnalysis.Anomalies>
 	}
 
 	@Override
-	public List<Anomalies> analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public List<Anomalies> analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		if (clauseList == null) {
 			return Collections.emptyList();
 		}
@@ -118,7 +118,7 @@ public class CauseAnalysis extends AClauseAnalysis<List<CauseAnalysis.Anomalies>
 
 		if (!remainingClauses.isEmpty()) {
 			final List<LiteralList> result = Executor.run(
-				new IndependentRedundancyAnalysis(remainingClauses),
+				new IndependentRedundancyAnalysis(remainingClauses)::execute,
 				solver.getCnf()).orElse(Logger::logProblems);
 			remainingClauses.removeIf(result::contains);
 		}
@@ -126,7 +126,7 @@ public class CauseAnalysis extends AClauseAnalysis<List<CauseAnalysis.Anomalies>
 
 		if (remainingVariables.getLiterals().length > 0) {
 			remainingVariables = remainingVariables.removeAll(
-				Executor.run(new CoreDeadAnalysis(remainingVariables),
+				Executor.run(new CoreDeadAnalysis(remainingVariables)::execute,
 					solver.getCnf()).orElse(Logger::logProblems));
 		}
 		monitor.step();

@@ -27,7 +27,6 @@ import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.mig.*;
 import org.spldev.formula.clause.mig.visitor.*;
 import org.spldev.formula.clause.solver.*;
-import org.spldev.util.*;
 import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 
@@ -36,41 +35,45 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnalysis {
+public class ConditionallyCoreDeadAnalysisMIG extends Sat4JMIGAnalysis<LiteralList> {
 
 	public static final Identifier<LiteralList> identifier = new Identifier<>();
+
+	protected int[] fixedVariables;
+	protected int[] variableOrder;
+	protected int newCount;
+
+	public void setFixedFeatures(int[] fixedVariables, int newCount) {
+		this.fixedVariables = fixedVariables;
+		this.newCount = newCount;
+	}
+
+	public void setVariableOrder(int[] variableOrder) {
+		this.variableOrder = variableOrder;
+	}
+
+	public void resetFixedFeatures() {
+		fixedVariables = new int[0];
+		newCount = 0;
+	}
 
 	@Override
 	public Identifier<LiteralList> getIdentifier() {
 		return identifier;
 	}
 
-	private SatSolver solver;
-	private MIG mig;
-
-	@Override
-	public Result<LiteralList> apply(CacheHolder formula, InternalMonitor monitor) {
-		monitor.setTotalWork(2);
-		mig = formula.get(MIGProvider.fromCNF(), monitor.subTask(1)).get();
-		return super.apply(formula, monitor.subTask(1));
-	}
-
 	public ConditionallyCoreDeadAnalysisMIG() {
 		super();
-	}
-
-	public ConditionallyCoreDeadAnalysisMIG(MIG mig) {
-		this.mig = mig;
+		resetFixedFeatures();
 	}
 
 	@Override
-	public LiteralList analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
-		this.solver = solver;
-		monitor.setTotalWork(solver.getCnf().getVariableMap().size() + 2);
+	public LiteralList analyze(Sat4JMIGSolver solver, InternalMonitor monitor) throws Exception {
+		monitor.setTotalWork(solver.sat4j.getCnf().getVariableMap().size() + 2);
 
-		final Traverser traverser = mig.traverse();
-		solver.asignmentEnsure(fixedVariables.length + 1);
-		final int[] knownValues = new int[solver.getCnf().getVariableMap().size()];
+		final Traverser traverser = solver.mig.traverse();
+		solver.sat4j.asignmentEnsure(fixedVariables.length + 1);
+		final int[] knownValues = new int[solver.sat4j.getCnf().getVariableMap().size()];
 
 		for (final int fixedVar : fixedVariables) {
 			final int var = Math.abs(fixedVar);
@@ -79,7 +82,7 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 		}
 
 		// get core / dead variables
-		for (final Vertex vertex : mig.getVertices()) {
+		for (final Vertex vertex : solver.mig.getVertices()) {
 			if (vertex.isCore()) {
 				final int var = vertex.getVar();
 				knownValues[Math.abs(var) - 1] = var;
@@ -121,23 +124,23 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 
 		for (final int var : knownValues) {
 			if (var != 0) {
-				solver.assignmentPush(var);
+				solver.sat4j.assignmentPush(var);
 			}
 		}
 		monitor.checkCancel();
 
 		if (!valuesToCompute.isEmpty()) {
-			solver.setSelectionStrategy(SStrategy.positive());
-			final int[] unkownValues = solver.findSolution();
+			solver.sat4j.setSelectionStrategy(SStrategy.positive());
+			final int[] unkownValues = solver.sat4j.findSolution();
 			monitor.step();
 
 			if (unkownValues != null) {
-				solver.setSelectionStrategy(SStrategy.negative());
-				final int[] model2 = solver.findSolution();
+				solver.sat4j.setSelectionStrategy(SStrategy.negative());
+				final int[] model2 = solver.sat4j.findSolution();
 				monitor.step();
 
 				LiteralList.resetConflicts(unkownValues, model2);
-				solver.setSelectionStrategy(SStrategy.inverse(unkownValues));
+				solver.sat4j.setSelectionStrategy(SStrategy.inverse(unkownValues));
 
 				for (int k = 0; k < knownValues.length; k++) {
 					final int var = knownValues[k];
@@ -147,13 +150,14 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 				}
 				monitor.step();
 
-				sat(unkownValues, valuesToCompute, monitor, traverser);
+				sat(solver, unkownValues, valuesToCompute, monitor, traverser);
 			}
 		}
-		return new LiteralList(solver.getAssignmentArray(0, solver.getAssignmentSize()));
+		return new LiteralList(solver.sat4j.getAssignmentArray(0, solver.sat4j.getAssignmentSize()));
 	}
 
-	private void sat(int[] unkownValues, VecInt valuesToCalulate, InternalMonitor monitor, Traverser traverser) {
+	private void sat(Sat4JMIGSolver solver, int[] unkownValues, VecInt valuesToCalulate, InternalMonitor monitor,
+		Traverser traverser) {
 		final CollectingVisitor visitor = new CollectingVisitor();
 		traverser.setVisitor(visitor);
 
@@ -162,30 +166,30 @@ public class ConditionallyCoreDeadAnalysisMIG extends AConditionallyCoreDeadAnal
 			valuesToCalulate.pop();
 			final int i = Math.abs(varX) - 1;
 			if (unkownValues[i] == varX) {
-				solver.assignmentPush(-varX);
-				switch (solver.hasSolution()) {
+				solver.sat4j.assignmentPush(-varX);
+				switch (solver.sat4j.hasSolution()) {
 				case FALSE:
-					solver.assignmentReplaceLast(varX);
+					solver.sat4j.assignmentReplaceLast(varX);
 					unkownValues[i] = 0;
 					monitor.step();
 					traverser.traverseStrong(varX);
 					final VecInt newFoundValues = visitor.getResult()[0];
 					for (int j = 0; j < newFoundValues.size(); j++) {
 						final int var = newFoundValues.get(j);
-						solver.assignmentPush(var);
+						solver.sat4j.assignmentPush(var);
 						unkownValues[Math.abs(var) - 1] = 0;
 						monitor.step();
 					}
 					break;
 				case TIMEOUT:
-					solver.assignmentPop();
+					solver.sat4j.assignmentPop();
 					unkownValues[Math.abs(varX) - 1] = 0;
 					monitor.step();
 					break;
 				case TRUE:
-					solver.assignmentPop();
-					LiteralList.resetConflicts(unkownValues, solver.getSolution());
-					solver.shuffleOrder(getRandom());
+					solver.sat4j.assignmentPop();
+					LiteralList.resetConflicts(unkownValues, solver.sat4j.getSolution());
+					solver.sat4j.shuffleOrder(getRandom());
 					break;
 				}
 			}

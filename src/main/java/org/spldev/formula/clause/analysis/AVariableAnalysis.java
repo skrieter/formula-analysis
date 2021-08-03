@@ -31,7 +31,7 @@ import org.spldev.formula.clause.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class AVariableAnalysis<T> extends AbstractAnalysis<T> {
+public abstract class AVariableAnalysis<T> extends Sat4JAnalysis<T> {
 
 	protected LiteralList variables;
 

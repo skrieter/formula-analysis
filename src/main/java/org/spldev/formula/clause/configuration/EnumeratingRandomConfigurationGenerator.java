@@ -25,6 +25,7 @@ package org.spldev.formula.clause.configuration;
 import java.util.*;
 
 import org.spldev.formula.clause.*;
+import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
@@ -35,12 +36,19 @@ import org.spldev.util.logging.*;
  */
 public class EnumeratingRandomConfigurationGenerator extends RandomConfigurationGenerator {
 
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
+
 	private List<LiteralList> allConfigurations;
 
 	@Override
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 		final AllConfigurationGenerator gen = new AllConfigurationGenerator();
-		allConfigurations = Executor.run(new ConfigurationSampler(gen), solver.getCnf())
+		allConfigurations = Executor.run(gen::execute, solver.getCnf(), monitor)
 			.map(SolutionList::getSolutions)
 			.orElse(Collections::emptyList, Logger::logProblems);
 		if (!allowDuplicates) {

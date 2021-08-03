@@ -25,6 +25,7 @@ package org.spldev.formula.clause.configuration;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.LiteralList.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
 
 /**
  * Generates all configurations for a given propositional formula.
@@ -32,6 +33,13 @@ import org.spldev.formula.clause.solver.*;
  * @author Sebastian Krieter
  */
 public class AllConfigurationGenerator extends ConfigurationGenerator {
+
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
 
 	private boolean satisfiable = true;
 

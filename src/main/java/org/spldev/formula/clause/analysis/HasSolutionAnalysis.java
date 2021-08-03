@@ -34,7 +34,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class HasSolutionAnalysis extends AbstractAnalysis<Boolean> {
+public class HasSolutionAnalysis extends Sat4JAnalysis<Boolean> {
 
 	public static final Identifier<Boolean> identifier = new Identifier<>();
 
@@ -44,7 +44,7 @@ public class HasSolutionAnalysis extends AbstractAnalysis<Boolean> {
 	}
 
 	@Override
-	public Boolean analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public Boolean analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		final SatResult hasSolution = solver.hasSolution();
 		switch (hasSolution) {
 		case FALSE:

@@ -57,18 +57,9 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 	}
 
 	@Override
-	public LiteralList analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public LiteralList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		this.solver = solver;
 		return analyze1(monitor);
-	}
-
-	@Override
-	protected SatSolver createSolver(CNF satInstance) {
-		try {
-			return new Sat4JSolver(satInstance);
-		} catch (final RuntimeContradictionException e) {
-			return null;
-		}
 	}
 
 	public LiteralList analyze2(SatSolver solver, InternalMonitor monitor) throws Exception {

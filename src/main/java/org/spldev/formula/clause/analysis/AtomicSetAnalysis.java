@@ -34,7 +34,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class AtomicSetAnalysis extends AVariableAnalysis<List<LiteralList>> {
+public class AtomicSetAnalysis extends Sat4JAnalysis<List<LiteralList>> {
 
 	public static final Identifier<List<LiteralList>> identifier = new Identifier<>();
 
@@ -48,7 +48,7 @@ public class AtomicSetAnalysis extends AVariableAnalysis<List<LiteralList>> {
 	}
 
 	@Override
-	public List<LiteralList> analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public List<LiteralList> analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		final List<LiteralList> result = new ArrayList<>();
 
 		solver.setSelectionStrategy(SStrategy.positive());

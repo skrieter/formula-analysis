@@ -22,6 +22,8 @@
  */
 package org.spldev.formula.clause.configuration.sample;
 
+import java.util.*;
+
 import org.spldev.formula.clause.*;
 
 /**
@@ -32,6 +34,15 @@ import org.spldev.formula.clause.*;
 public interface SampleMetric {
 
 	double get(SolutionList sample);
+
+	default double[] get(List<SolutionList> sampleList) {
+		final double[] values = new double[sampleList.size()];
+		int index = 0;
+		for (final SolutionList solution : sampleList) {
+			values[index++] = get(solution);
+		}
+		return values;
+	}
 
 	String getName();
 

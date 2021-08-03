@@ -22,7 +22,9 @@
  */
 package org.spldev.formula.clause.configuration;
 
+import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
 
 /**
  * Generates random configurations for a given propositional formula.
@@ -31,9 +33,16 @@ import org.spldev.formula.clause.solver.*;
  */
 public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
 
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
 	@Override
-	protected void init() {
-		super.init();
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
+
+	@Override
+	protected void prepareSolver(Sat4JSolver solver) {
+		super.prepareSolver(solver);
 		solver.setSelectionStrategy(SStrategy.random(getRandom()));
 	}
 

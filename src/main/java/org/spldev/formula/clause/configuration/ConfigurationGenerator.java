@@ -24,32 +24,46 @@ package org.spldev.formula.clause.configuration;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.analysis.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.job.*;
 
 /**
  * Finds certain solutions of propositional formulas.
  *
  * @author Sebastian Krieter
  */
-public abstract class ConfigurationGenerator extends SatAnalysis
-	implements Supplier<LiteralList>, Spliterator<LiteralList> {
+public abstract class ConfigurationGenerator extends Sat4JAnalysis<SolutionList> implements Supplier<LiteralList>,
+	Spliterator<LiteralList> {
 
-	protected SatSolver solver;
+	private int maxSampleSize = Integer.MAX_VALUE;
 
-	public final void init(CNF cnf) {
-		init(createSolver(cnf));
+	public int getLmit() {
+		return maxSampleSize;
 	}
 
-	public final void init(SatSolver solver) {
+	public void setLimit(int limit) {
+		maxSampleSize = limit;
+	}
+
+	public final void init(ModelRepresentation c, InternalMonitor monitor) {
+		init(createSolver(c), monitor);
+	}
+
+	public final void init(CNF cnf, InternalMonitor monitor) {
+		init(createSolver(cnf), monitor);
+	}
+
+	public final void init(Sat4JSolver solver, InternalMonitor monitor) {
 		prepareSolver(solver);
-		this.solver = solver;
-		init();
+		setSolver(solver);
+		init(monitor);
 	}
 
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 	}
 
 	@Override
@@ -76,6 +90,16 @@ public abstract class ConfigurationGenerator extends SatAnalysis
 	@Override
 	public Spliterator<LiteralList> trySplit() {
 		return null;
+	}
+
+	@Override
+	public final SolutionList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
+		monitor.setTotalWork(maxSampleSize);
+		init(solver, monitor);
+		return new SolutionList(solver.getCnf().getVariables(), StreamSupport.stream(this, false) //
+			.limit(maxSampleSize) //
+			.peek(c -> monitor.step()) //
+			.collect(Collectors.toCollection(ArrayList::new)));
 	}
 
 }

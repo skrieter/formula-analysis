@@ -39,11 +39,11 @@ import org.spldev.formula.clause.solver.strategy.*;
  *
  * @author Sebastian Krieter
  */
-public class Sat4JSolver implements SatSolver {
+public class Sat4JSolver extends Solver implements SatSolver {
 
 	protected final CNF satInstance;
 
-	protected final Solver<?> solver;
+	protected final org.sat4j.minisat.core.Solver<?> solver;
 	protected final ArrayList<IConstr> constrList = new ArrayList<>();
 	protected final VecInt assignment;
 	protected final int[] order;
@@ -57,8 +57,12 @@ public class Sat4JSolver implements SatSolver {
 
 	private boolean contradiction = false;
 
-	public Sat4JSolver(CNF satInstance) {
-		this.satInstance = satInstance;
+	public Sat4JSolver(ModelRepresentation knowledgeCompilation) {
+		this(knowledgeCompilation.getCache().get(CNFProvider.fromFormula()).get());
+	}
+
+	public Sat4JSolver(CNF cnf) {
+		satInstance = cnf;
 		solver = createSolver();
 		configureSolver();
 		initSolver();
@@ -159,8 +163,8 @@ public class Sat4JSolver implements SatSolver {
 	 * 
 	 * @return Sat4J solver
 	 */
-	protected Solver<?> createSolver() {
-		return (Solver<?>) SolverFactory.newDefault();
+	protected org.sat4j.minisat.core.Solver<?> createSolver() {
+		return (org.sat4j.minisat.core.Solver<?>) SolverFactory.newDefault();
 	}
 
 	/**

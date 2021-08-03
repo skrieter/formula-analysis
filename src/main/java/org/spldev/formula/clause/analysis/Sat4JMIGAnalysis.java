@@ -30,9 +30,11 @@ import org.spldev.formula.clause.solver.*;
 /**
  * Base class for an analysis using a {@link SatSolver sat solver}.
  *
+ * @param <T> Type of the analysis result.
+ *
  * @author Sebastian Krieter
  */
-public abstract class SatAnalysis {
+public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSolver> {
 
 	protected LiteralList assumptions = null;
 
@@ -40,18 +42,37 @@ public abstract class SatAnalysis {
 	private boolean throwTimeoutException = true;
 	private int timeout = 1000;
 
-	protected void prepareSolver(SatSolver solver) {
+	protected Random random = new Random(112358);
+
+	public Random getRandom() {
+		return random;
+	}
+
+	public void setRandom(Random random) {
+		this.random = random;
+	}
+
+	@Override
+	protected Sat4JMIGSolver createSolver(ModelRepresentation c) throws RuntimeContradictionException {
+		return new Sat4JMIGSolver(c);
+	}
+
+	@Override
+	protected void prepareSolver(Sat4JMIGSolver solver) {
 		Objects.nonNull(solver);
-		solver.setTimeout(timeout);
+		Objects.nonNull(solver.mig);
+		Objects.nonNull(solver.sat4j);
+		solver.sat4j.setTimeout(timeout);
 		if (assumptions != null) {
-			solver.assignmentPushAll(assumptions.getLiterals());
+			solver.sat4j.assignmentPushAll(assumptions.getLiterals());
 		}
-		assumptions = new LiteralList(solver.getAssignmentArray());
+		assumptions = new LiteralList(solver.sat4j.getAssignmentArray());
 		timeoutOccured = false;
 	}
 
-	protected SatSolver createSolver(CNF cnf) throws RuntimeContradictionException {
-		return new Sat4JSolver(cnf);
+	@Override
+	protected void resetSolver(Sat4JMIGSolver solver) {
+		solver.sat4j.assignmentClear(0);
 	}
 
 	protected final void reportTimeout() throws RuntimeTimeoutException {

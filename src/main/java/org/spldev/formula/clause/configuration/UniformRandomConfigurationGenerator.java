@@ -27,6 +27,7 @@ import java.util.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.*;
 import org.spldev.formula.clause.solver.SatSolver.*;
+import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
@@ -37,12 +38,19 @@ import org.spldev.util.logging.*;
  */
 public class UniformRandomConfigurationGenerator extends RandomConfigurationGenerator {
 
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
+
 	private int sampleSize = 100;
 	private List<LiteralList> sample;
 	private SampleDistribution dist;
 
 	@Override
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 		satisfiable = findCoreFeatures(solver);
 		if (!satisfiable) {
 			return;
@@ -51,7 +59,8 @@ public class UniformRandomConfigurationGenerator extends RandomConfigurationGene
 		final RandomConfigurationGenerator gen = new FastRandomConfigurationGenerator();
 		gen.setAllowDuplicates(false);
 		gen.setRandom(getRandom());
-		sample = Executor.run(new ConfigurationSampler(gen, sampleSize), solver.getCnf()).map(
+		gen.setLimit(sampleSize);
+		sample = Executor.run(gen::execute, solver.getCnf()).map(
 			SolutionList::getSolutions).orElse(Logger::logProblems);
 		if ((sample == null) || sample.isEmpty()) {
 			satisfiable = false;

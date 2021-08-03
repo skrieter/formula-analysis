@@ -22,7 +22,7 @@
  */
 package org.spldev.formula.clause.analysis;
 
-import java.util.*;
+import java.util.function.*;
 
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.solver.*;
@@ -37,42 +37,85 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class AbstractAnalysis<T> extends SatAnalysis implements Analysis<T>, Provider<T> {
+public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<T> {
 
-	protected Random random = new Random(112358);
+	protected static Object defaultParameters = new Object();
 
-	@Override
-	public Result<T> apply(CacheHolder formula, InternalMonitor monitor) {
-		return formula.get(CNFProvider.identifier).flatMap(cnf -> Executor.run(this, cnf, monitor));
+	protected abstract Identifier<T> getIdentifier();
+
+	public class AnalysisResultProvider implements Provider<T> {
+		private final Function<InternalMonitor, Result<T>> function;
+
+		public AnalysisResultProvider(Function<InternalMonitor, Result<T>> function) {
+			this.function = function;
+		}
+
+		@Override
+		public Identifier<T> getIdentifier() {
+			return AbstractAnalysis.this.getIdentifier();
+		}
+
+		@Override
+		public Object getParameters() {
+			return AbstractAnalysis.this.getParameters();
+		}
+
+		@Override
+		public Result<T> apply(CacheHolder c, InternalMonitor m) {
+			return function.apply(m);
+		}
+	}
+
+	protected S solver;
+
+	public void setSolver(S solver) {
+		this.solver = solver;
+	}
+
+	protected Object getParameters() {
+		return defaultParameters;
 	}
 
 	@Override
-	public final T execute(CNF cnf, InternalMonitor monitor) {
-		return execute(createSolver(cnf), monitor);
+	public Result<T> getResult(ModelRepresentation kc) {
+		return kc.getCache().get(
+			new AnalysisResultProvider(
+				m -> Executor.run(this::execute, kc, m)));
 	}
 
 	@Override
-	public final T execute(SatSolver solver, InternalMonitor monitor) {
+	public final T execute(ModelRepresentation c, InternalMonitor monitor) {
+		if (solver == null) {
+			solver = createSolver(c);
+		}
+		return execute(solver, monitor);
+	}
+
+	public T execute(S solver, InternalMonitor monitor) {
+		if (this.solver == null) {
+			this.solver = solver;
+		}
 		prepareSolver(solver);
-
 		monitor.checkCancel();
 		try {
 			return analyze(solver, monitor);
 		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			solver.assignmentClear(0);
+			resetSolver(solver);
 		}
 	}
 
-	protected abstract T analyze(SatSolver solver, InternalMonitor monitor) throws Exception;
-
-	public Random getRandom() {
-		return random;
+	public final MonitorableFunction<S, T> getAsFunction() {
+		return this::execute;
 	}
 
-	public void setRandom(Random random) {
-		this.random = random;
-	}
+	protected abstract T analyze(S solver, InternalMonitor monitor) throws Exception;
+
+	protected abstract S createSolver(ModelRepresentation c) throws RuntimeContradictionException;
+
+	protected abstract void prepareSolver(S solver);
+
+	protected abstract void resetSolver(S solver);
 
 }

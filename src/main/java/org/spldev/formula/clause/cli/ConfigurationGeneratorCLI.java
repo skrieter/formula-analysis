@@ -29,7 +29,6 @@ import java.util.*;
 import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.configuration.*;
 import org.spldev.formula.clause.io.*;
-import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.io.*;
 import org.spldev.util.*;
 import org.spldev.util.cli.*;
@@ -105,14 +104,12 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments)
 				.orElse(Logger::logProblems);
 		if (generator != null) {
-			final ConfigurationSampler sampler = new ConfigurationSampler(generator, limit);
-
-			final CNF cnf = FileHandler.load(fmFile, FormulaFormatManager.getInstance()) //
-					.map(Formulas::toCNF) //
-					.map(Clauses::convertToCNF) //
-					.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
+			generator.setLimit(limit);
+			final ModelRepresentation c = FileHandler.load(fmFile, FormulaFormatManager.getInstance()) //
+				.map(ModelRepresentation::new) //
+				.orElseThrow(p -> new IllegalArgumentException(p.isEmpty() ? null : p.get(0).getError().get()));
 			final Path out = outputFile;
-			final Result<SolutionList> result = Executor.run(sampler, cnf);
+			final Result<SolutionList> result = Executor.run(generator, c);
 			result.ifPresentOrElse(list -> {
 				try {
 					FileHandler.save(list, out, new ConfigurationListFormat());

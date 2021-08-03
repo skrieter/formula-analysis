@@ -65,7 +65,7 @@ public class AddRedundancyAnalysis extends AClauseAnalysis<List<LiteralList>> {
 	}
 
 	@Override
-	public List<LiteralList> analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public List<LiteralList> analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		if (clauseList == null) {
 			return Collections.emptyList();
 		}

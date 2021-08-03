@@ -66,7 +66,7 @@ public class RemoveRedundancyAnalysis extends AClauseAnalysis<List<LiteralList>>
 	}
 
 	@Override
-	protected SatSolver createSolver(CNF satInstance) {
+	protected Sat4JSolver createSolver(ModelRepresentation satInstance) {
 		try {
 			return new Sat4JSolver(satInstance);
 		} catch (final RuntimeContradictionException e) {
@@ -75,7 +75,7 @@ public class RemoveRedundancyAnalysis extends AClauseAnalysis<List<LiteralList>>
 	}
 
 	@Override
-	public List<LiteralList> analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public List<LiteralList> analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		if (clauseList == null) {
 			return Collections.emptyList();
 		}

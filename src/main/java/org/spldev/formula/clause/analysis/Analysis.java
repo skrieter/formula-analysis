@@ -23,7 +23,7 @@
 package org.spldev.formula.clause.analysis;
 
 import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.solver.*;
+import org.spldev.util.*;
 import org.spldev.util.job.*;
 
 /**
@@ -33,12 +33,8 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public interface Analysis<T> extends MonitorableFunction<CNF, T> {
+public interface Analysis<T> extends MonitorableFunction<ModelRepresentation, T> {
 
-	LiteralList getAssumptions();
-
-	void setAssumptions(LiteralList assumptions);
-
-	T execute(SatSolver solver, InternalMonitor monitor) throws Exception;
+	Result<T> getResult(ModelRepresentation model);
 
 }

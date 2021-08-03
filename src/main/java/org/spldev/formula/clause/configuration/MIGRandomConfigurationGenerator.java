@@ -22,8 +22,10 @@
  */
 package org.spldev.formula.clause.configuration;
 
+import org.spldev.formula.clause.*;
 import org.spldev.formula.clause.mig.*;
 import org.spldev.formula.clause.solver.*;
+import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
@@ -34,10 +36,17 @@ import org.spldev.util.logging.*;
  */
 public class MIGRandomConfigurationGenerator extends RandomConfigurationGenerator {
 
+	public static final Identifier<SolutionList> identifier = new Identifier<>();
+
+	@Override
+	protected Identifier<SolutionList> getIdentifier() {
+		return identifier;
+	}
+
 	private MIGDistribution dist;
 
 	@Override
-	protected void init() {
+	protected void init(InternalMonitor monitor) {
 		final RegularMIGBuilder migBuilder = new RegularMIGBuilder();
 		final MIG mig = Executor.run(migBuilder, solver.getCnf()).orElse(Logger::logProblems);
 		satisfiable = mig != null;

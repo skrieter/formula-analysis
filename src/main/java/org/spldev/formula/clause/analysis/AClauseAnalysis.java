@@ -35,7 +35,7 @@ import org.spldev.formula.clause.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class AClauseAnalysis<T> extends AbstractAnalysis<T> {
+public abstract class AClauseAnalysis<T> extends Sat4JAnalysis<T> {
 
 	protected List<LiteralList> clauseList;
 	protected int[] clauseGroupSize;

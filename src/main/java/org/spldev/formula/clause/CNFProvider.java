@@ -60,8 +60,8 @@ public interface CNFProvider extends Provider<CNF> {
 		return (c, m) -> Provider.load(path, FormulaFormatManager.getInstance()).map(Clauses::convertToCNF);
 	}
 
-	static <T> CNFProvider fromExpression() {
-		return (c, m) -> Provider.convert(c, ExpressionProvider.identifier, new FormulaToCNF(), m);
+	static <T> CNFProvider fromFormula() {
+		return (c, m) -> Provider.convert(c, FormulaProvider.identifier, new FormulaToCNF(), m);
 	}
 
 }

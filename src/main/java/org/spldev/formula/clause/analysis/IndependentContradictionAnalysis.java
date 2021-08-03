@@ -52,15 +52,6 @@ public class IndependentContradictionAnalysis extends AClauseAnalysis<List<Liter
 		return identifier;
 	}
 
-	@Override
-	protected SatSolver createSolver(CNF satInstance) {
-		try {
-			return new Sat4JSolver(satInstance);
-		} catch (final RuntimeContradictionException e) {
-			return null;
-		}
-	}
-
 	public IndependentContradictionAnalysis() {
 		super();
 	}
@@ -71,7 +62,7 @@ public class IndependentContradictionAnalysis extends AClauseAnalysis<List<Liter
 	}
 
 	@Override
-	public List<LiteralList> analyze(SatSolver solver, InternalMonitor monitor) throws Exception {
+	public List<LiteralList> analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		if (clauseList == null) {
 			clauseList = solver.getCnf().getClauses();
 		}
