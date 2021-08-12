@@ -27,7 +27,7 @@ import java.util.*;
 /**
  * Handles assumptions for solvers.
  * 
- * @param T the type of the assumptions
+ * @param <T> the type of the assumptions
  *
  * @author Sebastian Krieter
  */

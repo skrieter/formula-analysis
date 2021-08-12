@@ -27,6 +27,8 @@ import java.util.*;
 /**
  * Arbitrary assumptions organized in a stack.
  *
+ * @param <T> the type of the assumptions
+ * 
  * @author Sebastian Krieter
  */
 public class AssumptionStack<T> implements Assumptions<T> {

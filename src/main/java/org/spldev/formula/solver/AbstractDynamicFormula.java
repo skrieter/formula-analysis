@@ -29,8 +29,8 @@ import org.spldev.formula.expression.atomic.literal.*;
 /**
  * Base class for modifiable formulas.
  * 
- * @param I type of clauses added to a solver
- * @param O type of the constraint object used within a solver
+ * @param <I> type of clauses added to a solver
+ * @param <O> type of the constraint object used within a solver
  *
  * @author Sebastian Krieter
  */
