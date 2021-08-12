@@ -2,8 +2,8 @@ license:
   name: lgpl
   version: 3
 program:
-  name: Formula-Analysis-Lib
+  name: Formula-Analysis Lib
   description: Library to analyze propositional formulas.
   authors: Sebastian Krieter
-  url: https://github.com/skrieter/formula
+  url: https://github.com/skrieter/formula-analysis
   year: 2021
