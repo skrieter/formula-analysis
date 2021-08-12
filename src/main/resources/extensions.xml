@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <extensions>
 	<point id="org.spldev.util.cli.CLIFunctionManager">
-	    <extension id="org.spldev.formula.clause.cli.ConfigurationGeneratorCLI" />
+	    <extension id="org.spldev.formula.cli.configuration.ConfigurationGeneratorCLI" />
 	</point>
-	<point id="org.spldev.formula.clause.cli.ConfigurationGeneratorAlgorithmManager">
-	    <extension id="org.spldev.formula.clause.cli.AllAlgorithm" />
-	    <extension id="org.spldev.formula.clause.cli.OneWiseAlgorithm" />
-	    <extension id="org.spldev.formula.clause.cli.PairWiseAlgorithm" />
-	    <extension id="org.spldev.formula.clause.cli.TWiseAlgorithm" />
-	    <extension id="org.spldev.formula.clause.cli.FastRandomAlgorithm" />
-	    <extension id="org.spldev.formula.clause.cli.EnumeratingRandomAlgorithm" />
-	    <extension id="org.spldev.formula.clause.cli.UniformRandomAlgorithm" />
+	<point id="org.spldev.formula.cli.configuration.ConfigurationGeneratorAlgorithmManager">
+	    <extension id="org.spldev.formula.cli.configuration.AllAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.OneWiseAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.PairWiseAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.TWiseAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.FastRandomAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.EnumeratingRandomAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.UniformRandomAlgorithm" />
 	</point>
 </extensions>

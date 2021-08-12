@@ -1,23 +1,23 @@
 /* -----------------------------------------------------------------------------
- * Formula-Analysis-Lib - Library to analyze propositional formulas.
+ * Formula-Analysis Lib - Library to analyze propositional formulas.
  * Copyright (C) 2021  Sebastian Krieter
  * 
- * This file is part of Formula-Analysis-Lib.
+ * This file is part of Formula-Analysis Lib.
  * 
- * Formula-Analysis-Lib is free software: you can redistribute it and/or modify it
+ * Formula-Analysis Lib is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License,
  * or (at your option) any later version.
  * 
- * Formula-Analysis-Lib is distributed in the hope that it will be useful,
+ * Formula-Analysis Lib is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public License
- * along with Formula-Analysis-Lib.  If not, see <https://www.gnu.org/licenses/>.
+ * along with Formula-Analysis Lib.  If not, see <https://www.gnu.org/licenses/>.
  * 
- * See <https://github.com/skrieter/formula> for further information.
+ * See <https://github.com/skrieter/formula-analysis> for further information.
  * -----------------------------------------------------------------------------
  */
 package org.spldev.assignment;
@@ -27,14 +27,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 
 import org.junit.jupiter.api.*;
-import org.spldev.formula.clause.*;
-import org.spldev.formula.clause.analysis.*;
-import org.spldev.formula.clause.transform.*;
+import org.spldev.formula.*;
+import org.spldev.formula.analysis.*;
+import org.spldev.formula.analysis.mig.*;
+import org.spldev.formula.analysis.sat4j.*;
+import org.spldev.formula.clauses.*;
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.expression.compound.*;
+import org.spldev.formula.expression.term.integer.*;
+import org.spldev.formula.transform.*;
 import org.spldev.util.*;
-import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 import org.spldev.util.tree.*;
@@ -44,10 +47,10 @@ public class CNFTest {
 
 	@Test
 	public void convert() {
-		final VariableMap variables = new VariableMap(Arrays.asList("a", "b", "c"));
-		final Literal a = variables.getLiteral("a", true).get();
-		final Literal b = variables.getLiteral("b", true).get();
-		final Literal c = variables.getLiteral("c", true).get();
+		final VariableMap variables = VariableMap.fromNames(Arrays.asList("a", "b", "c"));
+		final Literal a = new LiteralVariable((BoolVariable) variables.getVariable("a").get(), true);
+		final Literal b = new LiteralVariable((BoolVariable) variables.getVariable("b").get(), true);
+		final Literal c = new LiteralVariable((BoolVariable) variables.getVariable("c").get(), true);
 
 		final Implies implies1 = new Implies(a, b);
 		final Or or = new Or(implies1, c);
@@ -84,19 +87,24 @@ public class CNFTest {
 
 	@Test
 	public void testAnalyses() {
-		final VariableMap variables = new VariableMap(
+		final VariableMap variables = VariableMap.fromNames(
 			Arrays.asList("a", "b", "c", "d", "e"));
-		final CNF cnf = new CNF(variables);
-		cnf.addClause(new LiteralList(4));
-		cnf.addClause(new LiteralList(-5));
-		cnf.addClause(new LiteralList(1, 2));
-		cnf.addClause(new LiteralList(-1, 3));
-		cnf.addClause(new LiteralList(4, 2, -5));
-		cnf.addClause(new LiteralList(-2, 3, 4));
-		cnf.addClause(new LiteralList(-3, -4, -5));
+		final Literal a = new LiteralVariable((BoolVariable) variables.getVariable("a").get(), true);
+		final Literal b = new LiteralVariable((BoolVariable) variables.getVariable("b").get(), true);
+		final Literal c = new LiteralVariable((BoolVariable) variables.getVariable("c").get(), true);
+		final Literal d = new LiteralVariable((BoolVariable) variables.getVariable("d").get(), true);
+		final Literal e = new LiteralVariable((BoolVariable) variables.getVariable("e").get(), true);
 
-		final CacheHolder rep = new CacheHolder();
-		rep.get(CNFProvider.of(cnf));
+		final And formula = new And(
+			new Or(d),
+			new Or(e.flip()),
+			new Or(a, b),
+			new Or(a.flip(), c),
+			new Or(d, b, e.flip()),
+			new Or(b.flip(), c, d),
+			new Or(c.flip(), d.flip(), e.flip()));
+
+		final ModelRepresentation rep = new ModelRepresentation(formula);
 
 		System.out.println("---------");
 
@@ -113,6 +121,7 @@ public class CNFTest {
 		executeAnalysis(rep, new RemoveRedundancyAnalysis());
 		executeAnalysis(rep, new ConditionallyCoreDeadAnalysisMIG());
 
+		final CNF cnf = rep.get(CNFProvider.fromFormula());
 		final CNFSlicer slicer = new CNFSlicer(new LiteralList(new int[] { 2 }));
 		final CNF slicedCNF = Executor.run(slicer, cnf).orElse(Logger::logProblems);
 
@@ -122,11 +131,14 @@ public class CNFTest {
 		System.out.println(slicedCNF.adapt(cnf.getVariableMap()).get());
 	}
 
-	private void executeAnalysis(CacheHolder rep, Provider<?> builder) {
-		final Result<?> result = rep.get(builder);
-		Logger.logInfo(builder.getClass().getName());
+	private void executeAnalysis(ModelRepresentation rep, Analysis<?> analysis) {
+		final Result<?> result = analysis.getResult(rep);
+		Logger.logInfo(analysis.getClass().getName());
 		result.map(Object::toString)
-			.ifPresentOrElse(Logger::logInfo, Logger::logProblems);
+			.ifPresentOrElse(Logger::logInfo, p -> {
+				Logger.logProblems(p);
+				fail();
+			});
 	}
 
 }
