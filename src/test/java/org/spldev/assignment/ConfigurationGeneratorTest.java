@@ -144,6 +144,7 @@ public class ConfigurationGeneratorTest {
 			assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
 			final TWiseCoverageMetrics tWiseCoverageMetrics = new TWiseCoverageMetrics();
 			tWiseCoverageMetrics.setCNF(cnf);
+			tWiseCoverageMetrics.init();
 			assertEquals(1.0, tWiseCoverageMetrics.getTWiseCoverageMetric(t).get(sample), 0.0,
 				"Wrong coverage for " + modelName);
 			final SolutionList sample2 = sample(modelFile, algorithmName, t, null);
@@ -159,6 +160,7 @@ public class ConfigurationGeneratorTest {
 			assertTrue(sample.getInvalidSolutions(cnf).findFirst().isEmpty(), "Invalid solutions for " + modelFile);
 			final TWiseCoverageMetrics tWiseCoverageMetrics = new TWiseCoverageMetrics();
 			tWiseCoverageMetrics.setCNF(cnf);
+			tWiseCoverageMetrics.init();
 			assertEquals(1.0, tWiseCoverageMetrics.getTWiseCoverageMetric(2).get(sample), 0.0,
 				"Wrong coverage for " + modelName);
 			final SolutionList sample2 = sample(modelFile, algorithmName, null, null);

@@ -71,45 +71,72 @@ public class TWiseCoverageMetrics {
 
 		@Override
 		public String getName() {
-			return "T" + t + "Coverage";
+			return "T" + t + "_" + name + "_" + "Coverage";
 		}
 
 	}
 
 	private TWiseConfigurationUtil util;
 	private PresenceConditionManager presenceConditionManager;
+	private String name;
+	private CNF cnf;
+	private List<List<ClauseList>> expressions;
 
 	public void setCNF(CNF cnf) {
+		this.cnf = cnf;
+	}
+
+	public void setExpressions(List<List<ClauseList>> expressions) {
+		this.expressions = expressions;
+	}
+
+	public void init() {
 		if (!cnf.getClauses().isEmpty()) {
 			util = new TWiseConfigurationUtil(cnf, new Sat4JSolver(cnf));
 		} else {
 			util = new TWiseConfigurationUtil(cnf, null);
 		}
-
 		util.setInvalidClausesList(InvalidClausesList.Create);
 		util.computeRandomSample(1000);
 		if (!cnf.getClauses().isEmpty()) {
+
 			util.computeMIG(false, false);
 		}
-		presenceConditionManager = new PresenceConditionManager(util,
-			TWiseConfigurationGenerator.convertLiterals(Clauses.getLiterals(cnf
-				.getVariables())));
+		if (expressions == null) {
+			expressions = TWiseConfigurationGenerator.convertLiterals(Clauses.getLiterals(cnf.getVariables()));
+		}
+		presenceConditionManager = new PresenceConditionManager(util, expressions);
 	}
 
 	public TWiseCoverageMetric getTWiseCoverageMetric(int t) {
 		return new TWiseCoverageMetric(t);
 	}
 
-	public static List<TWiseCoverageMetric> getTWiseCoverageMetrics(CNF cnf, int... tValues) {
+	public static List<TWiseCoverageMetric> getTWiseCoverageMetrics(CNF cnf, List<List<ClauseList>> expressions,
+		String name,
+		int... tValues) {
 		final TWiseCoverageMetrics metrics = new TWiseCoverageMetrics();
+		metrics.setName(name);
+		if (expressions != null) {
+			metrics.setExpressions(expressions);
+		}
 		if (cnf != null) {
 			metrics.setCNF(cnf);
+			metrics.init();
 		}
 		final List<TWiseCoverageMetric> coverageMetrics = new ArrayList<>(tValues.length);
 		for (final int t : tValues) {
 			coverageMetrics.add(metrics.getTWiseCoverageMetric(t));
 		}
 		return coverageMetrics;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

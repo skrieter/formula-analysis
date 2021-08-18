@@ -22,17 +22,19 @@
  */
 package org.spldev.formula.solver;
 
-import org.sosy_lab.java_smt.api.*;
-
 /**
  * Solver used to solve SMT querys.
  *
+ * @param <T> the type of the return value for minimum/maximum
+ * @param <V> the type of the variable to minimize
+ * 
  * @author Joshua Sprey
+ * @author Sebastian Krieter
  */
-public interface OptSolver<T> {
+public interface OptSolver<T, V> {
 
-	T minimum(NumeralFormula formula);
+	T minimum(V formula);
 
-	T maximum(NumeralFormula formula);
+	T maximum(V formula);
 
 }

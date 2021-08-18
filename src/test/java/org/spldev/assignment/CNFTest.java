@@ -35,7 +35,7 @@ import org.spldev.formula.clauses.*;
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.expression.compound.*;
-import org.spldev.formula.expression.term.integer.*;
+import org.spldev.formula.expression.term.bool.*;
 import org.spldev.formula.transform.*;
 import org.spldev.util.*;
 import org.spldev.util.job.*;
@@ -48,9 +48,9 @@ public class CNFTest {
 	@Test
 	public void convert() {
 		final VariableMap variables = VariableMap.fromNames(Arrays.asList("a", "b", "c"));
-		final Literal a = new LiteralVariable((BoolVariable) variables.getVariable("a").get(), true);
-		final Literal b = new LiteralVariable((BoolVariable) variables.getVariable("b").get(), true);
-		final Literal c = new LiteralVariable((BoolVariable) variables.getVariable("c").get(), true);
+		final Literal a = new LiteralPredicate((BoolVariable) variables.getVariable("a").get(), true);
+		final Literal b = new LiteralPredicate((BoolVariable) variables.getVariable("b").get(), true);
+		final Literal c = new LiteralPredicate((BoolVariable) variables.getVariable("c").get(), true);
 
 		final Implies implies1 = new Implies(a, b);
 		final Or or = new Or(implies1, c);
@@ -89,11 +89,11 @@ public class CNFTest {
 	public void testAnalyses() {
 		final VariableMap variables = VariableMap.fromNames(
 			Arrays.asList("a", "b", "c", "d", "e"));
-		final Literal a = new LiteralVariable((BoolVariable) variables.getVariable("a").get(), true);
-		final Literal b = new LiteralVariable((BoolVariable) variables.getVariable("b").get(), true);
-		final Literal c = new LiteralVariable((BoolVariable) variables.getVariable("c").get(), true);
-		final Literal d = new LiteralVariable((BoolVariable) variables.getVariable("d").get(), true);
-		final Literal e = new LiteralVariable((BoolVariable) variables.getVariable("e").get(), true);
+		final Literal a = new LiteralPredicate((BoolVariable) variables.getVariable("a").get(), true);
+		final Literal b = new LiteralPredicate((BoolVariable) variables.getVariable("b").get(), true);
+		final Literal c = new LiteralPredicate((BoolVariable) variables.getVariable("c").get(), true);
+		final Literal d = new LiteralPredicate((BoolVariable) variables.getVariable("d").get(), true);
+		final Literal e = new LiteralPredicate((BoolVariable) variables.getVariable("e").get(), true);
 
 		final And formula = new And(
 			new Or(d),
