@@ -51,13 +51,13 @@ public final class FormulaToCNF implements MonitorableFunction<Formula, CNF> {
 		}
 		final VariableMap mapping = variableMapping != null ? variableMapping : VariableMap.fromExpression(node);
 		final ClauseList clauses = new ClauseList();
-		final Formula cnf = Formulas.toCNF(node);
-		final Optional<Object> formulaValue = Formulas.evaluate(cnf, new Assignment(mapping));
+		final Optional<Object> formulaValue = Formulas.evaluate(node, new Assignment(mapping));
 		if (formulaValue.isPresent()) {
 			if (formulaValue.get() == Boolean.FALSE) {
 				clauses.add(new LiteralList());
 			}
 		} else {
+			final Formula cnf = Formulas.toCNF(node);
 			cnf.getChildren().stream().map(exp -> getClause(exp, mapping)).filter(Objects::nonNull).forEach(
 				clauses::add);
 		}
@@ -94,8 +94,10 @@ public final class FormulaToCNF implements MonitorableFunction<Formula, CNF> {
 			} else {
 				final int[] literals = clauseChildren.stream()
 					.filter(literal -> literal != Literal.False)
+					.filter(literal -> literal instanceof LiteralPredicate)
 					.mapToInt(literal -> {
-						final int variable = mapping.getIndex(literal.getName()).orElseThrow(RuntimeException::new);
+						final int variable = mapping.getIndex(
+							((LiteralPredicate) literal).getVariable().getName()).orElseThrow(RuntimeException::new);
 						return ((Literal) literal).isPositive() ? variable : -variable;
 					}).toArray();
 				return new LiteralList(literals, keepLiteralOrder ? Order.UNORDERED : Order.NATURAL);

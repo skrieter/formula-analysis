@@ -48,6 +48,10 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 
 	protected Random random = new Random(112358);
 
+	protected Object getParameters() {
+		return assumptions != null ? assumptions : super.getParameters();
+	}
+
 	public Random getRandom() {
 		return random;
 	}
