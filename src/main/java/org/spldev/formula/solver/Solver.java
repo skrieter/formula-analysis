@@ -22,12 +22,21 @@
  */
 package org.spldev.formula.solver;
 
+import org.spldev.formula.expression.atomic.*;
+import org.spldev.formula.expression.atomic.literal.*;
+
 /**
  * Solver interface.
  *
  * @author Sebastian Krieter
  */
 public interface Solver extends Cloneable {
+
+	Assignment getAssumptions();
+	
+	DynamicFormula<?> getDynamicFormula();
+
+	VariableMap getVariables();
 
 	default void reset() {
 	}

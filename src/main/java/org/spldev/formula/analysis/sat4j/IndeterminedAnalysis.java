@@ -70,7 +70,7 @@ public class IndeterminedAnalysis extends AVariableAnalysis<LiteralList> {
 				}
 			}
 			try {
-				modSolver.getFormula().pushAll(relevantClauses);
+				modSolver.getFormula().push(relevantClauses);
 			} catch (final RuntimeContradictionException e) {
 				relevantClauses.clear();
 				monitor.step();
@@ -112,7 +112,7 @@ public class IndeterminedAnalysis extends AVariableAnalysis<LiteralList> {
 				}
 			}
 			try {
-				modSolver.getFormula().pushAll(relevantClauses);
+				modSolver.getFormula().push(relevantClauses);
 			} catch (final RuntimeContradictionException e) {
 				relevantClauses.clear();
 				monitor.step();

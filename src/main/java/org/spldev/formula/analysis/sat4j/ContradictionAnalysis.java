@@ -88,7 +88,7 @@ public class ContradictionAnalysis extends AClauseAnalysis<List<LiteralList>> {
 			final List<LiteralList> subList = clauseList.subList(startIndex, endIndex);
 
 			try {
-				solver.getFormula().pushAll(subList);
+				solver.getFormula().push(subList);
 			} catch (final RuntimeContradictionException e) {
 				resultList.set(i, clauseList.get(startIndex));
 				monitor.step();

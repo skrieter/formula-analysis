@@ -27,8 +27,10 @@ package org.spldev.formula.solver;
  *
  * @author Sebastian Krieter
  */
-public interface SatSolver<T> {
+public interface SatSolver extends Solver {
 
+	
+	
 	/**
 	 * Possible outcomes of a satisfiability solver call.<br>
 	 * One of {@code TRUE}, {@code FALSE}, or {@code TIMEOUT}.
@@ -40,25 +42,10 @@ public interface SatSolver<T> {
 	}
 
 	/**
-	 * Returns the last solution found by satisfiability solver. Can only be called
-	 * after a successful call of {@link #hasSolution()}.
-	 *
-	 * @return An int array representing the satisfying assignment.
-	 *
-	 * @see #hasSolution()
-	 * @see #findSolution()
-	 */
-	T getSolution();
-
-	T findSolution();
-
-	/**
 	 * Checks whether there is a satisfying solution considering the clauses of the
 	 * solver.
 	 *
 	 * @return A {@link SatResult}.
-	 *
-	 * @see #findSolution()
 	 */
 	SatResult hasSolution();
 

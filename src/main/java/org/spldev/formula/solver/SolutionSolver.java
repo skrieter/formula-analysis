@@ -23,18 +23,35 @@
 package org.spldev.formula.solver;
 
 /**
- * Solver used to solve SMT querys.
+ * Sat solver interface that is able to return a solution.
  *
- * @param <T> the type of the return value for minimum/maximum
- * @param <V> the type of the variable to minimize
- * 
- * @author Joshua Sprey
  * @author Sebastian Krieter
  */
-public interface OptSolver<T, V> extends Solver {
+public interface SolutionSolver<T> extends SatSolver {
 
-	T minimum(V formula);
+	/**
+	 * Returns the last solution found by satisfiability solver. Can only be called
+	 * after a successful call of {@link #hasSolution()}.
+	 *
+	 * @return A representation of a satisfying assignment.
+	 *
+	 * @see #hasSolution()
+	 * @see #findSolution()
+	 */
+	T getSolution();
 
-	T maximum(V formula);
+	/**
+	 * Computes and returns a solution. This is a convenience method that is
+	 * equivalent to calling {@link #hasSolution()} and {@link #getSolution()} in
+	 * succession.
+	 *
+	 * @return A representation of a satisfying assignment.
+	 *
+	 * @see #hasSolution()
+	 * @see #findSolution()
+	 */
+	default T findSolution() {
+		return hasSolution() == SatResult.TRUE ? getSolution() : null;
+	}
 
 }

@@ -22,10 +22,14 @@
  */
 package org.spldev.formula;
 
+import java.nio.file.*;
+
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
+import org.spldev.formula.expression.io.*;
 import org.spldev.util.*;
 import org.spldev.util.data.*;
+import org.spldev.util.io.*;
 import org.spldev.util.logging.*;
 
 public class ModelRepresentation {
@@ -33,6 +37,11 @@ public class ModelRepresentation {
 	private final CacheHolder cache = new CacheHolder();
 	private final Formula formula;
 	private final VariableMap variables;
+	
+	public static Result<ModelRepresentation> load(final Path modelFile) {
+		return FileHandler.load(modelFile, FormulaFormatManager.getInstance()) //
+			.map(ModelRepresentation::new);
+	}
 
 	public ModelRepresentation(Formula formula) {
 		this(formula, VariableMap.fromExpression(formula));

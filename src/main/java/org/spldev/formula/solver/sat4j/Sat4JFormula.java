@@ -27,6 +27,7 @@ import java.util.*;
 import org.sat4j.core.*;
 import org.sat4j.specs.*;
 import org.spldev.formula.clauses.*;
+import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.solver.*;
 
@@ -35,7 +36,7 @@ import org.spldev.formula.solver.*;
  *
  * @author Sebastian Krieter
  */
-public class Sat4JFormula extends AbstractDynamicFormula<LiteralList, IConstr> {
+public class Sat4JFormula extends AbstractDynamicFormula<IConstr> {
 
 	private final AbstractSat4JSolver<?> sat4jSolver;
 
@@ -50,15 +51,43 @@ public class Sat4JFormula extends AbstractDynamicFormula<LiteralList, IConstr> {
 	}
 
 	@Override
-	public IConstr push(LiteralList clause) throws RuntimeContradictionException {
-		if ((clause.size() == 1) && (clause.getLiterals()[0] == 0)) {
-			throw new RuntimeContradictionException();
+	public List<IConstr> push(Formula formula) throws RuntimeContradictionException {
+		return push(FormulaToCNF.convert(formula, variableMap).getClauses());
+	}
+
+	public List<IConstr> push(List<? extends LiteralList> clauses) {
+		final ArrayList<IConstr> constrs = new ArrayList<>();
+		for (LiteralList clause : clauses) {
+			try {
+				if ((clause.size() == 1) && (clause.getLiterals()[0] == 0)) {
+					throw new ContradictionException();
+				}
+				final IConstr constr = sat4jSolver.solver
+						.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
+				constrs.add(constr);
+			} catch (final ContradictionException e) {
+				for (IConstr constr : constrs) {
+					sat4jSolver.solver.removeConstr(constr);
+				}
+				throw new RuntimeContradictionException(e);
+			}
 		}
+		if (sat4jSolver.solutionHistory != null) {
+			sat4jSolver.solutionHistory.clear();
+			sat4jSolver.lastModel = null;
+		}
+		constraints.addAll(constrs);
+		return constrs;
+	}
+
+	public IConstr push(LiteralList clause) throws RuntimeContradictionException {
 		try {
-			final IConstr constr = sat4jSolver.solver.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0,
-				clause.size())));
+			if ((clause.size() == 1) && (clause.getLiterals()[0] == 0)) {
+				throw new ContradictionException();
+			}
+			final IConstr constr = sat4jSolver.solver
+					.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
 			constraints.add(constr);
-			originClauses.add(clause);
 			if (sat4jSolver.solutionHistory != null) {
 				sat4jSolver.solutionHistory.clear();
 				sat4jSolver.lastModel = null;
@@ -67,7 +96,6 @@ public class Sat4JFormula extends AbstractDynamicFormula<LiteralList, IConstr> {
 		} catch (final ContradictionException e) {
 			throw new RuntimeContradictionException(e);
 		}
-
 	}
 
 	@Override

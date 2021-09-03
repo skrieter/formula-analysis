@@ -28,15 +28,16 @@ import org.sat4j.core.*;
 import org.sat4j.specs.*;
 import org.spldev.formula.clauses.*;
 import org.spldev.formula.clauses.LiteralList.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.solver.*;
+import org.spldev.util.data.*;
 
 /**
  * Base class for solvers using Sat4J.
  *
  * @author Sebastian Krieter
  */
-public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
-	SatSolver<LiteralList> {
+public abstract class AbstractSat4JSolver<T extends ISolver> implements SolutionSolver<LiteralList> {
 
 	public static final int MAX_SOLUTION_BUFFER = 1000;
 
@@ -62,17 +63,7 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 		formula = new Sat4JFormula(this, cnf.getVariableMap());
 		initSolver();
 
-		assumptions = new Sat4JAssumptions(satInstance.getVariableMap().size());
-	}
-
-	protected AbstractSat4JSolver(AbstractSat4JSolver<T> oldSolver) {
-		satInstance = oldSolver.satInstance;
-		solver = createSolver();
-		configureSolver();
-		formula = new Sat4JFormula(this, oldSolver.formula);
-		initSolver();
-
-		assumptions = new Sat4JAssumptions(oldSolver.assumptions);
+		assumptions = new Sat4JAssumptions(satInstance.getVariableMap());
 	}
 
 	/**
@@ -80,6 +71,21 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 	 */
 	public CNF getCnf() {
 		return satInstance;
+	}
+
+	@Override
+	public Sat4JAssumptions getAssumptions() {
+		return assumptions;
+	}
+
+	@Override
+	public Sat4JFormula getDynamicFormula() {
+		return formula;
+	}
+
+	@Override
+	public VariableMap getVariables() {
+		return formula.getVariableMap();
 	}
 
 	/**
@@ -149,7 +155,7 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 		try {
 			if (!clauses.isEmpty()) {
 				solver.setExpectedNumberOfClauses(clauses.size() + 1);
-				formula.pushAll(clauses);
+				formula.push(clauses);
 			}
 			if (size > 0) {
 				final VecInt pseudoClause = new VecInt(size + 1);
@@ -168,10 +174,6 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 		solver.setTimeoutMs(timeout);
 	}
 
-	public Sat4JAssumptions getAssumptions() {
-		return assumptions;
-	}
-
 	public Sat4JFormula getFormula() {
 		return formula;
 	}
@@ -183,6 +185,17 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 
 	public List<LiteralList> getSolutionHistory() {
 		return solutionHistory != null ? Collections.unmodifiableList(solutionHistory) : Collections.emptyList();
+	}
+
+	private int[] getAssumptionArray() {
+		final List<Pair<Integer, Object>> all = assumptions.getAll();
+		final int[] literals = new int[all.size()];
+		int index = 0;
+		for (final Pair<Integer, Object> entry : all) {
+			final int variable = entry.getKey();
+			literals[index++] = (entry.getValue() == Boolean.TRUE) ? variable : -variable;
+		}
+		return literals;
 	}
 
 	/**
@@ -202,10 +215,10 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 			return SatResult.FALSE;
 		}
 
+		final int[] assumptionArray = getAssumptionArray();
 		if (solutionHistory != null) {
-			final int[] array = assumptions.asArray();
 			for (final LiteralList solution : solutionHistory) {
-				if (solution.containsAllLiterals(array)) {
+				if (solution.containsAllLiterals(assumptionArray)) {
 					lastModel = solution.getLiterals();
 					return SatResult.TRUE;
 				}
@@ -213,7 +226,7 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solver,
 		}
 
 		try {
-			if (solver.isSatisfiable(assumptions.getAssumptions(), globalTimeout)) {
+			if (solver.isSatisfiable(new VecInt(assumptionArray), globalTimeout)) {
 				lastModel = solver.model();
 				addSolution();
 				return SatResult.TRUE;

@@ -53,12 +53,6 @@ public class Sat4JSolver extends AbstractSat4JSolver<Solver<?>> {
 		setOrderFix();
 	}
 
-	protected Sat4JSolver(Sat4JSolver oldSolver) {
-		super(oldSolver);
-		strategy = oldSolver.strategy;
-		order = Arrays.copyOf(oldSolver.order, oldSolver.order.length);
-	}
-
 	@Override
 	protected Solver<?> createSolver() {
 		return (Solver<?>) SolverFactory.newDefault();
@@ -68,15 +62,6 @@ public class Sat4JSolver extends AbstractSat4JSolver<Solver<?>> {
 	protected void initSolver() {
 		super.initSolver();
 		solver.getOrder().init();
-	}
-
-	@Override
-	public Sat4JSolver clone() {
-		if (this.getClass() == Sat4JSolver.class) {
-			return new Sat4JSolver(this);
-		} else {
-			throw new RuntimeException("Cloning not supported for " + this.getClass().toString());
-		}
 	}
 
 	public int[] getOrder() {

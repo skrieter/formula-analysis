@@ -84,7 +84,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 			}
 
 			for (int i = 0; i < initialAssignmentLength; i++) {
-				model1[Math.abs(solver.getAssumptions().get(i)) - 1] = 0;
+				model1[Math.abs(solver.getAssumptions().peek(i)) - 1] = 0;
 			}
 
 			LiteralList.resetConflicts(model1, model2);
@@ -195,7 +195,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 			}
 
 			for (int i = 0; i < initialAssignmentLength; i++) {
-				model1[Math.abs(solver.getAssumptions().get(i)) - 1] = 0;
+				model1[Math.abs(solver.getAssumptions().peek(i)) - 1] = 0;
 			}
 
 			LiteralList.resetConflicts(model1, model2);

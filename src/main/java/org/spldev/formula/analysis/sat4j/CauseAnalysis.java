@@ -139,7 +139,7 @@ public class CauseAnalysis extends AClauseAnalysis<List<CauseAnalysis.Anomalies>
 
 			final int startIndex = endIndex;
 			endIndex += clauseGroupSize[i];
-			solver.getFormula().pushAll(clauseList.subList(startIndex, endIndex));
+			solver.getFormula().push(clauseList.subList(startIndex, endIndex));
 			if (relevantConstraint[i]) {
 				if (remainingVariables.getLiterals().length > 0) {
 					final LiteralList deadVariables = new CoreDeadAnalysis(remainingVariables).execute(solver,

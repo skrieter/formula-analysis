@@ -24,21 +24,19 @@ package org.spldev.formula.solver;
 
 import java.util.*;
 
+import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
 
 /**
  * Modifiable formula for solvers.
  *
- * @param <I> type of clauses added to a solver
  * @param <O> type of the constraint object used within a solver
  * 
  * @author Sebastian Krieter
  */
-public interface DynamicFormula<I, O> {
+public interface DynamicFormula<O> {
 
 	List<O> getConstraints();
-
-	List<I> getOriginConstraints();
 
 	VariableMap getVariableMap();
 
@@ -50,12 +48,12 @@ public interface DynamicFormula<I, O> {
 	 * @return The identifying constraint object of the clause that can be used to
 	 *         remove it from the solver.
 	 *
-	 * @see #pushAll(Collection)
+	 * @see #push(Collection)
 	 * @see #pop()
 	 * @see #pop(count)
 	 * @see #remove(O)
 	 */
-	O push(I clause);
+	List<O> push(Formula clause);
 
 	/**
 	 * Adds multiple clauses.
@@ -70,10 +68,10 @@ public interface DynamicFormula<I, O> {
 	 * @see #pop(count)
 	 * @see #remove(O)
 	 */
-	default List<O> pushAll(Collection<? extends I> clauses) {
+	default List<O> push(Collection<Formula> clauses) {
 		int addCount = 0;
 		final ArrayList<O> constraintList = new ArrayList<>(clauses.size());
-		for (final I clause : clauses) {
+		for (final Formula clause : clauses) {
 			try {
 				push(clause);
 				addCount++;

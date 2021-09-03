@@ -22,9 +22,12 @@
  */
 package org.spldev.formula.analysis;
 
+import java.util.*;
 import java.util.function.*;
 
 import org.spldev.formula.*;
+import org.spldev.formula.expression.*;
+import org.spldev.formula.expression.atomic.*;
 import org.spldev.formula.solver.*;
 import org.spldev.util.*;
 import org.spldev.util.data.*;
@@ -41,8 +44,6 @@ import org.spldev.util.job.*;
 public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<T> {
 
 	protected static Object defaultParameters = new Object();
-
-	protected abstract Identifier<T> getIdentifier();
 
 	public class AnalysisResultProvider implements Provider<T> {
 		private final Function<InternalMonitor, Result<T>> function;
@@ -67,10 +68,21 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 		}
 	}
 
+	protected final Assignment assumptions = new IndexAssignment();
+	protected final List<Formula> assumedConstraints = new ArrayList<>();
 	protected S solver;
 
-	public void setSolver(S solver) {
-		this.solver = solver;
+//
+//	public void setSolver(S solver) {
+//		this.solver = solver;
+//	}
+
+	public Assignment getAssumptions() {
+		return assumptions;
+	}
+
+	public List<Formula> getAssumedConstraints() {
+		return assumedConstraints;
 	}
 
 	protected Object getParameters() {
@@ -78,10 +90,8 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 	}
 
 	@Override
-	public Result<T> getResult(ModelRepresentation kc) {
-		return kc.getCache().get(
-			new AnalysisResultProvider(
-				m -> Executor.run(this::execute, kc, m)));
+	public Result<T> getResult(ModelRepresentation rep) {
+		return rep.getCache().get(new AnalysisResultProvider(m -> Executor.run(this::execute, rep, m)));
 	}
 
 	@Override
@@ -96,8 +106,8 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 		if (this.solver == null) {
 			this.solver = solver;
 		}
-		prepareSolver(solver);
 		monitor.checkCancel();
+		prepareSolver(solver);
 		try {
 			return analyze(solver, monitor);
 		} catch (final Exception e) {
@@ -107,12 +117,28 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 		}
 	}
 
-	protected abstract T analyze(S solver, InternalMonitor monitor) throws Exception;
+	/*
+	 * 1. Create analysis with MR Create analysis with MR and params
+	 * 
+	 * 2. Create Sub-analysis within other analysis Create Sub-analysis within other
+	 * analysis and params
+	 * 
+	 */
+
+	protected abstract Identifier<T> getIdentifier();
 
 	protected abstract S createSolver(ModelRepresentation c) throws RuntimeContradictionException;
 
-	protected abstract void prepareSolver(S solver);
+	protected void prepareSolver(S solver) {
+		solver.getAssumptions().setAll(assumptions.getAll());
+		solver.getDynamicFormula().push(assumedConstraints);
+	}
 
-	protected abstract void resetSolver(S solver);
+	protected abstract T analyze(S solver, InternalMonitor monitor) throws Exception;
+
+	protected void resetSolver(S solver) {
+		solver.getAssumptions().resetAll(assumptions.getAll());
+		solver.getDynamicFormula().pop(assumedConstraints.size());
+	}
 
 }

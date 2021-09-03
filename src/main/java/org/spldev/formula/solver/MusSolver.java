@@ -33,7 +33,7 @@ import java.util.*;
  * @author Timo Günther
  * @author Sebastian Krieter
  */
-public interface MusSolver<T> {
+public interface MusSolver<T> extends SatSolver {
 
 	/**
 	 * <p>

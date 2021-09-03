@@ -406,7 +406,7 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 		numberOfFixedFeatures = solver.getAssumptions().size();
 		featuresUsedOrg = new boolean[numVariables];
 		for (int i = 0; i < numberOfFixedFeatures; i++) {
-			featuresUsedOrg[Math.abs(solver.getAssumptions().get(i)) - 1] = true;
+			featuresUsedOrg[Math.abs(solver.getAssumptions().peek(i)) - 1] = true;
 		}
 
 		featureIndexArray = new FeatureIndex[numVariables - numberOfFixedFeatures];

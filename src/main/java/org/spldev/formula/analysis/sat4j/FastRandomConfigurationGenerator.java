@@ -34,6 +34,7 @@ import org.spldev.util.data.*;
 public class FastRandomConfigurationGenerator extends RandomConfigurationGenerator {
 
 	public static final Identifier<SolutionList> identifier = new Identifier<>();
+	private SStrategy originalSelectionStrategy;
 
 	@Override
 	protected Identifier<SolutionList> getIdentifier() {
@@ -43,7 +44,15 @@ public class FastRandomConfigurationGenerator extends RandomConfigurationGenerat
 	@Override
 	protected void prepareSolver(Sat4JSolver solver) {
 		super.prepareSolver(solver);
+		originalSelectionStrategy = solver.getSelectionStrategy();
 		solver.setSelectionStrategy(SStrategy.random(getRandom()));
+	}
+
+	@Override
+	protected void resetSolver(Sat4JSolver solver) {
+		super.resetSolver(solver);
+		solver.setSelectionStrategy(originalSelectionStrategy);
+		originalSelectionStrategy = null;
 	}
 
 }

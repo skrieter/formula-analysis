@@ -25,36 +25,33 @@ package org.spldev.formula.solver.sat4j;
 import java.util.*;
 
 import org.sat4j.core.*;
-import org.spldev.formula.solver.*;
+import org.spldev.formula.expression.atomic.*;
+import org.spldev.formula.expression.atomic.literal.*;
+import org.spldev.util.data.*;
 
 /**
  * Assumptions for a {@link Sat4JSolver}.
  *
  * @author Sebastian Krieter
  */
-public class Sat4JAssumptions implements Assumptions<Integer> {
+public class Sat4JAssumptions implements Assignment {
 
 	protected final VecInt assumptions;
+	protected final VariableMap variables;
 
 	public VecInt getAssumptions() {
 		return assumptions;
 	}
 
-	public Sat4JAssumptions(int size) {
-		assumptions = new VecInt(size);
+	public Sat4JAssumptions(VariableMap variables) {
+		this.variables = variables;
+		assumptions = new VecInt(variables.size());
 	}
 
-	protected Sat4JAssumptions(Sat4JAssumptions oldAssumptions) {
-		assumptions = new VecInt(0);
-		oldAssumptions.assumptions.copyTo(assumptions);
-	}
-
-	@Override
 	public void clear() {
 		assumptions.clear();
 	}
 
-	@Override
 	public void clear(int newSize) {
 		assumptions.shrinkTo(newSize);
 	}
@@ -63,21 +60,14 @@ public class Sat4JAssumptions implements Assumptions<Integer> {
 		assumptions.ensure(size);
 	}
 
-	@Override
 	public Integer pop() {
 		final int topElement = assumptions.get(assumptions.size());
 		assumptions.pop();
 		return topElement;
 	}
 
-	@Override
 	public void pop(int count) {
 		assumptions.shrinkTo(assumptions.size() - count);
-	}
-
-	@Override
-	public void push(Integer var) {
-		assumptions.push(var);
 	}
 
 	public void push(int var) {
@@ -86,11 +76,6 @@ public class Sat4JAssumptions implements Assumptions<Integer> {
 
 	public void pushAll(int[] vars) {
 		assumptions.pushAll(new VecInt(vars));
-	}
-
-	@Override
-	public void replaceLast(Integer var) {
-		assumptions.pop().unsafePush(var);
 	}
 
 	public void replaceLast(int var) {
@@ -105,7 +90,6 @@ public class Sat4JAssumptions implements Assumptions<Integer> {
 		assumptions.set(index, var);
 	}
 
-	@Override
 	public int size() {
 		return assumptions.size();
 	}
@@ -122,13 +106,72 @@ public class Sat4JAssumptions implements Assumptions<Integer> {
 		return Arrays.copyOfRange(assumptions.toArray(), from, to);
 	}
 
-	public int get(int i) {
+	public int peek() {
+		return assumptions.get(assumptions.size() - 1);
+	}
+
+	public int peek(int i) {
 		return assumptions.get(i);
 	}
 
 	@Override
-	public Integer peek() {
-		return assumptions.get(assumptions.size() - 1);
+	public void set(int index, Object assignment) {
+		if (assignment instanceof Integer) {
+			for (int i = 0; i < assumptions.size(); i++) {
+				final int l = assumptions.unsafeGet(i);
+				if (Math.abs(l) == index) {
+					assumptions.set(i, (Integer) assignment);
+					return;
+				}
+			}
+			assumptions.push((Integer) assignment);
+		}
+	}
+
+	public void set(String name, Object assignment) {
+		final int index = variables.getIndex(name).orElse(-1);
+		if (index > 0) {
+			set(index, assignment);
+		}
+	}
+
+	@Override
+	public Optional<Object> get(int index) {
+		for (int i = 0; i < assumptions.size(); i++) {
+			int l = assumptions.unsafeGet(i);
+			if (Math.abs(l) == index) {
+				return Optional.of(l);
+			}
+		}
+		return Optional.empty();
+	}
+
+	public Optional<Object> get(String name) {
+		final int index = variables.getIndex(name).orElse(-1);
+		return index > 0 ? get(index) : Optional.empty();
+	}
+
+//	public Set<Entry<Variable<?>, Object>> getAllEntries() {
+//		final HashMap<Variable<?>, Object> map = new HashMap<>();
+//		for (int i = 0; i < assumptions.size(); i++) {
+//			int l = assumptions.unsafeGet(i);
+//			map.put(variables.getVariable(Math.abs(l)).get(), l);
+//		}
+//		return map.entrySet();
+//	}
+
+	public VariableMap getVariables() {
+		return variables;
+	}
+
+	@Override
+	public List<Pair<Integer, Object>> getAll() {
+		final List<Pair<Integer, Object>> map = new ArrayList<>();
+		for (int i = 0; i < assumptions.size(); i++) {
+			int l = assumptions.unsafeGet(i);
+			map.add(new Pair<>(Math.abs(l), l));
+		}
+		return map;
 	}
 
 }

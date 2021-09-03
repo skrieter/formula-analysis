@@ -40,8 +40,6 @@ import org.spldev.util.job.*;
  */
 public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver> {
 
-	protected LiteralList assumptions = null;
-
 	protected boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
 	private int timeout = 1000;
@@ -78,18 +76,9 @@ public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver> 
 
 	@Override
 	protected void prepareSolver(Sat4JSolver solver) {
-		Objects.nonNull(solver);
+		super.prepareSolver(solver);
 		solver.setTimeout(timeout);
-		if (assumptions != null) {
-			solver.getAssumptions().pushAll(assumptions.getLiterals());
-		}
-		assumptions = new LiteralList(solver.getAssumptions().asArray());
 		timeoutOccured = false;
-	}
-
-	@Override
-	protected void resetSolver(Sat4JSolver solver) {
-		solver.getAssumptions().clear(0);
 	}
 
 	protected final void reportTimeout() throws RuntimeTimeoutException {
@@ -97,14 +86,6 @@ public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver> 
 		if (throwTimeoutException) {
 			throw new RuntimeTimeoutException();
 		}
-	}
-
-	public final LiteralList getAssumptions() {
-		return assumptions;
-	}
-
-	public final void setAssumptions(LiteralList assumptions) {
-		this.assumptions = assumptions;
 	}
 
 	public final boolean isThrowTimeoutException() {

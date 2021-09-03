@@ -61,10 +61,6 @@ public class Sat4JMusSolver extends AbstractSat4JSolver<Xplain<ISolver>> impleme
 		super(cnf);
 	}
 
-	protected Sat4JMusSolver(Sat4JMusSolver oldSolver) {
-		super(oldSolver);
-	}
-
 	@Override
 	protected Xplain<ISolver> createSolver() {
 		return new Xplain<>(SolverFactory.newDefault());

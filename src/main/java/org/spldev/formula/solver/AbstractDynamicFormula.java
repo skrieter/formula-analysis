@@ -29,37 +29,28 @@ import org.spldev.formula.expression.atomic.literal.*;
 /**
  * Base class for modifiable formulas.
  * 
- * @param <I> type of clauses added to a solver
  * @param <O> type of the constraint object used within a solver
  *
  * @author Sebastian Krieter
  */
-public abstract class AbstractDynamicFormula<I, O> implements DynamicFormula<I, O> {
+public abstract class AbstractDynamicFormula<O> implements DynamicFormula<O> {
 
 	protected final ArrayList<O> constraints;
-	protected final ArrayList<I> originClauses;
 	protected final VariableMap variableMap;
 
 	public AbstractDynamicFormula(VariableMap variableMap) {
 		this.variableMap = variableMap;
 		constraints = new ArrayList<>();
-		originClauses = new ArrayList<>();
 	}
 
-	protected AbstractDynamicFormula(AbstractDynamicFormula<I, O> oldFormula) {
+	protected AbstractDynamicFormula(AbstractDynamicFormula<O> oldFormula) {
 		variableMap = oldFormula.variableMap;
 		constraints = new ArrayList<>(oldFormula.constraints);
-		originClauses = new ArrayList<>(oldFormula.originClauses);
 	}
 
 	@Override
 	public List<O> getConstraints() {
 		return constraints;
-	}
-
-	@Override
-	public List<I> getOriginConstraints() {
-		return originClauses;
 	}
 
 	@Override
@@ -78,7 +69,6 @@ public abstract class AbstractDynamicFormula<I, O> implements DynamicFormula<I, 
 	}
 
 	protected O removeConstraint(final int index) {
-		originClauses.remove(index);
 		return constraints.remove(index);
 	}
 

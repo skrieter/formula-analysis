@@ -287,8 +287,8 @@ public class CNFSlicer implements MonitorableFunction<CNF, CNF> {
 			addCleanClauses();
 
 			final Sat4JSolver solver = new Sat4JSolver(cnfCopy);
-			solver.getFormula().pushAll(cleanClauseList);
-			solver.getFormula().pushAll(dirtyClauseList.subList(0, dirtyListPosIndex));
+			solver.getFormula().push(cleanClauseList);
+			solver.getFormula().push(dirtyClauseList.subList(0, dirtyListPosIndex));
 
 			Collections.sort(newDirtyClauseList.subList(0, newDirtyListDelIndex), lengthComparator);
 			for (int i = newDirtyListDelIndex - 1; i >= 0; --i) {
@@ -330,7 +330,7 @@ public class CNFSlicer implements MonitorableFunction<CNF, CNF> {
 			addCleanClauses();
 
 			final Sat4JSolver solver = new Sat4JSolver(cnfCopy);
-			solver.getFormula().pushAll(cleanClauseList);
+			solver.getFormula().push(cleanClauseList);
 
 			// SAT Relevant
 			for (int i = dirtyListPosIndex - 1; i >= 0; --i) {

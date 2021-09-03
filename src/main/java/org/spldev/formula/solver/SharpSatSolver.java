@@ -22,19 +22,20 @@
  */
 package org.spldev.formula.solver;
 
+import java.math.*;
+
 /**
- * Solver used to solve SMT querys.
+ * Sharp-Sat solver interface.
  *
- * @param <T> the type of the return value for minimum/maximum
- * @param <V> the type of the variable to minimize
- * 
- * @author Joshua Sprey
  * @author Sebastian Krieter
  */
-public interface OptSolver<T, V> extends Solver {
+public interface SharpSatSolver extends SatSolver {
 
-	T minimum(V formula);
-
-	T maximum(V formula);
+	/**
+	 * Returns the number of possible solutions.
+	 *
+	 * @return The number of possible solutions.
+	 */
+	BigInteger countSolutions();
 
 }

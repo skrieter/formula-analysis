@@ -44,6 +44,13 @@ public final class FormulaToCNF implements MonitorableFunction<Formula, CNF> {
 		return Executor.run(new FormulaToCNF(), formula).get();
 	}
 
+	public static CNF convert(Formula formula, VariableMap variableMapping) {
+		FormulaToCNF function = new FormulaToCNF();
+		function.setVariableMapping(variableMapping);
+		function.setKeepLiteralOrder(true);
+		return Executor.run(function, formula).get();
+	}
+
 	@Override
 	public CNF execute(Formula node, InternalMonitor monitor) {
 		if (node == null) {
@@ -51,13 +58,13 @@ public final class FormulaToCNF implements MonitorableFunction<Formula, CNF> {
 		}
 		final VariableMap mapping = variableMapping != null ? variableMapping : VariableMap.fromExpression(node);
 		final ClauseList clauses = new ClauseList();
-		final Optional<Object> formulaValue = Formulas.evaluate(node, new Assignment(mapping));
+		final Optional<Object> formulaValue = Formulas.evaluate(node, new VariableAssignment(mapping));
 		if (formulaValue.isPresent()) {
 			if (formulaValue.get() == Boolean.FALSE) {
 				clauses.add(new LiteralList());
 			}
 		} else {
-			final Formula cnf = Formulas.toCNF(node);
+			final Formula cnf = Formulas.toCNF(node).get();
 			cnf.getChildren().stream().map(exp -> getClause(exp, mapping)).filter(Objects::nonNull).forEach(
 				clauses::add);
 		}

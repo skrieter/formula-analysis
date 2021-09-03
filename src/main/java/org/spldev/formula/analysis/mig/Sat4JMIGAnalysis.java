@@ -26,7 +26,6 @@ import java.util.*;
 
 import org.spldev.formula.*;
 import org.spldev.formula.analysis.*;
-import org.spldev.formula.clauses.*;
 import org.spldev.formula.solver.*;
 import org.spldev.formula.solver.mig.*;
 import org.spldev.util.job.*;
@@ -39,8 +38,6 @@ import org.spldev.util.job.*;
  * @author Sebastian Krieter
  */
 public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSolver> {
-
-	protected LiteralList assumptions = null;
 
 	protected boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
@@ -71,20 +68,9 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 
 	@Override
 	protected void prepareSolver(Sat4JMIGSolver solver) {
-		Objects.nonNull(solver);
-		Objects.nonNull(solver.mig);
-		Objects.nonNull(solver.sat4j);
-		solver.sat4j.setTimeout(timeout);
-		if (assumptions != null) {
-			solver.sat4j.getAssumptions().pushAll(assumptions.getLiterals());
-		}
-		assumptions = new LiteralList(solver.sat4j.getAssumptions().asArray());
+		super.prepareSolver(solver);
+		solver.setTimeout(timeout);
 		timeoutOccured = false;
-	}
-
-	@Override
-	protected void resetSolver(Sat4JMIGSolver solver) {
-		solver.sat4j.getAssumptions().clear(0);
 	}
 
 	protected final void reportTimeout() throws RuntimeTimeoutException {
@@ -92,14 +78,6 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 		if (throwTimeoutException) {
 			throw new RuntimeTimeoutException();
 		}
-	}
-
-	public final LiteralList getAssumptions() {
-		return assumptions;
-	}
-
-	public final void setAssumptions(LiteralList assumptions) {
-		this.assumptions = assumptions;
 	}
 
 	public final boolean isThrowTimeoutException() {

@@ -58,7 +58,7 @@ public class CNFTest {
 		final And and = new And(equals, c);
 		final Implies formula = new Implies(or, and);
 
-		final Formula cnfFormula = Formulas.toCNF(formula);
+		final Formula cnfFormula = Formulas.toCNF(formula).get();
 
 		final Or or2 = new Or(a, c);
 		final Or or3 = new Or(a, b.flip());

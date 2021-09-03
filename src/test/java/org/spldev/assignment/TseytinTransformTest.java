@@ -3,20 +3,15 @@ package org.spldev.assignment;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
-import java.util.Map.*;
 
 import org.junit.jupiter.api.*;
 import org.spldev.formula.*;
 import org.spldev.formula.analysis.sat4j.*;
-import org.spldev.formula.clauses.*;
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.expression.compound.*;
-import org.spldev.formula.expression.term.*;
 import org.spldev.formula.expression.term.bool.*;
-import org.spldev.formula.expression.transform.*;
-import org.spldev.util.tree.*;
 
 public class TseytinTransformTest {
 
@@ -36,13 +31,12 @@ public class TseytinTransformTest {
 	private void testTransform(final Implies formulaOrg) {
 		VariableMap map = VariableMap.fromExpression(formulaOrg);
 		final VariableMap orgMap = map.clone();
-		final Formula formulaSimplified = Formulas.simplifyForNF(formulaOrg);
-		final Formula formulaTseytin = Trees.traverse(formulaSimplified, new TseytinTransformer()).get();
+		final Formula formulaTseytin = Formulas.toTsyetinCNF(formulaOrg).get();
 
 		ModelRepresentation rep1 = new ModelRepresentation(formulaOrg);
 		ModelRepresentation rep2 = new ModelRepresentation(formulaTseytin);
 
-		final Assignment assignment = new Assignment(map);
+		final Assignment assignment = new VariableAssignment(map);
 		final int numVariables = orgMap.size();
 		final int numAssignments = (int) Math.pow(2, numVariables);
 		for (int i = 0; i < numAssignments; i++) {
@@ -59,13 +53,7 @@ public class TseytinTransformTest {
 
 	private Boolean evaluate(ModelRepresentation rep1, final Assignment assignment) {
 		final HasSolutionAnalysis analysis = new HasSolutionAnalysis();
-		final int[] assignmentArray = new int[4];
-		int index = 0;
-		for (Entry<Variable<?>, Object> entry : assignment.getAll()) {
-			final int l = entry.getKey().getIndex();
-			assignmentArray[index++] = (boolean) entry.getValue() ? l : -l;
-		}
-		analysis.setAssumptions(new LiteralList(assignmentArray));
+		analysis.getAssumptions().setAll(assignment.getAll());
 		return analysis.getResult(rep1).orElse((Boolean) null);
 	}
 
