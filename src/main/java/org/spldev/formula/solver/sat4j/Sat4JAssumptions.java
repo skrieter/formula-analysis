@@ -116,15 +116,15 @@ public class Sat4JAssumptions implements Assignment {
 
 	@Override
 	public void set(int index, Object assignment) {
-		if (assignment instanceof Integer) {
+		if (assignment instanceof Boolean) {
 			for (int i = 0; i < assumptions.size(); i++) {
 				final int l = assumptions.unsafeGet(i);
 				if (Math.abs(l) == index) {
-					assumptions.set(i, (Integer) assignment);
+					assumptions.set(i, (Boolean) assignment ? l : -l);
 					return;
 				}
 			}
-			assumptions.push((Integer) assignment);
+			assumptions.push((Boolean) assignment ? index : -index);
 		}
 	}
 
@@ -151,15 +151,6 @@ public class Sat4JAssumptions implements Assignment {
 		return index > 0 ? get(index) : Optional.empty();
 	}
 
-//	public Set<Entry<Variable<?>, Object>> getAllEntries() {
-//		final HashMap<Variable<?>, Object> map = new HashMap<>();
-//		for (int i = 0; i < assumptions.size(); i++) {
-//			int l = assumptions.unsafeGet(i);
-//			map.put(variables.getVariable(Math.abs(l)).get(), l);
-//		}
-//		return map.entrySet();
-//	}
-
 	public VariableMap getVariables() {
 		return variables;
 	}
@@ -169,7 +160,9 @@ public class Sat4JAssumptions implements Assignment {
 		final List<Pair<Integer, Object>> map = new ArrayList<>();
 		for (int i = 0; i < assumptions.size(); i++) {
 			int l = assumptions.unsafeGet(i);
-			map.add(new Pair<>(Math.abs(l), l));
+			if (l != 0) {
+				map.add(new Pair<>(Math.abs(l), l > 0));
+			}
 		}
 		return map;
 	}

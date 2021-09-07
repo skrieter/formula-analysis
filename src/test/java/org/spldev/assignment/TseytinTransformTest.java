@@ -46,8 +46,8 @@ public class TseytinTransformTest {
 			final Boolean orgEval = (Boolean) Formulas.evaluate(formulaOrg, assignment).orElse(null);
 			final Boolean cnfEval = evaluate(rep1, assignment);
 			final Boolean tseytinEval = evaluate(rep2, assignment);
-			assertEquals(orgEval, cnfEval);
-			assertEquals(orgEval, tseytinEval);
+			assertEquals(orgEval, cnfEval, Integer.toString(i));
+			assertEquals(orgEval, tseytinEval, Integer.toString(i));
 		}
 	}
 
