@@ -138,7 +138,7 @@ public class Sat4JAssumptions implements Assignment {
 	@Override
 	public Optional<Object> get(int index) {
 		for (int i = 0; i < assumptions.size(); i++) {
-			int l = assumptions.unsafeGet(i);
+			final int l = assumptions.unsafeGet(i);
 			if (Math.abs(l) == index) {
 				return Optional.of(l);
 			}
@@ -159,7 +159,7 @@ public class Sat4JAssumptions implements Assignment {
 	public List<Pair<Integer, Object>> getAll() {
 		final List<Pair<Integer, Object>> map = new ArrayList<>();
 		for (int i = 0; i < assumptions.size(); i++) {
-			int l = assumptions.unsafeGet(i);
+			final int l = assumptions.unsafeGet(i);
 			if (l != 0) {
 				map.add(new Pair<>(Math.abs(l), l > 0));
 			}

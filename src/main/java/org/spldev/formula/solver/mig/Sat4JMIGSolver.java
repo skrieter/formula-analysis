@@ -22,8 +22,6 @@
  */
 package org.spldev.formula.solver.mig;
 
-import org.spldev.formula.*;
-import org.spldev.formula.clauses.*;
 import org.spldev.formula.solver.sat4j.*;
 
 /**
@@ -33,23 +31,10 @@ import org.spldev.formula.solver.sat4j.*;
  */
 public class Sat4JMIGSolver extends Sat4JSolver {
 	public MIG mig;
-//	public Sat4JSolver sat4j;
 
-	public Sat4JMIGSolver(ModelRepresentation rep) {
-		super(rep);
-		mig = rep.get(MIGProvider.fromCNF());
-//		sat4j = new Sat4JSolver(c);
-	}
-
-	public Sat4JMIGSolver(MIG mig, CNF cnf) {
-		super(cnf);
+	public Sat4JMIGSolver(MIG mig) {
+		super(mig.getCnf());
 		this.mig = mig;
-//		sat4j = new Sat4JSolver(cnf);
 	}
-
-//	@Override
-//	public void reset() {
-//		sat4j.reset();
-//	}
 
 }

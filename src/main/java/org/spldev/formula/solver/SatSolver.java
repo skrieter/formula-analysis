@@ -29,8 +29,6 @@ package org.spldev.formula.solver;
  */
 public interface SatSolver extends Solver {
 
-	
-	
 	/**
 	 * Possible outcomes of a satisfiability solver call.<br>
 	 * One of {@code TRUE}, {@code FALSE}, or {@code TIMEOUT}.

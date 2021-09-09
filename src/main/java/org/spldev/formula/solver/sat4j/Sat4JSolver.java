@@ -27,7 +27,6 @@ import java.util.*;
 import org.sat4j.minisat.*;
 import org.sat4j.minisat.core.*;
 import org.sat4j.minisat.orders.*;
-import org.spldev.formula.*;
 import org.spldev.formula.clauses.*;
 import org.spldev.formula.solver.sat4j.SStrategy.*;
 import org.spldev.formula.solver.sat4j.strategy.*;
@@ -41,10 +40,6 @@ public class Sat4JSolver extends AbstractSat4JSolver<Solver<?>> {
 
 	protected final int[] order;
 	protected SStrategy strategy;
-
-	public Sat4JSolver(ModelRepresentation modelRepresentation) {
-		this(modelRepresentation.get(CNFProvider.fromFormula()));
-	}
 
 	public Sat4JSolver(CNF cnf) {
 		super(cnf);

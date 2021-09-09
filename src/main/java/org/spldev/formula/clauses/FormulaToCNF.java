@@ -45,7 +45,7 @@ public final class FormulaToCNF implements MonitorableFunction<Formula, CNF> {
 	}
 
 	public static CNF convert(Formula formula, VariableMap variableMapping) {
-		FormulaToCNF function = new FormulaToCNF();
+		final FormulaToCNF function = new FormulaToCNF();
 		function.setVariableMapping(variableMapping);
 		function.setKeepLiteralOrder(true);
 		return Executor.run(function, formula).get();

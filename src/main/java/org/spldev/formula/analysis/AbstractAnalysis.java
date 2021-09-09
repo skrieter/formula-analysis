@@ -38,10 +38,11 @@ import org.spldev.util.job.*;
  *
  * @param <T> Type of the analysis result.
  * @param <S> Type of the solver for this analysis.
+ * @param <I> Type of the solver input.
  *
  * @author Sebastian Krieter
  */
-public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<T> {
+public abstract class AbstractAnalysis<T, S extends Solver, I> implements Analysis<T> {
 
 	protected static Object defaultParameters = new Object();
 
@@ -70,12 +71,16 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 
 	protected final Assignment assumptions = new IndexAssignment();
 	protected final List<Formula> assumedConstraints = new ArrayList<>();
+	protected Provider<I> solverInputProvider;
 	protected S solver;
 
-//
-//	public void setSolver(S solver) {
-//		this.solver = solver;
-//	}
+	public void setSolver(S solver) {
+		this.solver = solver;
+	}
+
+	public void setSolverInputProvider(Provider<I> solverInputProvider) {
+		this.solverInputProvider = solverInputProvider;
+	}
 
 	public Assignment getAssumptions() {
 		return assumptions;
@@ -97,7 +102,7 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 	@Override
 	public final T execute(ModelRepresentation c, InternalMonitor monitor) {
 		if (solver == null) {
-			solver = createSolver(c);
+			solver = createSolver(c.get(solverInputProvider));
 		}
 		return execute(solver, monitor);
 	}
@@ -127,7 +132,7 @@ public abstract class AbstractAnalysis<T, S extends Solver> implements Analysis<
 
 	protected abstract Identifier<T> getIdentifier();
 
-	protected abstract S createSolver(ModelRepresentation c) throws RuntimeContradictionException;
+	protected abstract S createSolver(I input) throws RuntimeContradictionException;
 
 	protected void prepareSolver(S solver) {
 		solver.getAssumptions().setAll(assumptions.getAll());

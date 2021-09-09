@@ -25,9 +25,7 @@ package org.spldev.formula.analysis.sat4j;
 import java.util.*;
 
 import org.sat4j.specs.*;
-import org.spldev.formula.*;
 import org.spldev.formula.clauses.*;
-import org.spldev.formula.solver.*;
 import org.spldev.formula.solver.SatSolver.*;
 import org.spldev.formula.solver.sat4j.*;
 import org.spldev.util.data.*;
@@ -65,15 +63,6 @@ public class RemoveRedundancyAnalysis extends AClauseAnalysis<List<LiteralList>>
 
 	public RemoveRedundancyAnalysis(List<LiteralList> clauseList) {
 		this.clauseList = clauseList;
-	}
-
-	@Override
-	protected Sat4JSolver createSolver(ModelRepresentation satInstance) {
-		try {
-			return new Sat4JSolver(satInstance);
-		} catch (final RuntimeContradictionException e) {
-			return null;
-		}
 	}
 
 	@Override

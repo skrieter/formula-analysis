@@ -61,7 +61,11 @@ public interface CNFProvider extends Provider<CNF> {
 	}
 
 	static <T> CNFProvider fromFormula() {
-		return (c, m) -> Provider.convert(c, FormulaProvider.identifier, new FormulaToCNF(), m);
+		return (c, m) -> Provider.convert(c, CCNFProvider.fromFormula(), new FormulaToCNF(), m);
+	}
+
+	static <T> CNFProvider fromTseytinFormula() {
+		return (c, m) -> Provider.convert(c, TseytinCNFProvider.fromFormula(), new FormulaToCNF(), m);
 	}
 
 }

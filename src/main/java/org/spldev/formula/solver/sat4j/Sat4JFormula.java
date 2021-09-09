@@ -57,16 +57,16 @@ public class Sat4JFormula extends AbstractDynamicFormula<IConstr> {
 
 	public List<IConstr> push(List<? extends LiteralList> clauses) {
 		final ArrayList<IConstr> constrs = new ArrayList<>();
-		for (LiteralList clause : clauses) {
+		for (final LiteralList clause : clauses) {
 			try {
 				if ((clause.size() == 1) && (clause.getLiterals()[0] == 0)) {
 					throw new ContradictionException();
 				}
 				final IConstr constr = sat4jSolver.solver
-						.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
+					.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
 				constrs.add(constr);
 			} catch (final ContradictionException e) {
-				for (IConstr constr : constrs) {
+				for (final IConstr constr : constrs) {
 					sat4jSolver.solver.removeConstr(constr);
 				}
 				throw new RuntimeContradictionException(e);
@@ -86,7 +86,7 @@ public class Sat4JFormula extends AbstractDynamicFormula<IConstr> {
 				throw new ContradictionException();
 			}
 			final IConstr constr = sat4jSolver.solver
-					.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
+				.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
 			constraints.add(constr);
 			if (sat4jSolver.solutionHistory != null) {
 				sat4jSolver.solutionHistory.clear();

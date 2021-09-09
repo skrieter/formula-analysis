@@ -33,7 +33,7 @@ import org.spldev.formula.expression.atomic.literal.*;
 public interface Solver extends Cloneable {
 
 	Assignment getAssumptions();
-	
+
 	DynamicFormula<?> getDynamicFormula();
 
 	VariableMap getVariables();

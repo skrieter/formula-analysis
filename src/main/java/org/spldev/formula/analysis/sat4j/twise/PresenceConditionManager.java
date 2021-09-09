@@ -100,7 +100,7 @@ public class PresenceConditionManager {
 	public void shuffleSort(Random random) {
 		for (final List<PresenceCondition> list : groupedPresenceConditions) {
 			final Map<Integer, List<PresenceCondition>> groupedPCs = list.stream().collect(Collectors.groupingBy(
-				pc -> pc.size()));
+				PresenceCondition::size));
 			for (final List<PresenceCondition> pcList : groupedPCs.values()) {
 				Collections.shuffle(pcList, random);
 			}

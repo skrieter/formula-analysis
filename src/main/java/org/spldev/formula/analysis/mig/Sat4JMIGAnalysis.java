@@ -24,7 +24,6 @@ package org.spldev.formula.analysis.mig;
 
 import java.util.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.analysis.*;
 import org.spldev.formula.solver.*;
 import org.spldev.formula.solver.mig.*;
@@ -37,7 +36,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSolver> {
+public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSolver, MIG> {
 
 	protected boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
@@ -45,6 +44,12 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 
 	protected Random random = new Random(112358);
 
+	public Sat4JMIGAnalysis() {
+		super();
+		solverInputProvider = MIGProvider.fromFormula();
+	}
+
+	@Override
 	protected Object getParameters() {
 		return assumptions != null ? assumptions : super.getParameters();
 	}
@@ -62,8 +67,8 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 	}
 
 	@Override
-	protected Sat4JMIGSolver createSolver(ModelRepresentation c) throws RuntimeContradictionException {
-		return new Sat4JMIGSolver(c);
+	protected Sat4JMIGSolver createSolver(MIG input) throws RuntimeContradictionException {
+		return new Sat4JMIGSolver(input);
 	}
 
 	@Override

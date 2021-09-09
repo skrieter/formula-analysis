@@ -24,7 +24,6 @@ package org.spldev.formula.analysis.sat4j;
 
 import java.util.*;
 
-import org.spldev.formula.*;
 import org.spldev.formula.analysis.*;
 import org.spldev.formula.clauses.*;
 import org.spldev.formula.solver.*;
@@ -38,7 +37,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver> {
+public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver, CNF> {
 
 	protected boolean timeoutOccured = false;
 	private boolean throwTimeoutException = true;
@@ -46,6 +45,12 @@ public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver> 
 
 	protected Random random = new Random(112358);
 
+	public Sat4JAnalysis() {
+		super();
+		solverInputProvider = CNFProvider.fromFormula();
+	}
+
+	@Override
 	protected Object getParameters() {
 		return assumptions != null ? assumptions : super.getParameters();
 	}
@@ -66,12 +71,8 @@ public abstract class Sat4JAnalysis<T> extends AbstractAnalysis<T, Sat4JSolver> 
 	}
 
 	@Override
-	protected Sat4JSolver createSolver(ModelRepresentation c) throws RuntimeContradictionException {
-		return new Sat4JSolver(c);
-	}
-
-	protected Sat4JSolver createSolver(CNF cnf) throws RuntimeContradictionException {
-		return new Sat4JSolver(cnf);
+	protected Sat4JSolver createSolver(CNF input) throws RuntimeContradictionException {
+		return new Sat4JSolver(input);
 	}
 
 	@Override
