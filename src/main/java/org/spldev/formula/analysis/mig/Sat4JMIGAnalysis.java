@@ -38,7 +38,7 @@ import org.spldev.util.job.*;
  */
 public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSolver, MIG> {
 
-	protected boolean timeoutOccured = false;
+	protected boolean timeoutOccurred = false;
 	private boolean throwTimeoutException = true;
 	private int timeout = 1000;
 
@@ -75,11 +75,11 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 	protected void prepareSolver(Sat4JMIGSolver solver) {
 		super.prepareSolver(solver);
 		solver.setTimeout(timeout);
-		timeoutOccured = false;
+		timeoutOccurred = false;
 	}
 
 	protected final void reportTimeout() throws RuntimeTimeoutException {
-		timeoutOccured = true;
+		timeoutOccurred = true;
 		if (throwTimeoutException) {
 			throw new RuntimeTimeoutException();
 		}
@@ -93,8 +93,8 @@ public abstract class Sat4JMIGAnalysis<T> extends AbstractAnalysis<T, Sat4JMIGSo
 		this.throwTimeoutException = throwTimeoutException;
 	}
 
-	public final boolean isTimeoutOccured() {
-		return timeoutOccured;
+	public final boolean isTimeoutOccurred() {
+		return timeoutOccurred;
 	}
 
 	public int getTimeout() {

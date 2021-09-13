@@ -435,9 +435,9 @@ public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
 			final int[] varStatus = new int[2];
 			final boolean[] featuresUsed = Arrays.copyOf(featuresUsedOrg, featuresUsedOrg.length);
 
-			int prio = 0;
+			int priority = 0;
 			for (final FeatureIndex featureIndex : featureIndexArray) {
-				featureIndex.setPriority(prio++);
+				featureIndex.setPriority(priority++);
 			}
 			Arrays.sort(featureIndexArray);
 

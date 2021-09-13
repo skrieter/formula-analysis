@@ -57,21 +57,21 @@ public class TWiseConfiguration extends LiteralList {
 
 	private class DPVisitor extends DefaultVisitor {
 
-		private int[] unkownValues = null;
+		private int[] unknownValues = null;
 
 		@Override
 		public VisitResult visitStrong(int curLiteral) {
 			addLiteral(curLiteral);
-			if (unkownValues != null) {
+			if (unknownValues != null) {
 				util.getSolver().getAssumptions().push(curLiteral);
-				unkownValues[Math.abs(curLiteral) - 1] = 0;
+				unknownValues[Math.abs(curLiteral) - 1] = 0;
 			}
 			return VisitResult.Continue;
 		}
 
 		@Override
 		public final VisitResult visitWeak(final int curLiteral) {
-			if (unkownValues == null) {
+			if (unknownValues == null) {
 				final Sat4JSolver solver = util.getSolver();
 				setUpSolver(solver);
 				solver.setSelectionStrategy(SStrategy.original());
@@ -81,54 +81,54 @@ public class TWiseConfiguration extends LiteralList {
 				case TIMEOUT:
 					throw new RuntimeException();
 				case TRUE:
-					unkownValues = solver.getInternalSolution();
-					util.addSolverSolution(Arrays.copyOf(unkownValues, unkownValues.length));
+					unknownValues = solver.getInternalSolution();
+					util.addSolverSolution(Arrays.copyOf(unknownValues, unknownValues.length));
 					solver.shuffleOrder(util.getRandom());
 					break;
 				default:
 					throw new RuntimeException();
 				}
-				if (unkownValues != null) {
-					solver.setSelectionStrategy(SStrategy.inverse(unkownValues));
+				if (unknownValues != null) {
+					solver.setSelectionStrategy(SStrategy.inverse(unknownValues));
 					solver.hasSolution();
 					final int[] model2 = solver.getInternalSolution();
 					util.addSolverSolution(Arrays.copyOf(model2, model2.length));
 
-					LiteralList.resetConflicts(unkownValues, model2);
+					LiteralList.resetConflicts(unknownValues, model2);
 
 					final int[] literals = TWiseConfiguration.this.literals;
 					for (int k = 0; k < literals.length; k++) {
 						final int var = literals[k];
-						if ((var != 0) && (unkownValues[k] != 0)) {
-							unkownValues[k] = 0;
+						if ((var != 0) && (unknownValues[k] != 0)) {
+							unknownValues[k] = 0;
 						}
 					}
 				} else {
 					throw new RuntimeException();
 				}
 			}
-			return sat(unkownValues, curLiteral) ? VisitResult.Select : VisitResult.Continue;
+			return sat(unknownValues, curLiteral) ? VisitResult.Select : VisitResult.Continue;
 		}
 
-		private final boolean sat(final int[] unkownValues, final int curLiteral) {
+		private final boolean sat(final int[] unknownValues, final int curLiteral) {
 			final int i = Math.abs(curLiteral) - 1;
-			if (unkownValues[i] == curLiteral) {
+			if (unknownValues[i] == curLiteral) {
 				final Sat4JSolver solver = util.getSolver();
 				solver.getAssumptions().push(-curLiteral);
 				switch (solver.hasSolution()) {
 				case FALSE:
 					solver.getAssumptions().replaceLast(curLiteral);
-					unkownValues[i] = 0;
+					unknownValues[i] = 0;
 					return true;
 				case TIMEOUT:
 					solver.getAssumptions().pop();
-					unkownValues[i] = 0;
+					unknownValues[i] = 0;
 					break;
 				case TRUE:
 					solver.getAssumptions().pop();
 					final int[] solution2 = solver.getInternalSolution();
 					util.addSolverSolution(Arrays.copyOf(solution2, solution2.length));
-					LiteralList.resetConflicts(unkownValues, solution2);
+					LiteralList.resetConflicts(unknownValues, solution2);
 					solver.shuffleOrder(util.getRandom());
 					break;
 				}

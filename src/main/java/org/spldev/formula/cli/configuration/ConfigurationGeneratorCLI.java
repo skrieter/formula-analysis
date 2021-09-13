@@ -71,7 +71,7 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 					}
 				}
 				if (algorithm == null) {
-					throw new IllegalArgumentException("Unkown algorithm: " + name);
+					throw new IllegalArgumentException("Unknown algorithm: " + name);
 				}
 				break;
 			}

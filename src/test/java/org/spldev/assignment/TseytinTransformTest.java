@@ -54,7 +54,7 @@ public class TseytinTransformTest {
 	private void testTransform(final Formula formulaOrg) {
 		final VariableMap map = VariableMap.fromExpression(formulaOrg);
 		final VariableMap orgMap = map.clone();
-		final Formula formulaTseytin = Formulas.toTsyetinCNF(formulaOrg).get();
+		final Formula formulaTseytin = Formulas.toTseytinCNF(formulaOrg).get();
 
 		final ModelRepresentation rep1 = new ModelRepresentation(formulaOrg);
 		rep1.get(CNFProvider.fromFormula());

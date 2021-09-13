@@ -34,10 +34,10 @@ import org.spldev.util.job.*;
 /**
  * Finds redundant clauses with respect to a given {@link CNF}. This analysis
  * works by adding every clause group (see {@link AClauseAnalysis}) to the given
- * {@link CNF} at the beginning an then removing and readding each clause group
+ * {@link CNF} at the beginning an then removing and re-adding each clause group
  * individually. If a clause group is redundant with respect to the current
  * formula, it is marked as redundant and removed completely from the
- * {@link CNF}. Otherwise it is kept as part of the {@link CNF} for the
+ * {@link CNF}, otherwise it is kept as part of the {@link CNF} for the
  * remaining analysis. Clauses are added in the same order a they appear in the
  * given clauses list.<br>
  * For an independent analysis of every clause group use

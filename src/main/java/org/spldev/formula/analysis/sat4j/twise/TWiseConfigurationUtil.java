@@ -310,7 +310,7 @@ public class TWiseConfigurationUtil {
 
 			final Sat4JSolver solver = getSolver();
 //			solver.setSelectionStrategy(SStrategy.random(getRandom()));
-			final int orgAssingmentLength = solver.getAssumptions().size();
+			final int orgAssignmentLength = solver.getAssumptions().size();
 			try {
 				solver.getAssumptions().pushAll(literals.getLiterals());
 				final SatResult hasSolution = solver.hasSolution();
@@ -327,7 +327,7 @@ public class TWiseConfigurationUtil {
 					break;
 				}
 			} finally {
-				solver.getAssumptions().clear(orgAssingmentLength);
+				solver.getAssumptions().clear(orgAssignmentLength);
 			}
 		}
 		return true;

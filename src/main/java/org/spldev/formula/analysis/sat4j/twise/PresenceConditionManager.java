@@ -36,7 +36,7 @@ import org.spldev.formula.clauses.*;
  */
 public class PresenceConditionManager {
 
-	private final List<List<PresenceCondition>> dictonary = new ArrayList<>();
+	private final List<List<PresenceCondition>> dictionary = new ArrayList<>();
 	private final List<List<PresenceCondition>> groupedPresenceConditions = new ArrayList<>();
 
 	public PresenceConditionManager(TWiseConfigurationUtil util, List<List<ClauseList>> expressions) {
@@ -45,10 +45,10 @@ public class PresenceConditionManager {
 
 		final HashMap<PresenceCondition, PresenceCondition> presenceConditionSet = new HashMap<>();
 
-		dictonary.add(null);
+		dictionary.add(null);
 		for (int i = 0; i < numberOfVariables; i++) {
-			dictonary.add(new ArrayList<PresenceCondition>());
-			dictonary.add(new ArrayList<PresenceCondition>());
+			dictionary.add(new ArrayList<PresenceCondition>());
+			dictionary.add(new ArrayList<PresenceCondition>());
 		}
 
 		int groupIndex = 0;
@@ -77,7 +77,7 @@ public class PresenceConditionManager {
 						for (final LiteralList literalSet : mappedPc) {
 							for (final int literal : literalSet.getLiterals()) {
 								final int dictionaryIndex = literal < 0 ? numberOfVariables - literal : literal;
-								dictonary.get(dictionaryIndex).add(mappedPc);
+								dictionary.get(dictionaryIndex).add(mappedPc);
 							}
 						}
 					}
@@ -131,8 +131,8 @@ public class PresenceConditionManager {
 		return clauseLengthDiff;
 	}
 
-	public List<List<PresenceCondition>> getDictonary() {
-		return dictonary;
+	public List<List<PresenceCondition>> getDictionary() {
+		return dictionary;
 	}
 
 	public List<List<PresenceCondition>> getGroupedPresenceConditions() {

@@ -42,7 +42,7 @@ public abstract class AConfigurationGeneratorAlgorithm<T extends ConfigurationGe
 			for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {
 				final String arg = iterator.next();
 				if (!parseArgument(gen, arg, iterator)) {
-					throw new IllegalArgumentException("Unkown argument " + arg);
+					throw new IllegalArgumentException("Unknown argument " + arg);
 				}
 			}
 			return Result.of(gen);

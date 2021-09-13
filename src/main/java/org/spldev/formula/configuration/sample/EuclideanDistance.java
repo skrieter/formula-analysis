@@ -23,32 +23,25 @@
 package org.spldev.formula.configuration.sample;
 
 /**
- * Computes the Jacard distance between two literal arrays. Considers only
- * positive literals.
+ * Computes the Euclidean distance between two literal arrays. Negative literals
+ * are treated as zero, positive literals as one.
  *
  * @author Sebastian Krieter
  */
-public class JacradSelectedDistance implements DistanceFunction {
+public class EuclideanDistance implements DistanceFunction {
 
 	@Override
 	public double computeDistance(final int[] literals1, final int[] literals2) {
-		double sum = 0;
-		double sumA = 0;
-		double sumB = 0;
+		double conflicts = 0;
 		for (int k = 0; k < literals1.length; k++) {
-			final int a = ~literals1[k] >>> (Integer.SIZE - 1);
-			final int b = ~literals2[k] >>> (Integer.SIZE - 1);
-			sumA += a;
-			sumB += b;
-			sum += a & b;
+			conflicts += (literals1[k] != literals2[k]) ? 1 : 0;
 		}
-		final double similarity = sum / ((sumA + sumB) - sum);
-		return 1 - similarity;
+		return Math.sqrt(conflicts);
 	}
 
 	@Override
 	public String getName() {
-		return "JacardSelected";
+		return "Euclidean";
 	}
 
 }
