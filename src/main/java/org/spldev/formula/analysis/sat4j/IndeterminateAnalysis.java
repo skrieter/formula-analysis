@@ -35,11 +35,11 @@ import org.spldev.util.job.*;
 import org.spldev.util.logging.*;
 
 /**
- * Finds indetermined features.
+ * Finds indeterminate features.
  *
  * @author Sebastian Krieter
  */
-public class IndeterminedAnalysis extends AVariableAnalysis<LiteralList> {
+public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> {
 
 	public static final Identifier<LiteralList> identifier = new Identifier<>();
 

@@ -31,7 +31,7 @@ import org.spldev.formula.expression.term.*;
 import org.spldev.util.*;
 import org.spldev.util.Problem.*;
 
-// TODO add mathods for adding literals (e.g. addAll, union, ...)
+// TODO add methods for adding literals (e.g. addAll, union, ...)
 /**
  * A sorted list of literals. Can be used as a clause of a CNF or DNF.
  *

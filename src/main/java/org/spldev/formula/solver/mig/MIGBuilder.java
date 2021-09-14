@@ -248,21 +248,21 @@ public abstract class MIGBuilder implements MonitorableFunction<CNF, MIG> {
 			final Vertex complement = mig.getVertex(-vertex.getVar());
 
 			mark[Math.abs(vertex.getVar())] = true;
-			for (final Vertex stronglyConnetedVertex : vertex.getStrongEdges()) {
-				mark[Math.abs(stronglyConnetedVertex.getVar())] = true;
-				queue.add(stronglyConnetedVertex);
+			for (final Vertex stronglyConnectedVertex : vertex.getStrongEdges()) {
+				mark[Math.abs(stronglyConnectedVertex.getVar())] = true;
+				queue.add(stronglyConnectedVertex);
 			}
 			while (!queue.isEmpty()) {
 				final Vertex curVertex = queue.removeFirst();
-				for (final Vertex stronglyConnetedVertex : curVertex.getStrongEdges()) {
-					final int index = Math.abs(stronglyConnetedVertex.getVar());
+				for (final Vertex stronglyConnectedVertex : curVertex.getStrongEdges()) {
+					final int index = Math.abs(stronglyConnectedVertex.getVar());
 					if (!mark[index]) {
 						mark[index] = true;
-						queue.add(stronglyConnetedVertex);
+						queue.add(stronglyConnectedVertex);
 
-						final Vertex stronglyConnetedComplement = mig.getVertex(-stronglyConnetedVertex.getVar());
-						vertex.addStronglyConnected(stronglyConnetedVertex);
-						stronglyConnetedComplement.addStronglyConnected(complement);
+						final Vertex stronglyConnectedComplement = mig.getVertex(-stronglyConnectedVertex.getVar());
+						vertex.addStronglyConnected(stronglyConnectedVertex);
+						stronglyConnectedComplement.addStronglyConnected(complement);
 					}
 				}
 			}

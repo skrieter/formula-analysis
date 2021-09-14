@@ -23,7 +23,7 @@
 package org.spldev.formula.solver;
 
 /**
- * Solver used to solve SMT querys.
+ * Solver used to solve SMT queries.
  *
  * @param <T> the type of the return value for minimum/maximum
  * @param <V> the type of the variable to minimize

@@ -117,7 +117,7 @@ public class CNFTest {
 		executeAnalysis(rep, new CountSolutionsAnalysis());
 		executeAnalysis(rep, new IndependentContradictionAnalysis());
 		executeAnalysis(rep, new IndependentRedundancyAnalysis());
-		executeAnalysis(rep, new IndeterminedAnalysis());
+		executeAnalysis(rep, new IndeterminateAnalysis());
 		executeAnalysis(rep, new RemoveRedundancyAnalysis());
 		executeAnalysis(rep, new ConditionallyCoreDeadAnalysisMIG());
 

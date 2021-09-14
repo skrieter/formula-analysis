@@ -37,7 +37,7 @@ public class Vertex implements Comparable<Vertex> {
 	private Status status = Status.Normal;
 
 	ArrayList<LiteralList> complexClauses = new ArrayList<>();
-	ArrayList<Vertex> stronglyConnetedVertices = new ArrayList<>();
+	ArrayList<Vertex> stronglyConnectedVertices = new ArrayList<>();
 
 	public Vertex(int literal) {
 		this.literal = literal;
@@ -52,11 +52,11 @@ public class Vertex implements Comparable<Vertex> {
 	}
 
 	public List<Vertex> getStrongEdges() {
-		return stronglyConnetedVertices;
+		return stronglyConnectedVertices;
 	}
 
 	public void addStronglyConnected(Vertex vertex) {
-		stronglyConnetedVertices.add(vertex);
+		stronglyConnectedVertices.add(vertex);
 	}
 
 	public void addWeaklyConnected(LiteralList clause) {
@@ -111,12 +111,12 @@ public class Vertex implements Comparable<Vertex> {
 
 	public void finish() {
 		complexClauses = new ArrayList<>(new HashSet<>(complexClauses));
-		stronglyConnetedVertices = new ArrayList<>(new HashSet<>(stronglyConnetedVertices));
-		stronglyConnetedVertices.remove(this);
+		stronglyConnectedVertices = new ArrayList<>(new HashSet<>(stronglyConnectedVertices));
+		stronglyConnectedVertices.remove(this);
 		Collections.sort(complexClauses);
-		Collections.sort(stronglyConnetedVertices);
+		Collections.sort(stronglyConnectedVertices);
 //		complexClauses.trimToSize();
-//		stronglyConnetedVertices.trimToSize();
+//		stronglyConnectedVertices.trimToSize();
 	}
 
 }

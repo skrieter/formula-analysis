@@ -40,7 +40,7 @@ public abstract class ConfigurationGenerator extends Sat4JAnalysis<SolutionList>
 
 	private int maxSampleSize = Integer.MAX_VALUE;
 
-	public int getLmit() {
+	public int getLimit() {
 		return maxSampleSize;
 	}
 

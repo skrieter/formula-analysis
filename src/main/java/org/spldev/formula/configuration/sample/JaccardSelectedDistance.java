@@ -23,12 +23,12 @@
 package org.spldev.formula.configuration.sample;
 
 /**
- * Computes the Jacard distance between two literal arrays. Considers only
- * negative literals.
- * 
+ * Computes the Jaccard distance between two literal arrays. Considers only
+ * positive literals.
+ *
  * @author Sebastian Krieter
  */
-public class JacradDeselectedDistance implements DistanceFunction {
+public class JaccardSelectedDistance implements DistanceFunction {
 
 	@Override
 	public double computeDistance(final int[] literals1, final int[] literals2) {
@@ -36,8 +36,8 @@ public class JacradDeselectedDistance implements DistanceFunction {
 		double sumA = 0;
 		double sumB = 0;
 		for (int k = 0; k < literals1.length; k++) {
-			final int a = literals1[k] >>> (Integer.SIZE - 1);
-			final int b = literals2[k] >>> (Integer.SIZE - 1);
+			final int a = ~literals1[k] >>> (Integer.SIZE - 1);
+			final int b = ~literals2[k] >>> (Integer.SIZE - 1);
 			sumA += a;
 			sumB += b;
 			sum += a & b;
@@ -48,7 +48,7 @@ public class JacradDeselectedDistance implements DistanceFunction {
 
 	@Override
 	public String getName() {
-		return "JacardDeselected";
+		return "JaccardSelected";
 	}
 
 }
