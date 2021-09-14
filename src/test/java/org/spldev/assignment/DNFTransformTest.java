@@ -4,14 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.*;
 import org.spldev.formula.*;
-import org.spldev.formula.analysis.sat4j.*;
-import org.spldev.formula.clauses.*;
 import org.spldev.formula.expression.*;
-import org.spldev.formula.expression.atomic.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.tree.*;
 
-public class TseytinTransformTest {
+public class DNFTransformTest {
 
 	@Test
 	public void testImplies() {
@@ -29,22 +26,16 @@ public class TseytinTransformTest {
 		final VariableMap mapClone = map.clone();
 
 		final ModelRepresentation rep = new ModelRepresentation(formulaOrg);
-		rep.get(CNFProvider.fromTseytinFormula());
+		final Formula formulaDNF = rep.get(CDNFProvider.fromFormula());
 
 		FormulaCreator.testAllAssignments(map, assignment -> {
 			final Boolean orgEval = (Boolean) Formulas.evaluate(formulaOrg, assignment).orElseThrow();
-			final Boolean tseytinEval = evaluate(rep, assignment);
-			assertEquals(orgEval, tseytinEval, assignment.toString());
+			final Boolean dnfEval = (Boolean) Formulas.evaluate(formulaDNF, assignment).orElseThrow();
+			assertEquals(orgEval, dnfEval, assignment.toString());
 		});
 		assertTrue(Trees.equals(formulaOrg, formulaClone));
 		assertEquals(mapClone, map);
 		assertEquals(mapClone, VariableMap.fromExpression(formulaOrg));
-	}
-
-	private Boolean evaluate(ModelRepresentation rep, final Assignment assignment) {
-		final HasSolutionAnalysis analysis = new HasSolutionAnalysis();
-		analysis.getAssumptions().setAll(assignment.getAll());
-		return analysis.getResult(rep).orElseThrow();
 	}
 
 }

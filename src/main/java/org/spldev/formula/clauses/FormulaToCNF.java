@@ -29,6 +29,7 @@ import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.util.job.*;
+import org.spldev.util.tree.*;
 
 /**
  * Several methods concerning {@link Expression} framework.
@@ -64,7 +65,7 @@ public final class FormulaToCNF implements MonitorableFunction<Formula, CNF> {
 				clauses.add(new LiteralList());
 			}
 		} else {
-			final Formula cnf = Formulas.toCNF(node).get();
+			final Formula cnf = Formulas.toCNF(Trees.cloneTree(node)).get();
 			cnf.getChildren().stream().map(exp -> getClause(exp, mapping)).filter(Objects::nonNull).forEach(
 				clauses::add);
 		}
