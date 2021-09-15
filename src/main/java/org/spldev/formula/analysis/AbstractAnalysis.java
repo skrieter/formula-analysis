@@ -64,7 +64,7 @@ public abstract class AbstractAnalysis<T, S extends Solver, I> implements Analys
 		}
 
 		@Override
-		public Result<T> apply(CacheHolder c, InternalMonitor m) {
+		public Result<T> apply(Cache c, InternalMonitor m) {
 			return function.apply(m);
 		}
 	}

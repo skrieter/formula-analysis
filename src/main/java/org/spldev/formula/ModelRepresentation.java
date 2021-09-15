@@ -34,7 +34,7 @@ import org.spldev.util.logging.*;
 
 public class ModelRepresentation {
 
-	private final CacheHolder cache = new CacheHolder();
+	private final Cache cache = new Cache();
 	private final Formula formula;
 	private final VariableMap variables;
 
@@ -61,7 +61,7 @@ public class ModelRepresentation {
 		return cache.get(provider).orElse(Logger::logProblems);
 	}
 
-	public CacheHolder getCache() {
+	public Cache getCache() {
 		return cache;
 	}
 
