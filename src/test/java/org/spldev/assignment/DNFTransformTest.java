@@ -26,7 +26,7 @@ public class DNFTransformTest {
 		final VariableMap mapClone = map.clone();
 
 		final ModelRepresentation rep = new ModelRepresentation(formulaOrg);
-		final Formula formulaDNF = rep.get(CDNFProvider.fromFormula());
+		final Formula formulaDNF = rep.get(FormulaProvider.DNF.fromFormula());
 
 		FormulaCreator.testAllAssignments(map, assignment -> {
 			final Boolean orgEval = (Boolean) Formulas.evaluate(formulaOrg, assignment).orElseThrow();

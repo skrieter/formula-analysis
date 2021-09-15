@@ -26,7 +26,7 @@ public class CNFTransformTest {
 		final VariableMap mapClone = map.clone();
 
 		final ModelRepresentation rep = new ModelRepresentation(formulaOrg);
-		final Formula formulaCNF = rep.get(CCNFProvider.fromFormula());
+		final Formula formulaCNF = rep.get(FormulaProvider.CNF.fromFormula());
 
 		FormulaCreator.testAllAssignments(map, assignment -> {
 			final Boolean orgEval = (Boolean) Formulas.evaluate(formulaOrg, assignment).orElseThrow();
