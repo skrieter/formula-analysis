@@ -32,6 +32,10 @@ import org.spldev.util.data.*;
 import org.spldev.util.io.*;
 import org.spldev.util.logging.*;
 
+/**
+ * Representation of a feature model as a formula {@link #formula}, where features are mapped
+ * to {@link #variables}. Analysis results are stored in a {@link #cache} for later reuse.
+ */
 public class ModelRepresentation {
 
 	private final Cache cache = new Cache();
