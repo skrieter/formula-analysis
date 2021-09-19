@@ -75,8 +75,8 @@ public class BinarySampleFormat extends BinaryFormat<SolutionList> {
 			final VariableMap variableMap = VariableMap.fromNames(variableNames);
 			final int numberOfSolutions = readInt(inputStream);
 			final List<LiteralList> solutionList = new ArrayList<>(numberOfSolutions);
-			final BitSet bs = BitSet.valueOf(readBytes(inputStream, (numberOfVariables + 7) / 8));
 			for (int i = 0; i < numberOfSolutions; i++) {
+				final BitSet bs = BitSet.valueOf(readBytes(inputStream, (numberOfVariables + 7) / 8));
 				final int[] literals = new int[numberOfVariables];
 				for (int j = 0; j < numberOfVariables; j++) {
 					literals[j] = bs.get(j) ? (j + 1) : -(j + 1);
