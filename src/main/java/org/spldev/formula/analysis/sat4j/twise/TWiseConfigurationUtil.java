@@ -109,18 +109,17 @@ public class TWiseConfigurationUtil {
 		migBuilder.setCheckRedundancy(migCheckRedundancy);
 		migBuilder.setDetectStrong(migDetectStrong);
 		mig = Executor.run(migBuilder, cnf).get();
-		strongHull = new LiteralList[mig.getVertices().size()];
-
-		for (final Vertex vertex : mig.getVertices()) {
-			strongHull[MIG.getVertexIndex(vertex)] = new LiteralList(
-				vertex.getStrongEdges().stream().mapToInt(Vertex::getVar).toArray());
-		}
+		setupMIG();
 	}
 
 	public void computeMIG(Path migPath) {
 		Logger.logDebug("Init graph... ");
 		Logger.logDebug("\tLoad graph from " + migPath);
 		mig = FileHandler.load(migPath, new MIGFormat()).get();
+		setupMIG();
+	}
+
+	private void setupMIG() {
 		strongHull = new LiteralList[mig.getVertices().size()];
 
 		for (final Vertex vertex : mig.getVertices()) {
@@ -661,6 +660,7 @@ public class TWiseConfigurationUtil {
 
 	public void setMIG(MIG mig) {
 		this.mig = mig;
+		setupMIG();
 	}
 
 	public void setInvalidClausesList(InvalidClausesList invalidClausesList) {
