@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
+import org.spldev.formula.clauses.LiteralList.*;
 import org.spldev.formula.expression.atomic.literal.*;
 
 /**
@@ -67,6 +68,19 @@ public class SolutionList implements Serializable {
 
 	public List<LiteralList> getSolutions() {
 		return solutions;
+	}
+
+	public LiteralList getSolution(int index) {
+		return solutions.get(index);
+	}
+
+	public LiteralList getVaraibleAssingment(int variable) {
+		final int[] assignment = new int[solutions.size()];
+		int index = 0;
+		for (final LiteralList solution : solutions) {
+			assignment[index++] = solution.getLiterals()[variable];
+		}
+		return new LiteralList(assignment, Order.UNORDERED);
 	}
 
 	@Override

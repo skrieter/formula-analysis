@@ -27,174 +27,32 @@ import java.util.function.*;
 
 import org.spldev.formula.clauses.*;
 
-public class CountMetrics {
+public class CountMetrics extends AggregatableMetrics {
 
-	public final class CountMetric implements SampleMetric {
-		private final String name;
-		private final DoubleSupplier aggregate;
+	private final CountFunction function;
 
-		public CountMetric(String name, DoubleSupplier aggregate) {
-			this.name = name;
-			this.aggregate = aggregate;
+	public CountMetrics(CountFunction function) {
+		this.function = function;
+	}
+
+	public static List<SampleMetric> getAllAggregates(CountFunction function) {
+		return new CountMetrics(function).getAllAggregates();
+	}
+
+	@Override
+	protected double[] computeValues() {
+		final List<LiteralList> solutions = sample.getSolutions();
+		final int size = solutions.size();
+		final double[] values = new double[size];
+		for (int i = 0; i < (size - 1); i++) {
+			values[i] = function.compute(solutions.get(i));
 		}
-
-		@Override
-		public double get(SolutionList sample) {
-			setSample(sample);
-			return aggregate.getAsDouble();
-		}
-
-		@Override
-		public String getName() {
-			return name + countFunction.getName() + "Count";
-		}
-
+		return values;
 	}
 
-	private final CountFunction countFunction;
-
-	private SolutionList sample;
-
-	private double[] counts = null;
-	private double min = -1;
-	private double max = -1;
-	private double mean = -1;
-	private double median = -1;
-	private double variance = -1;
-	private double standardDeviation = -1;
-
-	public CountMetrics(CountFunction countFunction) {
-		this.countFunction = countFunction;
-	}
-
-	public static List<CountMetric> getAllAggregates(CountFunction countFunction) {
-		final CountMetrics metrics = new CountMetrics(countFunction);
-		final List<CountMetric> aggregates = new ArrayList<>(6);
-		aggregates.add(metrics.getMinCount());
-		aggregates.add(metrics.getMaxCount());
-		aggregates.add(metrics.getMeanCount());
-		aggregates.add(metrics.getMedianCount());
-		aggregates.add(metrics.getVarianceCount());
-		aggregates.add(metrics.getStandardDeviationCount());
-		return aggregates;
-	}
-
-	public double[] getCounts() {
-		if (counts == null) {
-			final List<LiteralList> solutions = sample.getSolutions();
-			final int size = solutions.size();
-			counts = new double[size];
-			for (int i = 0; i < (size - 1); i++) {
-				counts[i] = countFunction.computeCount(solutions.get(i));
-			}
-		}
-		return counts;
-	}
-
-	public void setSample(SolutionList sample) {
-		if ((this.sample == null) || (this.sample != sample)) {
-			this.sample = sample;
-			counts = null;
-			min = -1;
-			max = -1;
-			mean = -1;
-			median = -1;
-			variance = -1;
-			standardDeviation = -1;
-		}
-	}
-
-	public CountMetric getMinCount() {
-		return new CountMetric("Min", this::getMin);
-	}
-
-	public CountMetric getMaxCount() {
-		return new CountMetric("Max", this::getMax);
-	}
-
-	public CountMetric getMeanCount() {
-		return new CountMetric("Mean", this::getMean);
-	}
-
-	public CountMetric getMedianCount() {
-		return new CountMetric("Median", this::getMedian);
-	}
-
-	public CountMetric getVarianceCount() {
-		return new CountMetric("Variance", this::getVariance);
-	}
-
-	public CountMetric getStandardDeviationCount() {
-		return new CountMetric("StandardDeviation", this::getStandardDeviation);
-	}
-
-	private double getMin() {
-		if (min < 0) {
-			min = Double.MAX_VALUE;
-			for (final double count : getCounts()) {
-				if (min > count) {
-					min = count;
-				}
-			}
-		}
-		return min;
-	}
-
-	private double getMax() {
-		if (max < 0) {
-			max = 0;
-			for (final double count : getCounts()) {
-				if (max < count) {
-					max = count;
-				}
-			}
-		}
-		return max;
-	}
-
-	private double getMean() {
-		if (mean < 0) {
-			double sum = 0;
-			for (final double count : getCounts()) {
-				sum += count;
-			}
-			mean = sum / counts.length;
-		}
-		return mean;
-	}
-
-	private double getMedian() {
-		if (median < 0) {
-			final double[] counts = getCounts();
-			final double[] sortedCounts = Arrays.copyOf(counts, counts.length);
-			Arrays.sort(sortedCounts);
-
-			final int middle = sortedCounts.length / 2;
-			median = ((sortedCounts.length % 2) != 0) //
-				? sortedCounts[middle] //
-				: (sortedCounts[middle - 1] + sortedCounts[middle]) / 2.0;
-		}
-		return median;
-	}
-
-	private double getVariance() {
-		if (variance < 0) {
-			final double mean = getMean();
-			variance = 0;
-			for (final double count : getCounts()) {
-				final double diff = count - mean;
-				variance += diff * diff;
-			}
-			variance /= counts.length;
-		}
-		return variance;
-	}
-
-	private double getStandardDeviation() {
-		if (standardDeviation < 0) {
-			standardDeviation = Math.sqrt(getVariance());
-		}
-		return standardDeviation;
+	@Override
+	public SampleMetric getAggregate(String name, DoubleSupplier aggregate) {
+		return new DoubleMetric(function.getName() + "_count_" + name, aggregate);
 	}
 
 }

@@ -122,7 +122,7 @@ public class CNFTest {
 		executeAnalysis(rep, new ConditionallyCoreDeadAnalysisMIG());
 
 		final CNF cnf = rep.get(CNFProvider.fromFormula());
-		final CNFSlicer slicer = new CNFSlicer(new LiteralList(new int[] { 2 }));
+		final CNFSlicer slicer = new CNFSlicer(new LiteralList(2));
 		final CNF slicedCNF = Executor.run(slicer, cnf).orElse(Logger::logProblems);
 
 		System.out.println(cnf);

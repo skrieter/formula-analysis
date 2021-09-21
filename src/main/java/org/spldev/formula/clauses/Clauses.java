@@ -28,7 +28,9 @@ import java.util.stream.*;
 
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
+import org.spldev.formula.expression.compound.*;
 import org.spldev.formula.expression.io.*;
+import org.spldev.formula.expression.term.bool.*;
 import org.spldev.formula.transform.*;
 import org.spldev.util.*;
 import org.spldev.util.data.*;
@@ -175,6 +177,23 @@ public final class Clauses {
 		final Cache cache = new Cache();
 		cache.set(CNFProvider.of(cnf));
 		return cache;
+	}
+
+	public static Or toOrClause(LiteralList clause, VariableMap variableMap) {
+		return new Or(toLiterals(clause, variableMap));
+	}
+
+	public static And toAndClause(LiteralList clause, VariableMap variableMap) {
+		return new And(toLiterals(clause, variableMap));
+	}
+
+	public static List<Literal> toLiterals(LiteralList clause, VariableMap variableMap) {
+		final ArrayList<Literal> orChildren = new ArrayList<>(clause.size());
+		for (final int literal : clause.getLiterals()) {
+			final BoolVariable variable = (BoolVariable) variableMap.getVariable(Math.abs(literal)).orElseThrow();
+			orChildren.add(new LiteralPredicate(variable, literal > 0));
+		}
+		return orChildren;
 	}
 
 }

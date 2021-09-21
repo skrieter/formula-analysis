@@ -32,7 +32,7 @@ import org.spldev.formula.clauses.*;
  */
 public interface CountFunction {
 
-	double computeCount(final LiteralList literals);
+	double compute(final LiteralList literals);
 
 	String getName();
 

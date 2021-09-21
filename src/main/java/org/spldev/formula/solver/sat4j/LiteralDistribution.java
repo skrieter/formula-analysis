@@ -25,9 +25,8 @@ package org.spldev.formula.solver.sat4j;
 import java.util.*;
 
 /**
- * Uses a sample of configurations to achieve a
- * phase selection that corresponds to a uniform distribution of configurations
- * in the configuration space.
+ * Uses a sample of configurations to achieve a phase selection that corresponds
+ * to a uniform distribution of configurations in the configuration space.
  *
  * @author Sebastian Krieter
  */

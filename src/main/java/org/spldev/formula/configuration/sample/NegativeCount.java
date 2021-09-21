@@ -32,7 +32,7 @@ import org.spldev.formula.clauses.*;
 public class NegativeCount implements CountFunction {
 
 	@Override
-	public double computeCount(LiteralList literals) {
+	public double compute(LiteralList literals) {
 		return (double) literals.countNegative() / literals.size();
 	}
 

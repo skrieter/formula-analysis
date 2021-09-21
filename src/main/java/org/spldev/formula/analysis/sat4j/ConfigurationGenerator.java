@@ -48,20 +48,6 @@ public abstract class ConfigurationGenerator extends Sat4JAnalysis<SolutionList>
 		maxSampleSize = limit;
 	}
 
-//	public final void init(ModelRepresentation c, InternalMonitor monitor) {
-//		init(createSolver(c), monitor);
-//	}
-//
-//	public final void init(CNF cnf, InternalMonitor monitor) {
-//		init(createSolver(cnf), monitor);
-//	}
-//
-//	public final void init(Sat4JSolver solver, InternalMonitor monitor) {
-//		prepareSolver(solver);
-//		setSolver(solver);
-//		init(monitor);
-//	}
-
 	protected void init(InternalMonitor monitor) {
 	}
 
@@ -94,7 +80,6 @@ public abstract class ConfigurationGenerator extends Sat4JAnalysis<SolutionList>
 	@Override
 	public final SolutionList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		monitor.setTotalWork(maxSampleSize);
-//		init(solver, monitor);
 		init(monitor);
 		return new SolutionList(solver.getCnf().getVariables(), StreamSupport.stream(this, false) //
 			.limit(maxSampleSize) //

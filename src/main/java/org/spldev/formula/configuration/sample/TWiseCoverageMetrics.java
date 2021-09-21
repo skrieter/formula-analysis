@@ -99,7 +99,6 @@ public class TWiseCoverageMetrics {
 		util.setInvalidClausesList(InvalidClausesList.Create);
 		util.computeRandomSample(1000);
 		if (!cnf.getClauses().isEmpty()) {
-
 			util.computeMIG(false, false);
 		}
 		if (expressions == null) {
@@ -117,11 +116,9 @@ public class TWiseCoverageMetrics {
 		int... tValues) {
 		final TWiseCoverageMetrics metrics = new TWiseCoverageMetrics();
 		metrics.setName(name);
-		if (expressions != null) {
-			metrics.setExpressions(expressions);
-		}
+		metrics.setExpressions(expressions);
+		metrics.setCNF(cnf);
 		if (cnf != null) {
-			metrics.setCNF(cnf);
 			metrics.init();
 		}
 		final List<TWiseCoverageMetric> coverageMetrics = new ArrayList<>(tValues.length);
