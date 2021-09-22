@@ -33,35 +33,19 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class RandomConfigurationGenerator extends ConfigurationGenerator {
-
-	protected Random random = new Random();
+public abstract class RandomConfigurationGenerator extends AbstractConfigurationGenerator {
 
 	protected boolean satisfiable = true;
-	protected boolean allowDuplicates = false;
+
+	public RandomConfigurationGenerator() {
+		super();
+		setRandom(new Random());
+	}
 
 	@Override
 	protected void init(InternalMonitor monitor) {
 		super.init(monitor);
 		satisfiable = true;
-	}
-
-	@Override
-	public Random getRandom() {
-		return random;
-	}
-
-	@Override
-	public void setRandom(Random random) {
-		this.random = random;
-	}
-
-	public boolean isAllowDuplicates() {
-		return allowDuplicates;
-	}
-
-	public void setAllowDuplicates(boolean allowDuplicates) {
-		this.allowDuplicates = allowDuplicates;
 	}
 
 	@Override

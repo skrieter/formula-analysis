@@ -102,7 +102,7 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 		if (algorithm == null) {
 			throw new IllegalArgumentException("No algorithm specified!");
 		}
-		final ConfigurationGenerator generator = algorithm.parseArguments(remainingArguments)
+		final AbstractConfigurationGenerator generator = algorithm.parseArguments(remainingArguments)
 			.orElse(Logger::logProblems);
 		if (generator != null) {
 			generator.setLimit(limit);

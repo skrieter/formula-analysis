@@ -136,6 +136,17 @@ public class Sat4JAssumptions implements Assignment {
 	}
 
 	@Override
+	public void unset(int index) {
+		for (int i = 0; i < assumptions.size(); i++) {
+			final int l = assumptions.unsafeGet(i);
+			if (Math.abs(l) == index) {
+				assumptions.delete(i);
+				return;
+			}
+		}
+	}
+
+	@Override
 	public Optional<Object> get(int index) {
 		for (int i = 0; i < assumptions.size(); i++) {
 			final int l = assumptions.unsafeGet(i);

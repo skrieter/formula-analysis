@@ -107,9 +107,9 @@ public interface SStrategy {
 	}
 
 	public static final class UniformRandomStrategy implements SStrategy {
-		private final SampleDistribution dist;
+		private final LiteralDistribution dist;
 
-		public UniformRandomStrategy(SampleDistribution dist) {
+		public UniformRandomStrategy(LiteralDistribution dist) {
 			this.dist = dist;
 		}
 
@@ -118,7 +118,7 @@ public interface SStrategy {
 			return Strategy.UniformRandom;
 		}
 
-		public SampleDistribution getDist() {
+		public LiteralDistribution getDist() {
 			return dist;
 		}
 	}
@@ -168,7 +168,7 @@ public interface SStrategy {
 		return new InverseFixedStrategy(model);
 	}
 
-	static UniformRandomStrategy uniform(SampleDistribution dist) {
+	static UniformRandomStrategy uniform(LiteralDistribution dist) {
 		return new UniformRandomStrategy(dist);
 	}
 

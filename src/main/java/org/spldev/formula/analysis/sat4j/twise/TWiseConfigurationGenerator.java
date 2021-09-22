@@ -39,7 +39,7 @@ import org.spldev.util.logging.*;
  *
  * @author Sebastian Krieter
  */
-public class TWiseConfigurationGenerator extends ConfigurationGenerator {
+public class TWiseConfigurationGenerator extends AbstractConfigurationGenerator {
 
 	public static final Identifier<SolutionList> identifier = new Identifier<>();
 

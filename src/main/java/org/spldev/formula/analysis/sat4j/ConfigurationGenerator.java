@@ -26,65 +26,28 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
+import org.spldev.formula.*;
+import org.spldev.formula.analysis.*;
 import org.spldev.formula.clauses.*;
-import org.spldev.formula.solver.sat4j.*;
 import org.spldev.util.job.*;
 
 /**
- * Finds certain solutions of propositional formulas.
- *
+ * Interface for configuration generators. Can be used as a {@link Supplier} or
+ * to get a {@link Stream} or a {@link SolutionList} of configurations.
+ * 
  * @author Sebastian Krieter
  */
-public abstract class ConfigurationGenerator extends Sat4JAnalysis<SolutionList> implements Supplier<LiteralList>,
+public interface ConfigurationGenerator extends Analysis<SolutionList>, Supplier<LiteralList>,
 	Spliterator<LiteralList> {
 
-	private int maxSampleSize = Integer.MAX_VALUE;
+	void init(ModelRepresentation rep, InternalMonitor monitor);
 
-	public int getLimit() {
-		return maxSampleSize;
-	}
+	int getLimit();
 
-	public void setLimit(int limit) {
-		maxSampleSize = limit;
-	}
+	void setLimit(int limit);
 
-	protected void init(InternalMonitor monitor) {
-	}
+	boolean isAllowDuplicates();
 
-	@Override
-	public int characteristics() {
-		return NONNULL | IMMUTABLE;
-	}
-
-	@Override
-	public long estimateSize() {
-		return Long.MAX_VALUE;
-	}
-
-	@Override
-	public boolean tryAdvance(Consumer<? super LiteralList> consumer) {
-		final LiteralList literalList = get();
-		if (literalList != null) {
-			consumer.accept(literalList);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public Spliterator<LiteralList> trySplit() {
-		return null;
-	}
-
-	@Override
-	public final SolutionList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
-		monitor.setTotalWork(maxSampleSize);
-		init(monitor);
-		return new SolutionList(solver.getCnf().getVariables(), StreamSupport.stream(this, false) //
-			.limit(maxSampleSize) //
-			.peek(c -> monitor.step()) //
-			.collect(Collectors.toCollection(ArrayList::new)));
-	}
+	void setAllowDuplicates(boolean allowDuplicates);
 
 }

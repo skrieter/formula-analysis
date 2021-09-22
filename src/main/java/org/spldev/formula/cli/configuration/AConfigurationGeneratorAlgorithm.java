@@ -32,11 +32,11 @@ import org.spldev.util.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class AConfigurationGeneratorAlgorithm<T extends ConfigurationGenerator>
+public abstract class AConfigurationGeneratorAlgorithm<T extends AbstractConfigurationGenerator>
 	implements ConfigurationGeneratorAlgorithm {
 
 	@Override
-	public Result<ConfigurationGenerator> parseArguments(List<String> args) {
+	public Result<AbstractConfigurationGenerator> parseArguments(List<String> args) {
 		final T gen = createConfigurationGenerator();
 		try {
 			for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {

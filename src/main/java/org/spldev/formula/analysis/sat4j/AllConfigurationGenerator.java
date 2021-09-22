@@ -31,7 +31,7 @@ import org.spldev.util.data.*;
  *
  * @author Sebastian Krieter
  */
-public class AllConfigurationGenerator extends ConfigurationGenerator {
+public class AllConfigurationGenerator extends AbstractConfigurationGenerator {
 
 	public static final Identifier<SolutionList> identifier = new Identifier<>();
 

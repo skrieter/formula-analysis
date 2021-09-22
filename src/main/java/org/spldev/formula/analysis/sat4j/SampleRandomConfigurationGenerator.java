@@ -36,7 +36,7 @@ import org.spldev.util.logging.*;
  *
  * @author Sebastian Krieter
  */
-public class UniformRandomConfigurationGenerator extends RandomConfigurationGenerator {
+public class SampleRandomConfigurationGenerator extends RandomConfigurationGenerator {
 
 	public static final Identifier<SolutionList> identifier = new Identifier<>();
 

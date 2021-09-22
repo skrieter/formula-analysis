@@ -37,7 +37,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class PairWiseConfigurationGenerator extends ConfigurationGenerator {
+public class PairWiseConfigurationGenerator extends AbstractConfigurationGenerator {
 
 	public static final Identifier<SolutionList> identifier = new Identifier<>();
 

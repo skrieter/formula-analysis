@@ -29,13 +29,13 @@ import org.spldev.util.*;
 import org.spldev.util.extension.*;
 
 /**
- * Create a new instance of a {@link ConfigurationGenerator}.
+ * Create a new instance of a {@link AbstractConfigurationGenerator}.
  *
  * @author Sebastian Krieter
  */
 public interface ConfigurationGeneratorAlgorithm extends Extension {
 
-	Result<ConfigurationGenerator> parseArguments(List<String> args);
+	Result<AbstractConfigurationGenerator> parseArguments(List<String> args);
 
 	String getName();
 

@@ -208,34 +208,40 @@ public class ConfigurationGeneratorTest {
 	private static SolutionList sample(final Path modelFile, String algorithm, Integer t, Integer limit) {
 		try {
 			final Path inFile = Files.createTempFile("input", ".xml");
-			Files.write(inFile, Files.readAllBytes(modelFile));
+			try {
+				Files.write(inFile, Files.readAllBytes(modelFile));
+				final Path outFile = Files.createTempFile("output", "");
+				try {
+					final ArrayList<String> args = new ArrayList<>();
+					args.add("-a");
+					args.add(algorithm);
+					args.add("-o");
+					args.add(outFile.toString());
+					args.add("-fm");
+					args.add(inFile.toString());
 
-			final Path outFile = Files.createTempFile("output", "");
+					if (t != null) {
+						args.add("-t");
+						args.add(Integer.toString(t));
+					}
+					if (limit != null) {
+						args.add("-l");
+						args.add(Integer.toString(limit));
+					}
+					new ConfigurationGeneratorCLI().run(args);
 
-			final ArrayList<String> args = new ArrayList<>();
-			args.add("-a");
-			args.add(algorithm);
-			args.add("-o");
-			args.add(outFile.toString());
-			args.add("-fm");
-			args.add(inFile.toString());
-
-			if (t != null) {
-				args.add("-t");
-				args.add(Integer.toString(t));
+					final SolutionList sample = FileHandler.load(outFile, new ConfigurationListFormat()).orElse(
+						Logger::logProblems);
+					if (sample == null) {
+						fail("Sample for " + modelFile.toString() + " could not be read!");
+					}
+					return sample;
+				} finally {
+					Files.deleteIfExists(outFile);
+				}
+			} finally {
+				Files.deleteIfExists(inFile);
 			}
-			if (limit != null) {
-				args.add("-l");
-				args.add(Integer.toString(limit));
-			}
-			new ConfigurationGeneratorCLI().run(args);
-
-			final SolutionList sample = FileHandler.load(outFile, new ConfigurationListFormat()).orElse(
-				Logger::logProblems);
-			if (sample == null) {
-				fail("Sample for " + modelFile.toString() + " could not be read!");
-			}
-			return sample;
 		} catch (final IOException e) {
 			e.printStackTrace();
 			fail(e.getMessage());

@@ -29,11 +29,11 @@ import org.spldev.formula.analysis.sat4j.*;
  *
  * @author Sebastian Krieter
  */
-public class UniformRandomAlgorithm extends RandomAlgorithm<UniformRandomConfigurationGenerator> {
+public class SampleRandomAlgorithm extends RandomAlgorithm<SampleRandomConfigurationGenerator> {
 
 	@Override
-	protected UniformRandomConfigurationGenerator createConfigurationGenerator() {
-		return new UniformRandomConfigurationGenerator();
+	protected SampleRandomConfigurationGenerator createConfigurationGenerator() {
+		return new SampleRandomConfigurationGenerator();
 	}
 
 	@Override

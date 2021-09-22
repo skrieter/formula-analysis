@@ -35,7 +35,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class OneWiseConfigurationGenerator extends ConfigurationGenerator {
+public class OneWiseConfigurationGenerator extends AbstractConfigurationGenerator {
 
 	public static final Identifier<SolutionList> identifier = new Identifier<>();
 

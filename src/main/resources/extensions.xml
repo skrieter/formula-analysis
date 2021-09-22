@@ -10,6 +10,6 @@
 	    <extension id="org.spldev.formula.cli.configuration.TWiseAlgorithm" />
 	    <extension id="org.spldev.formula.cli.configuration.FastRandomAlgorithm" />
 	    <extension id="org.spldev.formula.cli.configuration.EnumeratingRandomAlgorithm" />
-	    <extension id="org.spldev.formula.cli.configuration.UniformRandomAlgorithm" />
+	    <extension id="org.spldev.formula.cli.configuration.SampleRandomAlgorithm" />
 	</point>
 </extensions>
