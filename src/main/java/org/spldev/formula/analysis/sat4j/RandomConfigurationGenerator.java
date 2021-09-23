@@ -62,12 +62,16 @@ public abstract class RandomConfigurationGenerator extends AbstractConfiguration
 		}
 		if (!allowDuplicates) {
 			try {
-				solver.getFormula().push(solution.negate());
+				forbidSolution(solution.negate());
 			} catch (final RuntimeContradictionException e) {
 				satisfiable = false;
 			}
 		}
 		return solution;
+	}
+
+	protected void forbidSolution(final LiteralList negate) {
+		solver.getFormula().push(negate);
 	}
 
 	protected void reset() {
