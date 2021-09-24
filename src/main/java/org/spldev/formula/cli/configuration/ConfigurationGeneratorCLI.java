@@ -50,6 +50,11 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 	}
 
 	@Override
+	public String getDescription() {
+		return "Generates configurations with various sampling algorithms";
+	}
+
+	@Override
 	public void run(List<String> args) {
 		Path outputFile = null;
 		Path fmFile = null;
@@ -124,7 +129,6 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 	@Override
 	public String getHelp() {
 		final StringBuilder helpBuilder = new StringBuilder();
-		helpBuilder.append("Help for command genconfig:\n");
 		helpBuilder.append("\tGeneral Parameters:\n");
 		helpBuilder.append("\t\t-fm <Path>   Specify path to feature model file.\n");
 		helpBuilder.append("\t\t-o <Path>    Specify path to output file.\n");
