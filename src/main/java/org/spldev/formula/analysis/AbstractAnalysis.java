@@ -91,12 +91,14 @@ public abstract class AbstractAnalysis<T, S extends Solver, I> implements Analys
 	}
 
 	protected Object getParameters() {
-		return defaultParameters;
+		return Arrays.asList(assumptions, assumedConstraints);
 	}
 
 	@Override
 	public Result<T> getResult(ModelRepresentation rep) {
-		return rep.getCache().get(new AnalysisResultProvider(m -> Executor.run(this::execute, rep, m)));
+		// TODO improve handling of many results with different parameters
+		return Executor.run(this::execute, rep, new NullMonitor());
+//		return rep.getCache().get(new AnalysisResultProvider(m -> Executor.run(this::execute, rep, m)));
 	}
 
 	@Override
@@ -142,7 +144,7 @@ public abstract class AbstractAnalysis<T, S extends Solver, I> implements Analys
 	protected abstract T analyze(S solver, InternalMonitor monitor) throws Exception;
 
 	protected void resetSolver(S solver) {
-		solver.getAssumptions().resetAll(assumptions.getAll());
+		solver.getAssumptions().unsetAll(assumptions.getAll());
 		solver.getDynamicFormula().pop(assumedConstraints.size());
 	}
 
