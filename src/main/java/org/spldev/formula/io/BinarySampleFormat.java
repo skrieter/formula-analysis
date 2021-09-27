@@ -57,7 +57,9 @@ public class BinarySampleFormat extends BinaryFormat<SolutionList> {
 			for (int i = 0; i < literals.length; i++) {
 				bs.set(i, literals[i] > 0);
 			}
-			writeBytes(outputStream, bs.toByteArray());
+			final byte[] byteArray = bs.toByteArray();
+			writeInt(outputStream, byteArray.length);
+			writeBytes(outputStream, byteArray);
 			bs.clear();
 		}
 		outputStream.flush();
@@ -76,7 +78,7 @@ public class BinarySampleFormat extends BinaryFormat<SolutionList> {
 			final int numberOfSolutions = readInt(inputStream);
 			final List<LiteralList> solutionList = new ArrayList<>(numberOfSolutions);
 			for (int i = 0; i < numberOfSolutions; i++) {
-				final BitSet bs = BitSet.valueOf(readBytes(inputStream, (numberOfVariables + 7) / 8));
+				final BitSet bs = BitSet.valueOf(readBytes(inputStream, readInt(inputStream)));
 				final int[] literals = new int[numberOfVariables];
 				for (int j = 0; j < numberOfVariables; j++) {
 					literals[j] = bs.get(j) ? (j + 1) : -(j + 1);
