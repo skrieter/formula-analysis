@@ -31,10 +31,10 @@ public class DistanceMetrics extends AggregatableMetrics {
 
 	private final DistanceFunction function;
 
-	private double leastMean = -1;
-	private double mostMean = -1;
-	private double meanMin = -1;
-	private double meanMax = -1;
+	private double leastMean = EMPTY;
+	private double mostMean = EMPTY;
+	private double meanMin = EMPTY;
+	private double meanMax = EMPTY;
 
 	public DistanceMetrics(DistanceFunction function) {
 		this.function = function;
@@ -73,17 +73,17 @@ public class DistanceMetrics extends AggregatableMetrics {
 	@Override
 	protected void reset() {
 		super.reset();
-		leastMean = -1;
-		mostMean = -1;
-		meanMin = -1;
-		meanMax = -1;
+		leastMean = EMPTY;
+		mostMean = EMPTY;
+		meanMin = EMPTY;
+		meanMax = EMPTY;
 	}
 
 	private double getLeastMean() {
-		if (leastMean < 0) {
+		if (leastMean == EMPTY) {
 			final double[] distances = getValues();
 			if (distances.length == 0) {
-				leastMean = 0;
+				leastMean = INVALID;
 			} else {
 				final int size = (((int) Math.sqrt((distances.length << 3) + 1)) >> 1) + 1;
 
@@ -107,10 +107,10 @@ public class DistanceMetrics extends AggregatableMetrics {
 	}
 
 	private double getMostMean() {
-		if (mostMean < 0) {
+		if (mostMean == EMPTY) {
 			final double[] distances = getValues();
 			if (distances.length == 0) {
-				mostMean = 0;
+				mostMean = INVALID;
 			} else {
 				final int size = (((int) Math.sqrt((distances.length << 3) + 1)) >> 1) + 1;
 
@@ -134,10 +134,10 @@ public class DistanceMetrics extends AggregatableMetrics {
 	}
 
 	private double getMeanMin() {
-		if (meanMin < 0) {
+		if (meanMin == EMPTY) {
 			final double[] distances = getValues();
 			if (distances.length == 0) {
-				meanMin = 0;
+				meanMin = INVALID;
 			} else {
 				final int size = (((int) Math.sqrt((distances.length << 3) + 1)) >> 1) + 1;
 				double minLocalMean = Double.MAX_VALUE;
@@ -160,10 +160,10 @@ public class DistanceMetrics extends AggregatableMetrics {
 	}
 
 	private double getMeanMax() {
-		if (meanMax < 0) {
+		if (meanMax == EMPTY) {
 			final double[] distances = getValues();
 			if (distances.length == 0) {
-				meanMax = 0;
+				meanMax = INVALID;
 			} else {
 				final int size = (((int) Math.sqrt((distances.length << 3) + 1)) >> 1) + 1;
 				double maxLocalMean = 0;

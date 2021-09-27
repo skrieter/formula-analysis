@@ -50,16 +50,19 @@ public abstract class AggregatableMetrics {
 		}
 	}
 
+	protected static final double EMPTY = -2;
+	protected static final double INVALID = -1;
+
 	protected SolutionList sample;
 
 	private double[] values = null;
 
-	protected double min = -1;
-	protected double max = -1;
-	protected double mean = -1;
-	protected double median = -1;
-	protected double variance = -1;
-	protected double standardDeviation = -1;
+	protected double min = EMPTY;
+	protected double max = EMPTY;
+	protected double mean = EMPTY;
+	protected double median = EMPTY;
+	protected double variance = EMPTY;
+	protected double standardDeviation = EMPTY;
 
 	public List<SampleMetric> getAllAggregates() {
 		final List<SampleMetric> aggregates = new ArrayList<>(6);
@@ -92,20 +95,25 @@ public abstract class AggregatableMetrics {
 
 	protected void reset() {
 		values = null;
-		min = -1;
-		max = -1;
-		mean = -1;
-		median = -1;
-		variance = -1;
-		standardDeviation = -1;
+		min = EMPTY;
+		max = EMPTY;
+		mean = EMPTY;
+		median = EMPTY;
+		variance = EMPTY;
+		standardDeviation = EMPTY;
 	}
 
 	protected double getMin() {
-		if (min < 0) {
-			min = Double.MAX_VALUE;
-			for (final double count : getValues()) {
-				if (min > count) {
-					min = count;
+		if (min == EMPTY) {
+			final double[] values = getValues();
+			if (values.length == 0) {
+				min = INVALID;
+			} else {
+				min = Double.MAX_VALUE;
+				for (final double count : values) {
+					if (min > count) {
+						min = count;
+					}
 				}
 			}
 		}
@@ -113,11 +121,16 @@ public abstract class AggregatableMetrics {
 	}
 
 	protected double getMax() {
-		if (max < 0) {
-			max = 0;
-			for (final double count : getValues()) {
-				if (max < count) {
-					max = count;
+		if (max == EMPTY) {
+			final double[] values = getValues();
+			if (values.length == 0) {
+				max = INVALID;
+			} else {
+				max = 0;
+				for (final double count : values) {
+					if (max < count) {
+						max = count;
+					}
 				}
 			}
 		}
@@ -125,46 +138,65 @@ public abstract class AggregatableMetrics {
 	}
 
 	protected double getMean() {
-		if (mean < 0) {
-			double sum = 0;
-			for (final double count : getValues()) {
-				sum += count;
+		if (mean == EMPTY) {
+			final double[] values = getValues();
+			if (values.length == 0) {
+				mean = INVALID;
+			} else {
+				double sum = 0;
+				for (final double count : values) {
+					sum += count;
+				}
+				mean = sum / values.length;
 			}
-			mean = sum / values.length;
 		}
 		return mean;
 	}
 
 	protected double getMedian() {
-		if (median < 0) {
-			final double[] counts = getValues();
-			final double[] sortedCounts = Arrays.copyOf(counts, counts.length);
-			Arrays.sort(sortedCounts);
+		if (median == EMPTY) {
+			final double[] values = getValues();
+			if (values.length == 0) {
+				median = INVALID;
+			} else {
+				final double[] sortedCounts = Arrays.copyOf(values, values.length);
+				Arrays.sort(sortedCounts);
 
-			final int middle = sortedCounts.length / 2;
-			median = ((sortedCounts.length % 2) != 0) //
-				? sortedCounts[middle] //
-				: (sortedCounts[middle - 1] + sortedCounts[middle]) / 2.0;
+				final int middle = sortedCounts.length / 2;
+				median = ((sortedCounts.length % 2) != 0) //
+					? sortedCounts[middle] //
+					: (sortedCounts[middle - 1] + sortedCounts[middle]) / 2.0;
+			}
 		}
 		return median;
 	}
 
 	protected double getVariance() {
-		if (variance < 0) {
-			final double mean = getMean();
-			variance = 0;
-			for (final double count : getValues()) {
-				final double diff = count - mean;
-				variance += diff * diff;
+		if (variance == EMPTY) {
+			final double[] values = getValues();
+			if (values.length == 0) {
+				variance = INVALID;
+			} else {
+				final double mean = getMean();
+				variance = 0;
+				for (final double count : values) {
+					final double diff = count - mean;
+					variance += diff * diff;
+				}
+				variance /= values.length;
 			}
-			variance /= values.length;
 		}
 		return variance;
 	}
 
 	protected double getStandardDeviation() {
-		if (standardDeviation < 0) {
-			standardDeviation = Math.sqrt(getVariance());
+		if (standardDeviation == EMPTY) {
+			final double[] values = getValues();
+			if (values.length == 0) {
+				standardDeviation = INVALID;
+			} else {
+				standardDeviation = Math.sqrt(getVariance());
+			}
 		}
 		return standardDeviation;
 	}
