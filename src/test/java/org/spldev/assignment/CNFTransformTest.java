@@ -22,13 +22,24 @@
  */
 package org.spldev.assignment;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.spldev.formula.ModelRepresentation;
+import org.spldev.formula.analysis.sat4j.HasSolutionAnalysis;
+import org.spldev.formula.clauses.CNFProvider;
+import org.spldev.formula.expression.Formula;
+import org.spldev.formula.expression.FormulaProvider;
+import org.spldev.formula.expression.Formulas;
+import org.spldev.formula.expression.atomic.literal.VariableMap;
+import org.spldev.formula.expression.io.parse.KConfigReaderFormat;
+import org.spldev.util.io.FileHandler;
+import org.spldev.util.io.format.FormatSupplier;
+import org.spldev.util.tree.Trees;
 
-import org.junit.jupiter.api.*;
-import org.spldev.formula.*;
-import org.spldev.formula.expression.*;
-import org.spldev.formula.expression.atomic.literal.*;
-import org.spldev.util.tree.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CNFTransformTest {
 
@@ -60,4 +71,33 @@ public class CNFTransformTest {
 		assertEquals(mapClone, VariableMap.fromExpression(formulaOrg));
 	}
 
+	@Test
+	public void testKConfigReader() {
+		Path modelFile = Paths.get("src/test/resources/kconfigreader/buildroot-2011.02.model");
+		Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
+
+		{
+			ModelRepresentation rep = new ModelRepresentation(formula);
+			rep.get(FormulaProvider.CNF.fromFormula());
+			final HasSolutionAnalysis hasSolutionAnalysis = new HasSolutionAnalysis();
+			hasSolutionAnalysis.setSolverInputProvider(CNFProvider.fromFormula());
+			hasSolutionAnalysis.getResult(rep).get();
+		}
+
+		{
+			ModelRepresentation rep = new ModelRepresentation(formula);
+			rep.get(FormulaProvider.TseytinCNF.fromFormula());
+			final HasSolutionAnalysis hasSolutionAnalysis = new HasSolutionAnalysis();
+			hasSolutionAnalysis.setSolverInputProvider(CNFProvider.fromTseytinFormula());
+			hasSolutionAnalysis.getResult(rep).get();
+		}
+
+		{
+			ModelRepresentation rep = new ModelRepresentation(formula);
+			rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10));
+			final HasSolutionAnalysis hasSolutionAnalysis = new HasSolutionAnalysis();
+			hasSolutionAnalysis.setSolverInputProvider(CNFProvider.fromTseytinFormula());
+			hasSolutionAnalysis.getResult(rep).get(); // todo: fails
+		}
+	}
 }
