@@ -24,17 +24,18 @@ package org.spldev.assignment;
 
 import org.junit.jupiter.api.Test;
 import org.spldev.formula.ModelRepresentation;
-import org.spldev.formula.analysis.sat4j.HasSolutionAnalysis;
-import org.spldev.formula.clauses.CNFProvider;
 import org.spldev.formula.expression.Formula;
 import org.spldev.formula.expression.FormulaProvider;
 import org.spldev.formula.expression.Formulas;
 import org.spldev.formula.expression.atomic.literal.VariableMap;
+import org.spldev.formula.expression.io.DIMACSFormat;
 import org.spldev.formula.expression.io.parse.KConfigReaderFormat;
 import org.spldev.util.io.FileHandler;
 import org.spldev.util.io.format.FormatSupplier;
 import org.spldev.util.tree.Trees;
+import org.spldev.util.tree.visitor.TreePrinter;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -72,32 +73,31 @@ public class CNFTransformTest {
 	}
 
 	@Test
-	public void testKConfigReader() {
-		Path modelFile = Paths.get("src/test/resources/kconfigreader/buildroot-2011.02.model");
+	public void testKConfigReader() throws IOException {
+		Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
 		Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
+		System.out.println(Trees.traverse(formula, new TreePrinter()));
 
-		{
-			ModelRepresentation rep = new ModelRepresentation(formula);
-			rep.get(FormulaProvider.CNF.fromFormula());
-			final HasSolutionAnalysis hasSolutionAnalysis = new HasSolutionAnalysis();
-			hasSolutionAnalysis.setSolverInputProvider(CNFProvider.fromFormula());
-			hasSolutionAnalysis.getResult(rep).get();
-		}
+		ModelRepresentation rep = new ModelRepresentation(formula);
+		Formula f1 = rep.get(FormulaProvider.CNF.fromFormula());
+		System.out.println(Trees.traverse(f1, new TreePrinter()));
+		FileHandler.save(f1, Paths.get(
+			"src/test/resources/kconfigreader/min-example1.dimacs"), new DIMACSFormat());
 
-		{
-			ModelRepresentation rep = new ModelRepresentation(formula);
-			rep.get(FormulaProvider.TseytinCNF.fromFormula());
-			final HasSolutionAnalysis hasSolutionAnalysis = new HasSolutionAnalysis();
-			hasSolutionAnalysis.setSolverInputProvider(CNFProvider.fromTseytinFormula());
-			hasSolutionAnalysis.getResult(rep).get();
-		}
+		rep = new ModelRepresentation(formula);
+		Formula f2 = rep.get(FormulaProvider.TseytinCNF.fromFormula());
+		System.out.println(Trees.traverse(f2, new TreePrinter()));
+		FileHandler.save(f2, Paths.get(
+			"src/test/resources/kconfigreader/min-example2.dimacs"), new DIMACSFormat());
 
-		{
-			ModelRepresentation rep = new ModelRepresentation(formula);
-			rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10));
-			final HasSolutionAnalysis hasSolutionAnalysis = new HasSolutionAnalysis();
-			hasSolutionAnalysis.setSolverInputProvider(CNFProvider.fromTseytinFormula());
-			hasSolutionAnalysis.getResult(rep).get(); // todo: fails
+		try {
+			rep = new ModelRepresentation(formula);
+			Formula f3 = rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10));
+			System.out.println(Trees.traverse(f3, new TreePrinter()));
+			FileHandler.save(f3, Paths.get(
+				"src/test/resources/kconfigreader/min-example3.dimacs"), new DIMACSFormat());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
