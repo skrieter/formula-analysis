@@ -183,4 +183,17 @@ public class Sat4JAssumptions implements Assignment {
 		return map;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < assumptions.size(); i++) {
+			final int l = assumptions.get(i);
+			sb.append(Math.abs(l));
+			sb.append(": ");
+			sb.append(l);
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
 }

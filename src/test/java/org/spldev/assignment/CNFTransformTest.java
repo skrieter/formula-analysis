@@ -22,25 +22,21 @@
  */
 package org.spldev.assignment;
 
-import org.junit.jupiter.api.Test;
-import org.spldev.formula.ModelRepresentation;
-import org.spldev.formula.expression.Formula;
-import org.spldev.formula.expression.FormulaProvider;
-import org.spldev.formula.expression.Formulas;
-import org.spldev.formula.expression.atomic.literal.VariableMap;
-import org.spldev.formula.expression.io.DIMACSFormat;
-import org.spldev.formula.expression.io.parse.KConfigReaderFormat;
-import org.spldev.util.io.FileHandler;
-import org.spldev.util.io.format.FormatSupplier;
-import org.spldev.util.tree.Trees;
-import org.spldev.util.tree.visitor.TreePrinter;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.*;
+import java.nio.file.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.*;
+import org.spldev.formula.*;
+import org.spldev.formula.expression.*;
+import org.spldev.formula.expression.atomic.literal.*;
+import org.spldev.formula.expression.io.*;
+import org.spldev.formula.expression.io.parse.*;
+import org.spldev.util.io.*;
+import org.spldev.util.io.format.*;
+import org.spldev.util.tree.*;
+import org.spldev.util.tree.visitor.*;
 
 public class CNFTransformTest {
 
@@ -74,30 +70,31 @@ public class CNFTransformTest {
 
 	@Test
 	public void testKConfigReader() throws IOException {
-		Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
-		Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
+		final Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
+		final Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
 		System.out.println(Trees.traverse(formula, new TreePrinter()));
 
 		ModelRepresentation rep = new ModelRepresentation(formula);
-		Formula f1 = rep.get(FormulaProvider.CNF.fromFormula());
+		final Formula f1 = rep.get(FormulaProvider.CNF.fromFormula());
 		System.out.println(Trees.traverse(f1, new TreePrinter()));
 		FileHandler.save(f1, Paths.get(
 			"src/test/resources/kconfigreader/min-example1.dimacs"), new DIMACSFormat());
 
 		rep = new ModelRepresentation(formula);
-		Formula f2 = rep.get(FormulaProvider.TseytinCNF.fromFormula());
+		final Formula f2 = rep.get(FormulaProvider.TseytinCNF.fromFormula());
 		System.out.println(Trees.traverse(f2, new TreePrinter()));
 		FileHandler.save(f2, Paths.get(
 			"src/test/resources/kconfigreader/min-example2.dimacs"), new DIMACSFormat());
 
 		try {
 			rep = new ModelRepresentation(formula);
-			Formula f3 = rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10));
+			final Formula f3 = rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10));
 			System.out.println(Trees.traverse(f3, new TreePrinter()));
 			FileHandler.save(f3, Paths.get(
 				"src/test/resources/kconfigreader/min-example3.dimacs"), new DIMACSFormat());
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}
+
 }
