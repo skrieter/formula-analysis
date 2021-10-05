@@ -36,7 +36,6 @@ import org.spldev.formula.expression.io.parse.*;
 import org.spldev.util.io.*;
 import org.spldev.util.io.format.*;
 import org.spldev.util.tree.*;
-import org.spldev.util.tree.visitor.*;
 
 public class CNFTransformTest {
 
@@ -70,31 +69,21 @@ public class CNFTransformTest {
 
 	@Test
 	public void testKConfigReader() throws IOException {
-		final Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
-		final Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
-		System.out.println(Trees.traverse(formula, new TreePrinter()));
+		Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
+		Path dimacsFile = Paths.get("src/test/resources/kconfigreader/min-example.dimacs");
+		Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
 
 		ModelRepresentation rep = new ModelRepresentation(formula);
-		final Formula f1 = rep.get(FormulaProvider.CNF.fromFormula());
-		System.out.println(Trees.traverse(f1, new TreePrinter()));
-		FileHandler.save(f1, Paths.get(
-			"src/test/resources/kconfigreader/min-example1.dimacs"), new DIMACSFormat());
+		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula()), dimacsFile, new DIMACSFormat());
+		Files.deleteIfExists(dimacsFile);
 
 		rep = new ModelRepresentation(formula);
-		final Formula f2 = rep.get(FormulaProvider.TseytinCNF.fromFormula());
-		System.out.println(Trees.traverse(f2, new TreePrinter()));
-		FileHandler.save(f2, Paths.get(
-			"src/test/resources/kconfigreader/min-example2.dimacs"), new DIMACSFormat());
+		FileHandler.save(rep.get(FormulaProvider.TseytinCNF.fromFormula()), dimacsFile, new DIMACSFormat());
+		Files.deleteIfExists(dimacsFile);
 
-		try {
-			rep = new ModelRepresentation(formula);
-			final Formula f3 = rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10));
-			System.out.println(Trees.traverse(f3, new TreePrinter()));
-			FileHandler.save(f3, Paths.get(
-				"src/test/resources/kconfigreader/min-example3.dimacs"), new DIMACSFormat());
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
+		rep = new ModelRepresentation(formula);
+		FileHandler.save(rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10)), dimacsFile, new DIMACSFormat());
+		Files.deleteIfExists(dimacsFile);
 	}
 
 }
