@@ -108,11 +108,10 @@ public class AnalysisCLI implements CLIFunction {
 		helpBuilder.append("\tGeneral Parameters:\n");
 		helpBuilder.append("\t\t-fm <Path>   Specify path to feature model file.\n");
 		helpBuilder.append("\t\t-a <Name>    Specify algorithm by name. One of:\n");
-		helpBuilder.append("\t\t                 void\n");
-		helpBuilder.append("\t\t                 core\n");
-		helpBuilder.append("\t\t                 atomic\n");
-		helpBuilder.append("\t\t                 count\n");
+		algorithms.forEach(a -> helpBuilder.append("\t\t                 ").append(a.getName()).append("\n"));
 		helpBuilder.append("\n");
+		helpBuilder.append("\tAlgorithm Specific Parameters:\n\t");
+		algorithms.forEach(a -> helpBuilder.append(a.getHelp().replace("\n", "\n\t")));
 		return helpBuilder.toString();
 	}
 
