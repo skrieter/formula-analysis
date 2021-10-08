@@ -37,10 +37,10 @@ import org.spldev.util.io.*;
  *
  * @author Sebastian Krieter
  */
-public class TWiseAlgorithm extends AConfigurationGeneratorAlgorithm<TWiseConfigurationGenerator> {
+public class TWiseAlgorithm extends AlgorithmWrapper<TWiseConfigurationGenerator> {
 
 	@Override
-	protected TWiseConfigurationGenerator createConfigurationGenerator() {
+	protected TWiseConfigurationGenerator createAlgorithm() {
 		return new TWiseConfigurationGenerator();
 	}
 
@@ -82,6 +82,21 @@ public class TWiseAlgorithm extends AConfigurationGeneratorAlgorithm<TWiseConfig
 	@Override
 	public String getName() {
 		return "yasa";
+	}
+
+	@Override
+	public String getHelp() {
+		final StringBuilder helpBuilder = new StringBuilder();
+		helpBuilder.append("\t");
+		helpBuilder.append(getName());
+		helpBuilder.append(
+			": generates a set of valid configurations such that two-wise feature coverage is achieved\n");
+		helpBuilder.append("\t\t-t <Value>    Specify value for t\n");
+		helpBuilder.append("\t\t-m <Value>    Specify value for m\n");
+		helpBuilder.append("\t\t-l <Value>    Specify maximum number of configurations.\n");
+		helpBuilder.append("\t\t-s <Value>    Specify random seed.\n");
+		helpBuilder.append("\t\t-e <Path>     Specify path to expression file\n");
+		return helpBuilder.toString();
 	}
 
 }

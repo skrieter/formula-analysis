@@ -20,7 +20,7 @@
  * See <https://github.com/skrieter/formula-analysis> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.cli.configuration;
+package org.spldev.formula.cli;
 
 import java.io.*;
 import java.nio.file.*;
@@ -29,6 +29,7 @@ import java.util.*;
 import org.spldev.formula.*;
 import org.spldev.formula.analysis.sat4j.*;
 import org.spldev.formula.clauses.*;
+import org.spldev.formula.cli.configuration.*;
 import org.spldev.formula.expression.io.*;
 import org.spldev.formula.io.*;
 import org.spldev.util.*;
@@ -44,8 +45,11 @@ import org.spldev.util.logging.*;
  */
 public class ConfigurationGeneratorCLI implements CLIFunction {
 
+	private final List<AlgorithmWrapper<? extends AbstractConfigurationGenerator>> algorithms = ConfigurationGeneratorAlgorithmManager
+		.getInstance().getExtensions();
+
 	@Override
-	public String getId() {
+	public String getName() {
 		return "genconfig";
 	}
 
@@ -58,7 +62,7 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 	public void run(List<String> args) {
 		Path outputFile = null;
 		Path fmFile = null;
-		ConfigurationGeneratorAlgorithm algorithm = null;
+		AlgorithmWrapper<? extends AbstractConfigurationGenerator> algorithm = null;
 		int limit = Integer.MAX_VALUE;
 
 		final List<String> remainingArguments = new ArrayList<>();
@@ -68,16 +72,10 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 			case "-a": {
 				// TODO add plugin for icpl and chvatal
 				final String name = CLI.getArgValue(iterator, arg).toLowerCase();
-				for (final ConfigurationGeneratorAlgorithm algExtension : ConfigurationGeneratorAlgorithmManager
-					.getInstance().getExtensions()) {
-					if (Objects.equals(name, algExtension.getName())) {
-						algorithm = algExtension;
-						break;
-					}
-				}
-				if (algorithm == null) {
-					throw new IllegalArgumentException("Unknown algorithm: " + name);
-				}
+				algorithm = algorithms.stream()
+					.filter(a -> Objects.equals(name, a.getName()))
+					.findFirst()
+					.orElseThrow(() -> new IllegalArgumentException("Unknown algorithm: " + name));
 				break;
 			}
 			case "-o": {
@@ -133,35 +131,10 @@ public class ConfigurationGeneratorCLI implements CLIFunction {
 		helpBuilder.append("\t\t-fm <Path>   Specify path to feature model file.\n");
 		helpBuilder.append("\t\t-o <Path>    Specify path to output file.\n");
 		helpBuilder.append("\t\t-a <Name>    Specify algorithm by name. One of:\n");
-		helpBuilder.append("\t\t                 icpl\n");
-		helpBuilder.append("\t\t                 chvatal\n");
-		helpBuilder.append("\t\t                 incling\n");
-		helpBuilder.append("\t\t                 yasa\n");
-		helpBuilder.append("\t\t                 random\n");
-		helpBuilder.append("\t\t                 all\n");
+		algorithms.forEach(a -> helpBuilder.append("\t\t                 ").append(a.getName()).append("\n"));
 		helpBuilder.append("\n");
-		helpBuilder.append("\tAlgorithm Specific Parameters:\n");
-		helpBuilder.append("\t\ticpl:\n");
-		helpBuilder.append("\t\t\t-t <Value>    Specify value for t\n");
-		helpBuilder.append("\t\t\t-l <Value>    Specify maximum number of configurations.\n");
-		helpBuilder.append("\t\tchvatal:\n");
-		helpBuilder.append("\t\t\t-t <Value>    Specify value for t\n");
-		helpBuilder.append("\t\t\t-l <Value>    Specify maximum number of configurations.\n");
-		helpBuilder.append("\t\tincling:\n");
-		helpBuilder.append("\t\t\t-l <Value>    Specify maximum number of configurations.\n");
-		helpBuilder.append("\t\t\t-s <Value>    Specify random seed.\n");
-		helpBuilder.append("\t\tyasa:\n");
-		helpBuilder.append("\t\t\t-t <Value>    Specify value for t\n");
-		helpBuilder.append("\t\t\t-m <Value>    Specify value for m\n");
-		helpBuilder.append("\t\t\t-l <Value>    Specify maximum number of configurations.\n");
-		helpBuilder.append("\t\t\t-s <Value>    Specify random seed.\n");
-		helpBuilder.append("\t\t\t-e <Path>     Specify path to expression file\n");
-		helpBuilder.append("\t\trandom:\n");
-		helpBuilder.append("\t\t\t-l <Value>    Specify maximum number of configurations.\n");
-		helpBuilder.append("\t\t\t-s <Value>    Specify random seed.\n");
-		helpBuilder.append("\t\tall:\n");
-		helpBuilder.append("\t\t\t-l <Value>    Specify maximum number of configurations.\n");
-		helpBuilder.append("\t\t\t-s <Value>    Specify random seed.\n");
+		helpBuilder.append("\tAlgorithm Specific Parameters:\n\t");
+		algorithms.forEach(a -> helpBuilder.append(a.getHelp().replace("\n", "\n\t")));
 		return helpBuilder.toString();
 	}
 

@@ -33,15 +33,15 @@ import org.spldev.util.cli.*;
  *
  * @author Sebastian Krieter
  */
-public class PairWiseAlgorithm extends AConfigurationGeneratorAlgorithm<PairWiseConfigurationGenerator> {
+public class PairWiseAlgorithm extends AlgorithmWrapper<AbstractConfigurationGenerator> {
 
 	@Override
-	protected PairWiseConfigurationGenerator createConfigurationGenerator() {
+	protected PairWiseConfigurationGenerator createAlgorithm() {
 		return new PairWiseConfigurationGenerator();
 	}
 
 	@Override
-	protected boolean parseArgument(PairWiseConfigurationGenerator gen, String arg, ListIterator<String> iterator)
+	protected boolean parseArgument(AbstractConfigurationGenerator gen, String arg, ListIterator<String> iterator)
 		throws IllegalArgumentException {
 		switch (arg) {
 		case "-s":
@@ -56,6 +56,18 @@ public class PairWiseAlgorithm extends AConfigurationGeneratorAlgorithm<PairWise
 	@Override
 	public String getName() {
 		return "incling";
+	}
+
+	@Override
+	public String getHelp() {
+		final StringBuilder helpBuilder = new StringBuilder();
+		helpBuilder.append("\t");
+		helpBuilder.append(getName());
+		helpBuilder.append(
+			": generates a set of valid configurations such that two-wise feature coverage is achieved\n");
+		helpBuilder.append("\t\t-l <Value>    Specify maximum number of configurations\n");
+		helpBuilder.append("\t\t-s <Value>    Specify random seed\n");
+		return helpBuilder.toString();
 	}
 
 }

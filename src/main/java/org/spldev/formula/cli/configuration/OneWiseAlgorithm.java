@@ -23,6 +23,7 @@
 package org.spldev.formula.cli.configuration;
 
 import org.spldev.formula.analysis.sat4j.*;
+import org.spldev.util.cli.*;
 
 /**
  * Generates configurations for a given propositional formula such that one-wise
@@ -30,16 +31,27 @@ import org.spldev.formula.analysis.sat4j.*;
  *
  * @author Sebastian Krieter
  */
-public class OneWiseAlgorithm extends AConfigurationGeneratorAlgorithm<OneWiseConfigurationGenerator> {
+public class OneWiseAlgorithm extends AlgorithmWrapper<AbstractConfigurationGenerator> {
 
 	@Override
-	protected OneWiseConfigurationGenerator createConfigurationGenerator() {
+	protected OneWiseConfigurationGenerator createAlgorithm() {
 		return new OneWiseConfigurationGenerator();
 	}
 
 	@Override
 	public String getName() {
 		return "onewise";
+	}
+
+	@Override
+	public String getHelp() {
+		final StringBuilder helpBuilder = new StringBuilder();
+		helpBuilder.append("\t");
+		helpBuilder.append(getName());
+		helpBuilder.append(
+			": generates a set of valid configurations such that one-wise feature coverage is achieved\n");
+		helpBuilder.append("\t\t-l <Value>    Specify maximum number of configurations\n");
+		return helpBuilder.toString();
 	}
 
 }

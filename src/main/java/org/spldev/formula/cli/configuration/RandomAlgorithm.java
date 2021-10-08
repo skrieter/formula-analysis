@@ -32,11 +32,11 @@ import org.spldev.util.cli.*;
  *
  * @author Sebastian Krieter
  */
-public abstract class RandomAlgorithm<T extends RandomConfigurationGenerator>
-	extends AConfigurationGeneratorAlgorithm<T> {
+public abstract class RandomAlgorithm extends AlgorithmWrapper<AbstractConfigurationGenerator> {
 
 	@Override
-	protected boolean parseArgument(T gen, String arg, ListIterator<String> iterator) throws IllegalArgumentException {
+	protected boolean parseArgument(AbstractConfigurationGenerator gen, String arg, ListIterator<String> iterator)
+		throws IllegalArgumentException {
 		switch (arg) {
 		case "-s":
 			gen.setRandom(new Random(Long.parseLong(CLI.getArgValue(iterator, arg))));

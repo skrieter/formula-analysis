@@ -30,7 +30,7 @@ import java.util.*;
 
 import org.junit.jupiter.api.*;
 import org.spldev.formula.clauses.*;
-import org.spldev.formula.cli.configuration.*;
+import org.spldev.formula.cli.*;
 import org.spldev.formula.configuration.sample.*;
 import org.spldev.formula.expression.io.*;
 import org.spldev.formula.io.*;

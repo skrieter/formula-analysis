@@ -29,16 +29,28 @@ import org.spldev.formula.analysis.sat4j.*;
  *
  * @author Sebastian Krieter
  */
-public class EnumeratingRandomAlgorithm extends RandomAlgorithm<EnumeratingRandomConfigurationGenerator> {
+public class EnumeratingRandomAlgorithm extends RandomAlgorithm {
 
 	@Override
-	protected EnumeratingRandomConfigurationGenerator createConfigurationGenerator() {
+	protected EnumeratingRandomConfigurationGenerator createAlgorithm() {
 		return new EnumeratingRandomConfigurationGenerator();
 	}
 
 	@Override
 	public String getName() {
 		return "erandom";
+	}
+
+	@Override
+	public String getHelp() {
+		final StringBuilder helpBuilder = new StringBuilder();
+		helpBuilder.append("\t");
+		helpBuilder.append(getName());
+		helpBuilder.append(
+			": generates random valid configurations (uniformly distributed by enumerating all configurations)\n");
+		helpBuilder.append("\t\t-l <Value>    Specify maximum number of configurations\n");
+		helpBuilder.append("\t\t-s <Value>    Specify random seed\n");
+		return helpBuilder.toString();
 	}
 
 }

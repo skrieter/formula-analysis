@@ -22,6 +22,8 @@
  */
 package org.spldev.formula.cli.configuration;
 
+import org.spldev.formula.analysis.sat4j.*;
+import org.spldev.util.cli.*;
 import org.spldev.util.extension.*;
 
 /**
@@ -29,7 +31,8 @@ import org.spldev.util.extension.*;
  *
  * @author Sebastian Krieter
  */
-public class ConfigurationGeneratorAlgorithmManager extends ExtensionPoint<ConfigurationGeneratorAlgorithm> {
+public class ConfigurationGeneratorAlgorithmManager extends
+	ExtensionPoint<AlgorithmWrapper<? extends AbstractConfigurationGenerator>> {
 
 	private static final ConfigurationGeneratorAlgorithmManager INSTANCE = new ConfigurationGeneratorAlgorithmManager();
 

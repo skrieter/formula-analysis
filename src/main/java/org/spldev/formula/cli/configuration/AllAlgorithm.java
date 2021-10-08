@@ -23,22 +23,34 @@
 package org.spldev.formula.cli.configuration;
 
 import org.spldev.formula.analysis.sat4j.*;
+import org.spldev.util.cli.*;
 
 /**
  * Generates all configurations for a given propositional formula.
  *
  * @author Sebastian Krieter
  */
-public class AllAlgorithm extends AConfigurationGeneratorAlgorithm<AllConfigurationGenerator> {
+public class AllAlgorithm extends AlgorithmWrapper<AbstractConfigurationGenerator> {
 
 	@Override
-	protected AllConfigurationGenerator createConfigurationGenerator() {
+	protected AllConfigurationGenerator createAlgorithm() {
 		return new AllConfigurationGenerator();
 	}
 
 	@Override
 	public String getName() {
 		return "all";
+	}
+
+	@Override
+	public String getHelp() {
+		final StringBuilder helpBuilder = new StringBuilder();
+		helpBuilder.append("\t");
+		helpBuilder.append(getName());
+		helpBuilder.append(": generates all valid configurations\n");
+		helpBuilder.append("\t\t-l <Value>    Specify maximum number of configurations\n");
+		helpBuilder.append("\t\t-s <Value>    Specify random seed\n");
+		return helpBuilder.toString();
 	}
 
 }

@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <extensions>
 	<point id="org.spldev.util.cli.CLIFunctionManager">
-	    <extension id="org.spldev.formula.cli.configuration.ConfigurationGeneratorCLI" />
+	    <extension id="org.spldev.formula.cli.ConfigurationGeneratorCLI" />
+	    <extension id="org.spldev.formula.cli.AnalysisCLI" />
 	</point>
 	<point id="org.spldev.formula.cli.configuration.ConfigurationGeneratorAlgorithmManager">
 	    <extension id="org.spldev.formula.cli.configuration.AllAlgorithm" />
@@ -11,5 +12,8 @@
 	    <extension id="org.spldev.formula.cli.configuration.FastRandomAlgorithm" />
 	    <extension id="org.spldev.formula.cli.configuration.EnumeratingRandomAlgorithm" />
 	    <extension id="org.spldev.formula.cli.configuration.SampleRandomAlgorithm" />
+	</point>
+	<point id="org.spldev.formula.cli.analysis.AnalysisAlgorithmManager">
+	    <extension id="org.spldev.formula.cli.analysis.SatisfiableAlgorithm" />
 	</point>
 </extensions>

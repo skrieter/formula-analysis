@@ -20,46 +20,26 @@
  * See <https://github.com/skrieter/formula-analysis> for further information.
  * -----------------------------------------------------------------------------
  */
-package org.spldev.formula.cli.configuration;
+package org.spldev.formula.cli.analysis;
 
-import java.util.*;
-
-import org.spldev.formula.analysis.sat4j.*;
-import org.spldev.util.*;
+import org.spldev.formula.analysis.*;
+import org.spldev.util.cli.*;
+import org.spldev.util.extension.*;
 
 /**
- * Finds certain solutions of propositional formulas.
+ * Extension point for analysis algorithms.
  *
  * @author Sebastian Krieter
  */
-public abstract class AConfigurationGeneratorAlgorithm<T extends AbstractConfigurationGenerator>
-	implements ConfigurationGeneratorAlgorithm {
+public class AnalysisAlgorithmManager extends ExtensionPoint<AlgorithmWrapper<Analysis<?>>> {
 
-	@Override
-	public Result<AbstractConfigurationGenerator> parseArguments(List<String> args) {
-		final T gen = createConfigurationGenerator();
-		try {
-			for (final ListIterator<String> iterator = args.listIterator(); iterator.hasNext();) {
-				final String arg = iterator.next();
-				if (!parseArgument(gen, arg, iterator)) {
-					throw new IllegalArgumentException("Unknown argument " + arg);
-				}
-			}
-			return Result.of(gen);
-		} catch (final Exception e) {
-			return Result.empty(e);
-		}
+	private static final AnalysisAlgorithmManager INSTANCE = new AnalysisAlgorithmManager();
+
+	public static final AnalysisAlgorithmManager getInstance() {
+		return INSTANCE;
 	}
 
-	protected abstract T createConfigurationGenerator();
-
-	protected boolean parseArgument(T gen, String arg, ListIterator<String> iterator) throws IllegalArgumentException {
-		return false;
-	}
-
-	@Override
-	public String getId() {
-		return getClass().getCanonicalName();
+	private AnalysisAlgorithmManager() {
 	}
 
 }
