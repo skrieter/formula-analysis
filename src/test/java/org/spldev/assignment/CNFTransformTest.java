@@ -69,20 +69,20 @@ public class CNFTransformTest {
 
 	@Test
 	public void testKConfigReader() throws IOException {
-		Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
-		Path dimacsFile = Paths.get("src/test/resources/kconfigreader/min-example.dimacs");
-		Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
+		final Path modelFile = Paths.get("src/test/resources/kconfigreader/min-example.model");
+		final Path dimacsFile = Paths.get("src/test/resources/kconfigreader/min-example.dimacs");
+		final Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
 
 		ModelRepresentation rep = new ModelRepresentation(formula);
 		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula()), dimacsFile, new DIMACSFormat());
 		Files.deleteIfExists(dimacsFile);
 
 		rep = new ModelRepresentation(formula);
-		FileHandler.save(rep.get(FormulaProvider.TseytinCNF.fromFormula()), dimacsFile, new DIMACSFormat());
+		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(0, 0, 0)), dimacsFile, new DIMACSFormat());
 		Files.deleteIfExists(dimacsFile);
 
 		rep = new ModelRepresentation(formula);
-		FileHandler.save(rep.get(FormulaProvider.TseytinCNF.fromFormula(10, 10)), dimacsFile, new DIMACSFormat());
+		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(10, 10, 100)), dimacsFile, new DIMACSFormat());
 		Files.deleteIfExists(dimacsFile);
 	}
 
