@@ -29,10 +29,8 @@ import org.spldev.formula.clauses.*;
 import org.spldev.formula.solver.*;
 import org.spldev.formula.solver.SatSolver.*;
 import org.spldev.formula.solver.sat4j.*;
-import org.spldev.formula.transform.*;
 import org.spldev.util.data.*;
 import org.spldev.util.job.*;
-import org.spldev.util.logging.*;
 
 /**
  * Finds indeterminate features.
@@ -51,72 +49,27 @@ public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> {
 	@Override
 	public LiteralList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		if (variables == null) {
-			variables = LiteralList.getVariables(solver.getCnf());
+			variables = LiteralList.getVariables(solver.getVariables());
 		}
-		monitor.setTotalWork(2 * variables.getLiterals().length);
-
-		final VecInt potentialResultList = new VecInt();
-		final List<LiteralList> relevantClauses = new ArrayList<>();
-
-		final Sat4JSolver modSolver = new Sat4JSolver(solver.getCnf());
-		for (final int literal : variables.getLiterals()) {
-			final List<LiteralList> clauses = solver.getCnf().getClauses();
-			for (final LiteralList clause : clauses) {
-				if (clause.containsAnyVariable(literal)) {
-					final LiteralList newClause = clause.removeVariables(literal);
-					if (newClause != null) {
-						relevantClauses.add(newClause);
-					}
-				}
-			}
-			try {
-				modSolver.getFormula().push(relevantClauses);
-			} catch (final RuntimeContradictionException e) {
-				relevantClauses.clear();
-				monitor.step();
-				continue;
-			}
-
-			final SatResult hasSolution = modSolver.hasSolution();
-			switch (hasSolution) {
-			case FALSE:
-				break;
-			case TIMEOUT:
-				reportTimeout();
-				break;
-			case TRUE:
-				potentialResultList.push(literal);
-				break;
-			default:
-				throw new AssertionError(hasSolution);
-			}
-			modSolver.getFormula().pop(relevantClauses.size());
-
-			relevantClauses.clear();
-			monitor.step();
-		}
+		monitor.setTotalWork(variables.getLiterals().length);		
 
 		final VecInt resultList = new VecInt();
-		while (!potentialResultList.isEmpty()) {
-			final int literal = potentialResultList.last();
-			potentialResultList.pop();
-			final CNF slicedCNF = Executor.run(new CNFSlicer(variables.removeAll(new LiteralList(literal))), solver
-				.getCnf()).orElse(Logger::logProblems);
-			final List<LiteralList> clauses = slicedCNF.getClauses();
+		variableLoop: for (final int variable : variables.getLiterals()) {
+			final Sat4JSolver modSolver = new Sat4JSolver(solver.getVariables());
+			final List<LiteralList> clauses = solver.getCnf().getClauses();
 			for (final LiteralList clause : clauses) {
-				if (clause.containsAnyVariable(literal)) {
-					final LiteralList newClause = clause.removeVariables(literal);
-					if (newClause != null) {
-						relevantClauses.add(newClause);
+				final LiteralList newClause = clause.removeVariables(variable);
+				if (newClause != null) {
+					try {
+						modSolver.getFormula().push(newClause);
+					} catch (final RuntimeContradictionException e) {
+						monitor.step();
+						continue variableLoop;
 					}
+				} else {
+					monitor.step();
+					continue variableLoop;
 				}
-			}
-			try {
-				modSolver.getFormula().push(relevantClauses);
-			} catch (final RuntimeContradictionException e) {
-				relevantClauses.clear();
-				monitor.step();
-				continue;
 			}
 
 			final SatResult hasSolution = modSolver.hasSolution();
@@ -127,17 +80,13 @@ public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> {
 				reportTimeout();
 				break;
 			case TRUE:
-				resultList.push(literal);
+				resultList.push(variable);
 				break;
 			default:
 				throw new AssertionError(hasSolution);
 			}
-			modSolver.getFormula().pop(relevantClauses.size());
-
-			relevantClauses.clear();
 			monitor.step();
 		}
-
 		return new LiteralList(Arrays.copyOf(resultList.toArray(), resultList.size()));
 	}
 

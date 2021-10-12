@@ -63,7 +63,7 @@ public class Sat4JFormula extends AbstractDynamicFormula<IConstr> {
 					throw new ContradictionException();
 				}
 				final IConstr constr = sat4jSolver.solver
-					.addClause(new VecInt(Arrays.copyOfRange(clause.getLiterals(), 0, clause.size())));
+					.addClause(new VecInt(Arrays.copyOf(clause.getLiterals(), clause.size())));
 				constrs.add(constr);
 			} catch (final ContradictionException e) {
 				for (final IConstr constr : constrs) {

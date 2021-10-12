@@ -104,7 +104,7 @@ public abstract class AbstractConfigurationGenerator extends Sat4JAnalysis<Solut
 	public final SolutionList analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		init(monitor);
 		monitor.setTotalWork(maxSampleSize);
-		return new SolutionList(solver.getCnf().getVariables(), StreamSupport.stream(this, false) //
+		return new SolutionList(solver.getVariables(), StreamSupport.stream(this, false) //
 			.limit(maxSampleSize) //
 			.peek(c -> monitor.step()) //
 			.collect(Collectors.toCollection(ArrayList::new)));

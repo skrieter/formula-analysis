@@ -41,7 +41,7 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solution
 
 	public static final int MAX_SOLUTION_BUFFER = 1000;
 
-	protected final CNF satInstance;
+	protected CNF satInstance;
 
 	protected final T solver;
 	protected final Sat4JAssumptions assumptions;
@@ -56,14 +56,24 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solution
 
 	private boolean contradiction = false;
 
+	public AbstractSat4JSolver(VariableMap variableMap) {
+		satInstance = null;
+		solver = createSolver();
+		configureSolver();
+		formula = new Sat4JFormula(this, variableMap);
+		initSolver(Collections.emptyList());
+
+		assumptions = new Sat4JAssumptions(variableMap);
+	}
+
 	public AbstractSat4JSolver(CNF cnf) {
 		satInstance = cnf;
 		solver = createSolver();
 		configureSolver();
 		formula = new Sat4JFormula(this, cnf.getVariableMap());
-		initSolver();
+		initSolver(cnf.getClauses());
 
-		assumptions = new Sat4JAssumptions(satInstance.getVariableMap());
+		assumptions = new Sat4JAssumptions(cnf.getVariableMap());
 	}
 
 	/**
@@ -149,9 +159,10 @@ public abstract class AbstractSat4JSolver<T extends ISolver> implements Solution
 	/**
 	 * Add clauses to the solver. Initializes the order instance.
 	 */
-	protected void initSolver() {
-		final int size = satInstance.getVariableMap().getMaxIndex();
-		final List<LiteralList> clauses = satInstance.getClauses();
+	protected void initSolver(List<LiteralList> clauses) {
+//		final int size = satInstance.getVariableMap().getMaxIndex();
+		final int size = formula.getVariableMap().getMaxIndex();
+//		final List<LiteralList> clauses = satInstance.getClauses();
 		try {
 			if (!clauses.isEmpty()) {
 				solver.setExpectedNumberOfClauses(clauses.size() + 1);

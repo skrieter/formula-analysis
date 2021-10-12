@@ -69,11 +69,11 @@ public class ConditionallyCoreDeadAnalysisMIG extends Sat4JMIGAnalysis<LiteralLi
 
 	@Override
 	public LiteralList analyze(Sat4JMIGSolver solver, InternalMonitor monitor) throws Exception {
-		monitor.setTotalWork(solver.getCnf().getVariableMap().size() + 2);
+		monitor.setTotalWork(solver.getVariables().size() + 2);
 
 		final Traverser traverser = solver.mig.traverse();
 		solver.getAssumptions().ensureSize(fixedVariables.length + 1);
-		final int[] knownValues = new int[solver.getCnf().getVariableMap().size()];
+		final int[] knownValues = new int[solver.getVariables().size()];
 
 		for (final int fixedVar : fixedVariables) {
 			final int var = Math.abs(fixedVar);

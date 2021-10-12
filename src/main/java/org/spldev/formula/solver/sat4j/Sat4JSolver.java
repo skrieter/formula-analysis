@@ -28,6 +28,7 @@ import org.sat4j.minisat.*;
 import org.sat4j.minisat.core.*;
 import org.sat4j.minisat.orders.*;
 import org.spldev.formula.clauses.*;
+import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.solver.sat4j.SStrategy.*;
 import org.spldev.formula.solver.sat4j.strategy.*;
 
@@ -44,7 +45,14 @@ public class Sat4JSolver extends AbstractSat4JSolver<Solver<?>> {
 	public Sat4JSolver(CNF cnf) {
 		super(cnf);
 		strategy = SStrategy.original();
-		order = new int[satInstance.getVariableMap().size()];
+		order = new int[cnf.getVariableMap().size()];
+		setOrderFix();
+	}
+
+	public Sat4JSolver(VariableMap variableMap) {
+		super(variableMap);
+		strategy = SStrategy.original();
+		order = new int[variableMap.size()];
 		setOrderFix();
 	}
 
@@ -54,8 +62,8 @@ public class Sat4JSolver extends AbstractSat4JSolver<Solver<?>> {
 	}
 
 	@Override
-	protected void initSolver() {
-		super.initSolver();
+	protected void initSolver(List<LiteralList> clauses) {
+		super.initSolver(clauses);
 		solver.getOrder().init();
 	}
 
