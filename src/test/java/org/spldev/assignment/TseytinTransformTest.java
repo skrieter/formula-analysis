@@ -64,9 +64,12 @@ public class TseytinTransformTest {
 	}
 
 	private Boolean evaluate(ModelRepresentation rep, final Assignment assignment) {
-		final HasSolutionAnalysis analysis = new HasSolutionAnalysis();
+		final AllConfigurationGenerator analysis = new AllConfigurationGenerator();
 		analysis.getAssumptions().setAll(assignment.getAll());
-		return analysis.getResult(rep).orElseThrow();
+		analysis.setLimit(2);
+		final int numSolutions = analysis.getResult(rep).orElseThrow().getSolutions().size();
+		assertTrue(numSolutions < 2);
+		return numSolutions == 1;
 	}
 
 }
