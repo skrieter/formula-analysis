@@ -49,7 +49,7 @@ public class DIMACSFormatCNF implements Format<CNF> {
 			sb.append(DIMACSConstants.COMMENT_START);
 			sb.append(index++);
 			sb.append(' ');
-			sb.append(String.valueOf(name));
+			sb.append(name);
 			sb.append(System.lineSeparator());
 		}
 

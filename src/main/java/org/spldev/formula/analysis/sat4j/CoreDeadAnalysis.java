@@ -63,6 +63,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 		return analyze1(monitor);
 	}
 
+	// currently unused (divide & conquer)
 	public LiteralList analyze2(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		final int initialAssignmentLength = solver.getAssumptions().size();
 		solver.setSelectionStrategy(SStrategy.positive());
@@ -180,7 +181,7 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 		int[] model1 = solver.findSolution().getLiterals();
 
 		if (model1 != null) {
-			solver.setSelectionStrategy(SStrategy.negative());
+			solver.setSelectionStrategy(SStrategy.inverse(model1));
 			final int[] model2 = solver.findSolution().getLiterals();
 
 			if (variables != null) {
@@ -199,7 +200,6 @@ public class CoreDeadAnalysis extends AVariableAnalysis<LiteralList> {
 			}
 
 			LiteralList.resetConflicts(model1, model2);
-			solver.setSelectionStrategy(SStrategy.inverse(model1));
 
 			for (int i = 0; i < model1.length; i++) {
 				final int varX = model1[i];

@@ -34,7 +34,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class AtomicSetAnalysis extends Sat4JAnalysis<List<LiteralList>> {
+public class AtomicSetAnalysis extends Sat4JAnalysis<List<LiteralList>> { // todo: AVariableAnalysis
 
 	public static final Identifier<List<LiteralList>> identifier = new Identifier<>();
 
@@ -50,12 +50,18 @@ public class AtomicSetAnalysis extends Sat4JAnalysis<List<LiteralList>> {
 	@Override
 	public List<LiteralList> analyze(Sat4JSolver solver, InternalMonitor monitor) throws Exception {
 		final List<LiteralList> result = new ArrayList<>();
+//		if (variables == null) {
+//			variables = LiteralList.getVariables(solver.getVariables());
+//		}
+
+		// for all variables not in this.variables, set done[...] to 2
 
 		solver.setSelectionStrategy(SStrategy.positive());
 		final int[] model1 = solver.findSolution().getLiterals();
 		final List<LiteralList> solutions = solver.rememberSolutionHistory(1000);
 
 		if (model1 != null) {
+			// initial atomic set consists of core and dead features
 			solver.setSelectionStrategy(SStrategy.negative());
 			final int[] model2 = solver.findSolution().getLiterals();
 			solver.setSelectionStrategy(SStrategy.positive());

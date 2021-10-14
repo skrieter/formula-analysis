@@ -37,7 +37,7 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> {
+public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> { // todo: variable-analysis does not work reliably (false positives) (use old analysis first?)
 
 	public static final Identifier<LiteralList> identifier = new Identifier<>();
 
