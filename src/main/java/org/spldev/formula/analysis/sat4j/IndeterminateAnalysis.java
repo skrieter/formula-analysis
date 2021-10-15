@@ -37,7 +37,9 @@ import org.spldev.util.job.*;
  *
  * @author Sebastian Krieter
  */
-public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> { // todo: variable-analysis does not work reliably (false positives) (use old analysis first?)
+public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> { // todo: variable-analysis does not work
+																			// reliably (false positives) (use old
+																			// analysis first?)
 
 	public static final Identifier<LiteralList> identifier = new Identifier<>();
 
@@ -51,7 +53,7 @@ public class IndeterminateAnalysis extends AVariableAnalysis<LiteralList> { // t
 		if (variables == null) {
 			variables = LiteralList.getVariables(solver.getVariables());
 		}
-		monitor.setTotalWork(variables.getLiterals().length);		
+		monitor.setTotalWork(variables.getLiterals().length);
 
 		final VecInt resultList = new VecInt();
 		variableLoop: for (final int variable : variables.getLiterals()) {
