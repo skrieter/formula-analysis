@@ -26,9 +26,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.List;
 
 import org.junit.jupiter.api.*;
 import org.spldev.formula.*;
+import org.spldev.formula.analysis.sat4j.AtomicSetAnalysis;
+import org.spldev.formula.clauses.LiteralList;
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.expression.io.*;
@@ -84,6 +87,16 @@ public class CNFTransformTest {
 		rep = new ModelRepresentation(formula);
 		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(100)), dimacsFile, new DIMACSFormat());
 		Files.deleteIfExists(dimacsFile);
+	}
+
+	@Test
+	public void testDistributiveBug() {
+		final Path modelFile = Paths.get("src/test/resources/kconfigreader/distrib-bug.model");
+		final Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
+
+		ModelRepresentation rep = new ModelRepresentation(formula);
+		List<LiteralList> atomicSets = new AtomicSetAnalysis().getResult(rep).orElseThrow();
+		assertEquals(4, atomicSets.size());
 	}
 
 }
