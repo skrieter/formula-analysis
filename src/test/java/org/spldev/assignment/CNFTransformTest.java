@@ -78,11 +78,11 @@ public class CNFTransformTest {
 		Files.deleteIfExists(dimacsFile);
 
 		rep = new ModelRepresentation(formula);
-		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(0, 0, 0)), dimacsFile, new DIMACSFormat());
+		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(0)), dimacsFile, new DIMACSFormat());
 		Files.deleteIfExists(dimacsFile);
 
 		rep = new ModelRepresentation(formula);
-		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(10, 10, 100)), dimacsFile, new DIMACSFormat());
+		FileHandler.save(rep.get(FormulaProvider.CNF.fromFormula(100)), dimacsFile, new DIMACSFormat());
 		Files.deleteIfExists(dimacsFile);
 	}
 
