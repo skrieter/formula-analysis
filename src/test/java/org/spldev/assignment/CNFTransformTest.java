@@ -94,9 +94,9 @@ public class CNFTransformTest {
 		final Path modelFile = Paths.get("src/test/resources/kconfigreader/distrib-bug.model");
 		final Formula formula = FileHandler.load(modelFile, FormatSupplier.of(new KConfigReaderFormat())).orElseThrow();
 
-		ModelRepresentation rep = new ModelRepresentation(formula);
-		List<LiteralList> atomicSets = new AtomicSetAnalysis().getResult(rep).orElseThrow();
-		assertEquals(4, atomicSets.size());
+		final ModelRepresentation rep = new ModelRepresentation(formula);
+		final List<LiteralList> atomicSets = new AtomicSetAnalysis().getResult(rep).orElseThrow();
+		assertEquals(5, atomicSets.size());
 	}
 
 }
