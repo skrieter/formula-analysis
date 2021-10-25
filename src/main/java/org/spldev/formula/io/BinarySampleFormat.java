@@ -108,11 +108,6 @@ public class BinarySampleFormat extends BinaryFormat<SolutionList> {
 
 	@Override
 	public boolean supportsSerialize() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWrite() {
 		return true;
 	}
 
