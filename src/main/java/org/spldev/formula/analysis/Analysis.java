@@ -23,7 +23,7 @@
 package org.spldev.formula.analysis;
 
 import org.spldev.formula.*;
-import org.spldev.util.*;
+import org.spldev.util.data.Result;
 import org.spldev.util.job.*;
 
 /**

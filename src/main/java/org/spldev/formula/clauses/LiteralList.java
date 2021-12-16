@@ -28,8 +28,9 @@ import java.util.stream.*;
 
 import org.spldev.formula.expression.atomic.literal.*;
 import org.spldev.formula.expression.term.*;
-import org.spldev.util.*;
-import org.spldev.util.Problem.*;
+import org.spldev.util.data.Problem;
+import org.spldev.util.data.Problem.*;
+import org.spldev.util.data.Result;
 
 // TODO add methods for adding literals (e.g. addAll, union, ...)
 /**

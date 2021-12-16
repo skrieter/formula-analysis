@@ -45,7 +45,7 @@ public class MIGFormat implements Format<MIG> {
 	}
 
 	@Override
-	public String getId() {
+	public String getIdentifier() {
 		return ID;
 	}
 

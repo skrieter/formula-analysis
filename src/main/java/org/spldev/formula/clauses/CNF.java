@@ -26,7 +26,7 @@ import java.io.*;
 import java.util.*;
 
 import org.spldev.formula.expression.atomic.literal.*;
-import org.spldev.util.*;
+import org.spldev.util.data.Result;
 
 // TODO rename, as it can represent both CNF and DNF
 /**

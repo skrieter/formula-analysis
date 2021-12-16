@@ -27,8 +27,8 @@ import java.util.*;
 import org.spldev.formula.clauses.*;
 import org.spldev.formula.clauses.LiteralList.*;
 import org.spldev.formula.expression.atomic.literal.*;
-import org.spldev.util.*;
-import org.spldev.util.Problem.*;
+import org.spldev.util.data.Problem.*;
+import org.spldev.util.data.Result;
 import org.spldev.util.io.format.*;
 
 /**
@@ -112,7 +112,7 @@ public class ConfigurationListFormat implements Format<SolutionList> {
 	}
 
 	@Override
-	public String getId() {
+	public String getIdentifier() {
 		return ID;
 	}
 

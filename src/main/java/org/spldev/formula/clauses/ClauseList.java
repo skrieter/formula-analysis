@@ -27,7 +27,7 @@ import java.util.*;
 
 import org.spldev.formula.clauses.LiteralList.*;
 import org.spldev.formula.expression.atomic.literal.*;
-import org.spldev.util.*;
+import org.spldev.util.data.Result;
 
 /**
  * Represents an instance of a satisfiability problem in CNF.

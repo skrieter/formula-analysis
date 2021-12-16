@@ -32,7 +32,6 @@ import org.spldev.formula.expression.compound.*;
 import org.spldev.formula.expression.io.*;
 import org.spldev.formula.expression.term.bool.*;
 import org.spldev.formula.transform.*;
-import org.spldev.util.*;
 import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 import org.spldev.util.logging.*;

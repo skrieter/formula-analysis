@@ -26,7 +26,6 @@ import java.nio.file.*;
 
 import org.spldev.formula.clauses.*;
 import org.spldev.formula.io.mig.*;
-import org.spldev.util.*;
 import org.spldev.util.data.*;
 import org.spldev.util.io.format.*;
 

@@ -29,7 +29,6 @@ import org.spldev.formula.*;
 import org.spldev.formula.expression.*;
 import org.spldev.formula.expression.atomic.*;
 import org.spldev.formula.solver.*;
-import org.spldev.util.*;
 import org.spldev.util.data.*;
 import org.spldev.util.job.*;
 

@@ -25,7 +25,7 @@ package org.spldev.formula.io;
 import java.util.*;
 
 import org.spldev.formula.clauses.*;
-import org.spldev.util.*;
+import org.spldev.util.data.Result;
 import org.spldev.util.io.format.*;
 
 /**
@@ -118,7 +118,7 @@ public class ExpressionGroupFormat implements Format<List<List<ClauseList>>> {
 	}
 
 	@Override
-	public String getId() {
+	public String getIdentifier() {
 		return ID;
 	}
 

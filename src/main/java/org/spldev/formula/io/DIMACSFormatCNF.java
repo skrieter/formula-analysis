@@ -87,7 +87,7 @@ public class DIMACSFormatCNF implements Format<CNF> {
 	}
 
 	@Override
-	public String getId() {
+	public String getIdentifier() {
 		return ID;
 	}
 
